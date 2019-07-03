@@ -1,6 +1,7 @@
-FROM 'python'
-RUN pip install django
-VOLUME /moca
+FROM python:3
+ENV PYTHONUNBUFFERED 1
+RUN mkdir /moca
 WORKDIR /moca
-EXPOSE 8000
-ENTRYPOINT ./manage.py runserver 0.0.0.0:8000
+COPY requirements.txt /moca/
+RUN pip install -r requirements.txt
+COPY . /moca
