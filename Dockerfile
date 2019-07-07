@@ -7,4 +7,5 @@ RUN ["pacman", "-Syu", "--noconfirm", "python", "python-pip", "docker", "docker-
 RUN pip install -r requirements.txt
 COPY . /moca
 # CMD ["python", "manage.py", "runserver", "0.0.0.0:9000"]
+RUN python manage.py migrate
 CMD python manage.py runserver 0.0.0.0:$PORT
