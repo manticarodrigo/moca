@@ -9,5 +9,5 @@ RUN ["pacman", "-Su", "--noconfirm", "postgresql-libs"]
 RUN ["pacman", "-Su", "--noconfirm", "gcc"]
 RUN pip install -r requirements.txt
 COPY . /moca
-RUN systemctl enable docker
-RUN systemctl start docker
+# RUN systemctl enable docker
+# RUN systemctl start docker
