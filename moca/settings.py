@@ -83,7 +83,7 @@ DATABASES = {
     }
 }
 
-DATABASES['default'] = dj_database_url.parse("postgres://stsbnhgufywanx:10b47aee3eb4cb1cc6995abb83d30590f5f5fe5979c8cc908f870797bb1d64e3@ec2-174-129-226-234.compute-1.amazonaws.com:5432/d1tf9akurlji7p")
+DATABASES['default'] = dj_database_url.parse(os.environ('DATABASE_URL')
 
 
 # Password validation
