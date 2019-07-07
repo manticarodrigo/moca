@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 import django_heroku
+import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -81,6 +82,8 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+DATABASES['default'] = dj_database_url.parse("postgres://stsbnhgufywanx:10b47aee3eb4cb1cc6995abb83d30590f5f5fe5979c8cc908f870797bb1d64e3@ec2-174-129-226-234.compute-1.amazonaws.com:5432/d1tf9akurlji7p")
 
 
 # Password validation
