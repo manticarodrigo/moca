@@ -3,20 +3,25 @@ version: '3'
 services:
   db:
     image: postgres
+    restart: always
     environment:
-      - POSTGRES_PASSWORD=test
+      - POSTGRES_USER=moca_user
+      - POSTGRES_PASSWORD=moca_password
+      - POSTGRES_DB=moca_db
+    # volumes:
+    #   - ./data/postgres-data:/var/lib/postgresql/data
     expose:
       - 5432
     ports:
       - 5432:5432
+
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    environment:
-      - DATABASE_URL=postgres://postgres:test@db:5432/postgres
+    command: python apps/manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/moca
+      - ./apps:/app/apps
     ports:
       - "8000:8000"
     depends_on:
       - db
+

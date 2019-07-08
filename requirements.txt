@@ -1,4 +1,1 @@
-django
-django-admin
-django_heroku
-dj-database-url
+-r requirements/prod.txt
