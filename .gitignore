@@ -193,3 +193,6 @@ dmypy.json
 
 # Local data
 data
+
+# Editors
+.vscode
