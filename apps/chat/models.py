@@ -8,7 +8,7 @@ class Conversation(models.Model):
 
 class Participant(models.Model):
   conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
-  user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+  user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, unique=True)
 
   def __str__(self):
     return f"{self.user} in {self.conversation}"
