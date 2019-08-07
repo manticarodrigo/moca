@@ -1,9 +1,9 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from .views import Conversation, ConversationList
+from .views import ConversationView, ConversationListView
 
 urlpatterns = [
-  path('', ConversationList.as_view()),
-  path('<int:id>/', Conversation.as_view())
+  path('', ConversationListView.as_view()),
+  path('<int:id>/', ConversationView.as_view())
 ]  
