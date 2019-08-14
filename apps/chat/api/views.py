@@ -33,7 +33,7 @@ class ConversationView(APIView, PageNumberPagination):
     }
 
     if (previous_link is None):
-      data["users"] = participants
+      data["participants"] = participants
 
     return Response(data=data)
   
@@ -76,10 +76,13 @@ class ConversationListView(APIView, PageNumberPagination):
           .latest('created_at')
       ).data
 
-      data.append({"other_participants": other_participants, "latest_message": latest_message})
+      data.append({
+        "id": participation.conversation.id,
+        "other_participants": other_participants,
+        "latest_message": latest_message
+      })
 
     return Response(data)
 
   def post(self, request):
     return Response("POST")
-
