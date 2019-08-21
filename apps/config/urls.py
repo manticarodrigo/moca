@@ -20,5 +20,5 @@ from rest_framework.authtoken.views import obtain_auth_token
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('authenticate/', obtain_auth_token, name='authenticate'),
-    path('api/chat/', include('chat.api.urls'))
+    path('api/chat/', include('moca.api.urls'))
 ]
