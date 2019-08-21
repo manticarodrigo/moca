@@ -29,7 +29,6 @@ services:
       bash -c "
       xargs -a os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --force --noconfirm &&
       pip install -qqq -r requirements.txt --exists-action i &&
-      python apps/manage.py migrate &&
       python apps/manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./:/app
