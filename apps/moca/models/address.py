@@ -12,7 +12,7 @@ class Address(models.Model):
   apartment = models.CharField(max_length=50)
   location = gisModels.PointField()
   user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                           related_name='addresses',
+                           related_name="addresses",
                            on_delete=models.CASCADE)
 
   # street = models.CharField(max_length=50)

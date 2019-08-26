@@ -37,6 +37,7 @@ INSTALLED_APPS = [
   'rest_framework',
   'corsheaders',
   'knox',
+  'rest_framework_gis',
 
   # Apps
   'moca.apps.MocaConfig',

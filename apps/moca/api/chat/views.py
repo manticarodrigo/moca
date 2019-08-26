@@ -1,12 +1,14 @@
-from rest_framework.views import APIView
+from django.contrib.auth.models import Group, User
 from django.core import serializers
-from django.contrib.auth.models import User, Group
-from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
-from moca.models import Conversation, Participant, Message
-from .serializers import MessageSerializer, UserSerializer
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from moca.models import Conversation, Message, Participant
+
 from .permissions import IsParticipant
+from .serializers import MessageSerializer, UserSerializer
 
 
 class ConversationView(APIView, PageNumberPagination):
@@ -33,7 +35,7 @@ class ConversationView(APIView, PageNumberPagination):
       "messages": serializer.data
     }
 
-    if (previous_link is None):
+    if previous_link is None:
       data["participants"] = participants
 
     return Response(data=data)
