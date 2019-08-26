@@ -14,8 +14,7 @@ class Migration(migrations.Migration):
     migrations.AddField(
       model_name='user',
       name='created_at',
-      field=models.DateTimeField(auto_now_add=True,
-                                 default=django.utils.timezone.now),
+      field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
       preserve_default=False,
     ),
     migrations.AddField(
@@ -33,9 +32,7 @@ class Migration(migrations.Migration):
     migrations.AddField(
       model_name='user',
       name='gender',
-      field=models.CharField(choices=[('F', 'Female'), ('M', 'Male')],
-                             default='M',
-                             max_length=2),
+      field=models.CharField(choices=[('F', 'Female'), ('M', 'Male')], default='M', max_length=2),
       preserve_default=False,
     ),
     migrations.AddField(
@@ -47,8 +44,7 @@ class Migration(migrations.Migration):
     migrations.AddField(
       model_name='user',
       name='type',
-      field=models.CharField(choices=[('PA', 'Patient'),
-                                      ('PT', 'Physical Therapist'),
+      field=models.CharField(choices=[('PA', 'Patient'), ('PT', 'Physical Therapist'),
                                       ('AG', 'Agent'), ('AD', 'Admin')],
                              default='AG',
                              max_length=2),

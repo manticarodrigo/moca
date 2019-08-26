@@ -48,14 +48,10 @@ REST_FRAMEWORK = {
   'DEFAULT_PERMISSION_CLASSES': [
     # 'rest_framework.permissions.IsAuthenticated',
   ],
-  'DEFAULT_PAGINATION_CLASS':
-  'rest_framework.pagination.PageNumberPagination',
-  'PAGE_SIZE':
-  10,
-  'DEFAULT_RENDERER_CLASSES':
-  ('djangorestframework_camel_case.render.CamelCaseJSONRenderer', ),
-  'DEFAULT_PARSER_CLASSES':
-  ('djangorestframework_camel_case.parser.CamelCaseJSONParser', ),
+  'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+  'PAGE_SIZE': 10,
+  'DEFAULT_RENDERER_CLASSES': ('djangorestframework_camel_case.render.CamelCaseJSONRenderer', ),
+  'DEFAULT_PARSER_CLASSES': ('djangorestframework_camel_case.parser.CamelCaseJSONParser', ),
 }
 
 MIDDLEWARE = [
@@ -96,8 +92,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 AUTH_PASSWORD_VALIDATORS = [
   {
-    'NAME':
-    'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
   },
   {
     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',

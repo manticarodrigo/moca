@@ -20,8 +20,7 @@ class ConversationView(APIView, PageNumberPagination):
 
     self.check_object_permissions(request, participants)
 
-    queryset = Message.objects.filter(
-      conversation__id=id).order_by('-created_at')
+    queryset = Message.objects.filter(conversation__id=id).order_by('-created_at')
     page = self.paginate_queryset(queryset, request, view=self)
     serializer = MessageSerializer(page, many=True)
 
@@ -48,9 +47,7 @@ class ConversationView(APIView, PageNumberPagination):
     self.check_object_permissions(request, participants)
 
     conversation = Conversation.objects.get(id=id)
-    message = Message(user=request.user,
-                      conversation=conversation,
-                      text=request.data['text'])
+    message = Message(user=request.user, conversation=conversation, text=request.data['text'])
     message.save()
 
     serializer = MessageSerializer(message)
@@ -68,13 +65,12 @@ class ConversationListView(APIView, PageNumberPagination):
       other_participants = [
         UserSerializer(User.objects.get(id=participant.id)).data
         for participant in Participant.objects.filter(
-          conversation__id=participation.conversation.id)
-        if participant.user.id != request.user.id
+          conversation__id=participation.conversation.id) if participant.user.id != request.user.id
       ]
 
       latest_message = MessageSerializer(
-        Message.objects.filter(conversation__id=participation.conversation.id).
-        latest('created_at')).data
+        Message.objects.filter(
+          conversation__id=participation.conversation.id).latest('created_at')).data
 
       data.append({
         "id": participation.conversation.id,
