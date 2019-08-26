@@ -4,12 +4,12 @@ from django.contrib.auth.models import User, Group
 from rest_framework.response import Response
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import status
-from ..models import Conversation, Participant, Message
+from moca.models import Conversation, Participant, Message
 from .serializers import MessageSerializer, UserSerializer
 from .permissions import IsParticipant
 
 class ConversationView(APIView, PageNumberPagination):
-  permission_classes = [IsParticipant]
+  # permission_classes = [IsParticipant]
 
   def get(self, request, id):
     participants = [

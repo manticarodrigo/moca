@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
-from ..models import Conversation, Message
+from moca.models import Conversation, Message
 
 
 class MessageSerializer(serializers.ModelSerializer):
