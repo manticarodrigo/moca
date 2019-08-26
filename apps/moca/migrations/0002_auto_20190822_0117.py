@@ -6,44 +6,51 @@ import django.utils.timezone
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('moca', '0001_initial'),
-    ]
+  dependencies = [
+    ('moca', '0001_initial'),
+  ]
 
-    operations = [
-        migrations.AddField(
-            model_name='user',
-            name='created_at',
-            field=models.DateTimeField(auto_now_add=True, default=django.utils.timezone.now),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='date_of_birth',
-            field=models.DateField(default=django.utils.timezone.now),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='first_name',
-            field=models.CharField(default='Jimmy', max_length=50),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='gender',
-            field=models.CharField(choices=[('F', 'Female'), ('M', 'Male')], default='M', max_length=2),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='last_name',
-            field=models.CharField(default='Falon', max_length=50),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='user',
-            name='type',
-            field=models.CharField(choices=[('PA', 'Patient'), ('PT', 'Physical Therapist'), ('AG', 'Agent'), ('AD', 'Admin')], default='AG', max_length=2),
-        ),
-    ]
+  operations = [
+    migrations.AddField(
+      model_name='user',
+      name='created_at',
+      field=models.DateTimeField(auto_now_add=True,
+                                 default=django.utils.timezone.now),
+      preserve_default=False,
+    ),
+    migrations.AddField(
+      model_name='user',
+      name='date_of_birth',
+      field=models.DateField(default=django.utils.timezone.now),
+      preserve_default=False,
+    ),
+    migrations.AddField(
+      model_name='user',
+      name='first_name',
+      field=models.CharField(default='Jimmy', max_length=50),
+      preserve_default=False,
+    ),
+    migrations.AddField(
+      model_name='user',
+      name='gender',
+      field=models.CharField(choices=[('F', 'Female'), ('M', 'Male')],
+                             default='M',
+                             max_length=2),
+      preserve_default=False,
+    ),
+    migrations.AddField(
+      model_name='user',
+      name='last_name',
+      field=models.CharField(default='Falon', max_length=50),
+      preserve_default=False,
+    ),
+    migrations.AddField(
+      model_name='user',
+      name='type',
+      field=models.CharField(choices=[('PA', 'Patient'),
+                                      ('PT', 'Physical Therapist'),
+                                      ('AG', 'Agent'), ('AD', 'Admin')],
+                             default='AG',
+                             max_length=2),
+    ),
+  ]

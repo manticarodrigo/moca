@@ -9,9 +9,8 @@ class MessageSerializer(serializers.ModelSerializer):
     model = Message
     fields = ("text", "created_at", "user")
 
+
 class UserSerializer(serializers.ModelSerializer):
   class Meta:
-    model = User 
+    model = User
     fields = ("username", "id")
-    
-

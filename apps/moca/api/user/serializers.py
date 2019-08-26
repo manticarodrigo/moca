@@ -4,6 +4,7 @@ from moca.models import Address
 
 User = get_user_model()
 
+
 class AddressSerializer(serializers.ModelSerializer):
   class Meta:
     model = Address
@@ -16,4 +17,3 @@ class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
     fields = ('id', 'email', 'addresses')
-

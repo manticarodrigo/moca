@@ -1,11 +1,13 @@
 from django.db import models
 from django.conf import settings
 
+
 class Conversation(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
 
   def __str__(self):
     return f"conversation {self.id}"
+
 
 class Participant(models.Model):
   conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
@@ -13,6 +15,7 @@ class Participant(models.Model):
 
   def __str__(self):
     return f"{self.user} in {self.conversation}"
+
 
 class Message(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)

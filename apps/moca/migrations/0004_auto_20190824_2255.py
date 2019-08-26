@@ -7,14 +7,15 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('moca', '0003_address'),
-    ]
+  dependencies = [
+    ('moca', '0003_address'),
+  ]
 
-    operations = [
-        migrations.AlterField(
-            model_name='participant',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
-    ]
+  operations = [
+    migrations.AlterField(
+      model_name='participant',
+      name='user',
+      field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                              to=settings.AUTH_USER_MODEL),
+    ),
+  ]

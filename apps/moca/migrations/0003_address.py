@@ -8,24 +8,31 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('moca', '0002_auto_20190822_0117'),
-    ]
+  dependencies = [
+    ('moca', '0002_auto_20190822_0117'),
+  ]
 
-    operations = [
-        migrations.CreateModel(
-            name='Address',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
-                ('street', models.CharField(max_length=50)),
-                ('zip_code', models.SmallIntegerField()),
-                ('city', models.CharField(max_length=50)),
-                ('state', models.CharField(max_length=2)),
-                ('primary', models.BooleanField()),
-                ('apartment', models.CharField(max_length=50)),
-                ('location', django.contrib.gis.db.models.fields.PointField(srid=4326)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-            ],
-        ),
-    ]
+  operations = [
+    migrations.CreateModel(
+      name='Address',
+      fields=[
+        ('id',
+         models.AutoField(auto_created=True,
+                          primary_key=True,
+                          serialize=False,
+                          verbose_name='ID')),
+        ('name', models.CharField(max_length=50)),
+        ('street', models.CharField(max_length=50)),
+        ('zip_code', models.SmallIntegerField()),
+        ('city', models.CharField(max_length=50)),
+        ('state', models.CharField(max_length=2)),
+        ('primary', models.BooleanField()),
+        ('apartment', models.CharField(max_length=50)),
+        ('location',
+         django.contrib.gis.db.models.fields.PointField(srid=4326)),
+        ('user',
+         models.ForeignKey(on_delete=django.db.models.deletion.CASCADE,
+                           to=settings.AUTH_USER_MODEL)),
+      ],
+    ),
+  ]
