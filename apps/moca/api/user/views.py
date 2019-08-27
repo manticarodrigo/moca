@@ -1,22 +1,16 @@
-from rest_framework import generics, permissions, serializers
-from rest_framework.response import Response
+from rest_framework import permissions
+from rest_framework.generics import (CreateAPIView, RetrieveAPIView, UpdateAPIView)
 
-from moca.models import Address, User
+from moca.models import User
 
 from .serializers import UserSerializer
 
 
-class UserAPIView(generics.RetrieveAPIView):
+class UserAPIView(RetrieveAPIView, CreateAPIView, UpdateAPIView):
   permission_classes = [
     permissions.IsAuthenticated,
   ]
 
+  queryset = User.objects.all()
+
   serializer_class = UserSerializer
-
-  def post(self, request):
-    serializer = self.get_serializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
-
-    serializer.save()
-
-    return Response(serializer.data)
