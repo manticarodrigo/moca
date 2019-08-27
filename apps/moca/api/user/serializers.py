@@ -11,9 +11,6 @@ class AddressSerializer(serializers.ModelSerializer):
     model = Address
     exclude = ['user']
 
-  def create(self, validated):
-    return Address.objects.create(**validated)
-
 
 class UserSerializer(serializers.ModelSerializer):
   addresses = AddressSerializer(many=True, required=True)
