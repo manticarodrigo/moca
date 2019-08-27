@@ -1,4 +1,3 @@
-from django.db import transaction
 from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
 
@@ -14,7 +13,6 @@ class UserAPIView(generics.RetrieveAPIView):
 
   serializer_class = UserSerializer
 
-  @transaction.atomic
   def post(self, request):
     serializer = self.get_serializer(data=request.data)
     serializer.is_valid(raise_exception=True)
