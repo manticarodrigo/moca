@@ -1,4 +1,0 @@
-pylint
-pylint-django
-yapf
--r requirements/prod.txt
