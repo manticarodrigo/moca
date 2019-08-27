@@ -1,13 +1,14 @@
+from knox.models import AuthToken
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 
-from knox.models import AuthToken
+from moca.api.user.serializers import UserSerializer
 
-from .serializers import UserSerializer, RegisterSerializer, LoginSerializer
+from .serializers import LoginSerializer
 
 
 class RegisterAPIView(generics.GenericAPIView):
-  serializer_class = RegisterSerializer
+  serializer_class = UserSerializer
 
   def post(self, request, *args, **kwargs):
     serializer = self.get_serializer(data=request.data)

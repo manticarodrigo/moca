@@ -1,7 +1,9 @@
 from django.db import transaction
 from rest_framework import generics, permissions, serializers
 from rest_framework.response import Response
-from moca.models import User, Address
+
+from moca.models import Address, User
+
 from .serializers import UserSerializer
 
 

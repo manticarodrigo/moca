@@ -1,5 +1,6 @@
-from rest_framework import serializers
 from django.contrib.auth import authenticate, get_user_model
+from rest_framework import serializers
+
 from moca.models import Address
 
 User = get_user_model()
@@ -32,11 +33,3 @@ class UserSerializer(serializers.ModelSerializer):
       user.addresses.add(address)
 
     return user
-
-
-class UserSerializerForRead(serializers.ModelSerializer):
-  addresses = AddressSerializer(many=True)
-
-  class Meta:
-    model = User
-    exclude = ['password']
