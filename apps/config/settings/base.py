@@ -25,6 +25,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
   # Django
+  'channels',
   'django.contrib.admin',
   'django.contrib.auth',
   'django.contrib.contenttypes',
@@ -124,3 +125,4 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # APPEND_SLASH=False
+ASGI_APPLICATION = 'moca.api.chat.routing.application'
