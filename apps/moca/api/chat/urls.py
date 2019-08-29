@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import ConversationView, ConversationListView
+
+from .views import ChatAPI, ConversationListView, ConversationView, MessagesAPI
 
 urlpatterns = [
-  path('', ConversationListView.as_view()),
-  path('<int:id>/', ConversationView.as_view())
+  path('', ChatAPI.as_view()),  # get/post new chats
+  path('<int:convid>/messages', MessagesAPI.as_view())
 ]
