@@ -9,6 +9,7 @@ class Conversation(models.Model):
     return f"conversation {self.id}"
 
 
+# TODO move this inside conversation as a ArrayField in Conversation
 class Participant(models.Model):
   conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
   user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

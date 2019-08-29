@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from rest_framework import permissions, status
+from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -89,12 +90,16 @@ class ConversationListView(APIView, PageNumberPagination):
 class ChatAPI(GenericAPIView):
   permission_classes = [permissions.IsAuthenticated]
 
+  # TODO use builtin serializer
+
   def post(self, request):
     """
     Creates a new chat
     """
+
+    # TODO get the participants from a query param, body should be empty
     participant_ids = set(request.data['participants'])
-    participant_ids.add(User.objects.get(email=request.user).id)
+    participant_ids.add(request.user.id)
 
     conversation = Conversation.objects.create()
 
@@ -113,14 +118,15 @@ class ChatAPI(GenericAPIView):
     """
     Returns a list of all conversations for the current user
     """
-    user = User.objects.get(email=request.user)
-    conversation_ids = Participant.objects.filter(user=user).values('conversation')
-    conversations = map(lambda conv: ConversationSerializer(conv).data,
-                        Conversation.objects.filter(id__in=conversation_ids))
 
-    return Response(conversations)
+    # TODO check if there's a more direct way
+    conversation_ids = Participant.objects.filter(user=request.user).values('conversation')
+    conversations = Conversation.objects.filter(id__in=conversation_ids)
+
+    return Response(ConversationSerializer(conversations, many=True).data)
 
 
+# TODO check ListCreateAPIView usage
 class MessagesAPI(GenericAPIView):
   permission_classes = [permissions.IsAuthenticated]
 
@@ -128,13 +134,12 @@ class MessagesAPI(GenericAPIView):
     """
     Sends a new message
     """
-
-    user = User.objects.get(email=request.user)
+    user = request.user
 
     conversation = Conversation.objects.get(id=convid)
-    participants = list(conversation.participant_set.values('user'))
+    is_participant = conversation.participant_set.get_queryset().filter(user=user).count() == 1
 
-    if {'user': user.id} not in participants:
+    if not is_participant:
       return Response({"error": "User not part of this conversation"},
                       status=status.HTTP_403_FORBIDDEN)
 
@@ -146,12 +151,12 @@ class MessagesAPI(GenericAPIView):
 
     # TODO(ukaya) Handle firebase here
 
+    # TODO check for a quicker way of created and/or forbidden
     return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
 
   def get(self, request, convid):
     """
     Gets all messages in a conversation
     """
-    messages = map(lambda message: MessageSerializer(message).data,
-                   Message.objects.filter(conversation__id=convid))
-    return Response({"messages": messages})
+    messages = Message.objects.filter(conversation__id=convid)
+    return Response({"messages": MessageSerializer(messages, many=True).data})
