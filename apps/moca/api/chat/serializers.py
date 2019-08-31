@@ -1,18 +1,45 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from moca.models import Conversation, Message, Participant
-
-
-class ParticipantSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = Participant
-    fields = '__all__'
+from moca.models import (AttachmentMessage, Conversation, Message,
+                         RequestMessage, ResponseMessage, TextMessage)
 
 
 class MessageSerializer(serializers.ModelSerializer):
   class Meta:
     model = Message
+    fields = '__all__'
+
+
+class RequestSerializer(serializers.ModelSerializer):
+  type = serializers.CharField(read_only=True)
+
+  class Meta:
+    model = RequestMessage
+    fields = '__all__'
+
+
+class ResponseSerializer(serializers.ModelSerializer):
+  type = serializers.CharField(read_only=True)
+
+  class Meta:
+    model = ResponseMessage
+    fields = '__all__'
+
+
+class TextMessageSerializer(serializers.ModelSerializer):
+  type = serializers.CharField(read_only=True)
+
+  class Meta:
+    model = TextMessage
+    fields = '__all__'
+
+
+class AttachmentSerializer(serializers.ModelSerializer):
+  type = serializers.CharField(read_only=True)
+
+  class Meta:
+    model = AttachmentMessage
     fields = '__all__'
 
 
@@ -23,8 +50,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-  participant_set = ParticipantSerializer(many=True)
-
   class Meta:
     model = Conversation
     fields = '__all__'

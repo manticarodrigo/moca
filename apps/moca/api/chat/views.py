@@ -1,90 +1,17 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
+from django.db import transaction
 from rest_framework import permissions, status
-from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
-from moca.models import Conversation, Message, Participant
+from moca.models import (AttachmentMessage, Conversation, Message, MessageTypes, RequestMessage,
+                         ResponseMessage, TextMessage)
 
-from .permissions import IsParticipant
-from .serializers import MessageSerializer, UserSerializer, ConversationSerializer
+from .serializers import (AttachmentSerializer, ConversationSerializer, MessageSerializer,
+                          RequestSerializer, ResponseSerializer, TextMessageSerializer,
+                          UserSerializer)
 
 User = get_user_model()
-
-
-class ConversationView(APIView, PageNumberPagination):
-  # permission_classes = [IsParticipant]
-
-  def get(self, request, id):
-    participants = [
-      UserSerializer(User.objects.get(id=participant.id)).data
-      for participant in Participant.objects.filter(conversation__id=id)
-    ]
-
-    self.check_object_permissions(request, participants)
-
-    queryset = Message.objects.filter(conversation__id=id).order_by('-created_at')
-    page = self.paginate_queryset(queryset, request, view=self)
-    serializer = MessageSerializer(page, many=True)
-
-    previous_link = self.get_previous_link()
-
-    data = {
-      "next": self.get_next_link(),
-      "previous": previous_link,
-      "count": self.page.paginator.count,
-      "messages": serializer.data
-    }
-
-    if previous_link is None:
-      data["participants"] = participants
-
-    return Response(data=data)
-
-  def post(self, request, id):
-    participants = [
-      UserSerializer(User.objects.get(id=participant.id)).data
-      for participant in Participant.objects.filter(conversation__id=id)
-    ]
-
-    self.check_object_permissions(request, participants)
-
-    conversation = Conversation.objects.get(id=id)
-    message = Message(user=request.user, conversation=conversation, text=request.data['text'])
-    message.save()
-
-    serializer = MessageSerializer(message)
-
-    return Response(serializer.data)
-
-
-class ConversationListView(APIView, PageNumberPagination):
-  def get(self, request):
-    queryset = Participant.objects.filter(user__id=request.user.id)
-
-    data = []
-
-    for participation in queryset:
-      other_participants = [
-        UserSerializer(User.objects.get(id=participant.id)).data
-        for participant in Participant.objects.filter(
-          conversation__id=participation.conversation.id) if participant.user.id != request.user.id
-      ]
-
-      latest_message = MessageSerializer(
-        Message.objects.filter(
-          conversation__id=participation.conversation.id).latest('created_at')).data
-
-      data.append({
-        "id": participation.conversation.id,
-        "other_participants": other_participants,
-        "latest_message": latest_message
-      })
-
-    return Response(data)
 
 
 class ChatAPI(GenericAPIView):
@@ -92,24 +19,25 @@ class ChatAPI(GenericAPIView):
 
   # TODO use builtin serializer
 
+  @transaction.atomic
   def post(self, request):
     """
     Creates a new chat
     """
-
     # TODO get the participants from a query param, body should be empty
     participant_ids = set(request.data['participants'])
     participant_ids.add(request.user.id)
-
     conversation = Conversation.objects.create()
 
     if len(participant_ids) < 2:
       return Response(status=400, data={"error": "Can't create a chat with yourself"})
 
     for participant_id in participant_ids:
-      new_participant = Participant.objects.create(conversation=conversation,
-                                                   user=User.objects.get(id=participant_id))
-      conversation.participant_set.add(new_participant)
+      try:
+        new_participant = User.objects.get(id=participant_id)
+        conversation.participants.add(new_participant)
+      except User.DoesNotExist:
+        return Response(status=404, data={"error": f"User with id {participant_id} not found"})
 
     conversation.save()
     return Response(ConversationSerializer(conversation).data)
@@ -118,45 +46,103 @@ class ChatAPI(GenericAPIView):
     """
     Returns a list of all conversations for the current user
     """
+    conversations = Conversation.objects.filter(participants=request.user)
 
-    # TODO check if there's a more direct way
-    conversation_ids = Participant.objects.filter(user=request.user).values('conversation')
-    conversations = Conversation.objects.filter(id__in=conversation_ids)
-
-    return Response(ConversationSerializer(conversations, many=True).data)
+    return Response(ConversationSerializer(conversations, many=True).data,
+                    status=status.HTTP_201_CREATED)
 
 
 # TODO check ListCreateAPIView usage
 class MessagesAPI(GenericAPIView):
   permission_classes = [permissions.IsAuthenticated]
 
+  @staticmethod
+  def handle_request_message(sender, conversation, message):
+    new_message = RequestMessage.objects.create(user=sender,
+                                                conversation=conversation,
+                                                options=message['options'])
+    new_message.save()
+    return RequestSerializer(new_message).data
+
+  @staticmethod
+  @transaction.atomic
+  def handle_response_message(sender, conversation, message):
+    # TODO this will change after RequestMessage changes.
+    # TODO use a serializer here
+    reply_to = message['reply_to']
+    selection = message['selection']
+
+    request = RequestMessage.objects.filter(id=reply_to).first()
+    answer = request.options[selection]
+
+    if request.responsemessage_set.count() > 0:
+      # TODO this should be an exception, or the callee needs to handle different kinds
+      # of return values
+      # for now it's bogus. follow up coming soon
+      return {"error": f"This request has a reply already with id {request.responsemessage_set.first()}"}
+
+    responseMessage = ResponseMessage.objects.create(user=sender,
+                                                     conversation=conversation,
+                                                     reply_to=request,
+                                                     selection=selection)
+
+    if answer == 'ACCEPT':
+      # Create the appointment here based on the request being an appointment and the date
+      # of the request
+      pass
+
+    responseMessage.save()
+
+    return ResponseSerializer(responseMessage).data
+
+  @staticmethod
+  def handle_attachment_message(sender, conversation, message):
+    return AttachmentSerializer(message).data
+
+  @staticmethod
+  def handle_text_message(sender, conversation, message):
+    new_message = TextMessage.objects.create(user=sender,
+                                             conversation=conversation,
+                                             text=message['text'])
+    new_message.save()
+    return TextMessageSerializer(new_message).data
+
   def post(self, request, convid):
     """
     Sends a new message
     """
     user = request.user
+    conversation = Conversation.objects.filter(id=convid, participants=user).first()
 
-    conversation = Conversation.objects.get(id=convid)
-    is_participant = conversation.participant_set.get_queryset().filter(user=user).count() == 1
+    if not conversation:
+      return Response({"error": "No such conversation for the current user"},
+                      status=status.HTTP_404_NOT_FOUND)
 
-    if not is_participant:
-      return Response({"error": "User not part of this conversation"},
-                      status=status.HTTP_403_FORBIDDEN)
+    created = None
+    message_data = {"sender": user, "conversation": conversation, "message": request.data['data']}
+    message_type = request.data['type']
 
-    message = Message.objects.create(conversation=conversation,
-                                     text=request.data['message'],
-                                     user=user)
-
-    message.save()
+    if message_type == MessageTypes.REQUEST:
+      created = MessagesAPI.handle_request_message(**message_data)
+    elif message_type == MessageTypes.RESPONSE:
+      created = MessagesAPI.handle_response_message(**message_data)
+    elif message_type == MessageTypes.TEXT:
+      created = MessagesAPI.handle_text_message(**message_data)
+    elif message_type == MessageTypes.ATTACHMENT:
+      created = MessagesAPI.handle_attachment_message(**message_data)
+    else:
+      return Response({"error": "Invalid message type"}, status=status.HTTP_400_BAD_REQUEST)
 
     # TODO(ukaya) Handle firebase here
 
     # TODO check for a quicker way of created and/or forbidden
-    return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+    return Response(created, status=status.HTTP_201_CREATED)
 
   def get(self, request, convid):
     """
     Gets all messages in a conversation
     """
+    # TODO fix this to use generic foreign keys to figure out how to serialize each message based
+    # on its type
     messages = Message.objects.filter(conversation__id=convid)
     return Response({"messages": MessageSerializer(messages, many=True).data})
