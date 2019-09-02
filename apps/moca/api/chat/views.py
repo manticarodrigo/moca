@@ -4,16 +4,13 @@ from rest_framework import permissions, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from moca.models import (AttachmentMessage, Conversation, Message,
-                         MessageTypes, RequestMessage, ResponseMessage,
-                         TextMessage)
+from moca.models import (AttachmentMessage, Conversation, Message, MessageTypes, RequestMessage,
+                         ResponseMessage, TextMessage)
 
-from .errors import (ConversationNotFound, InvalidMessageType, RequestNotFound,
-                     ResponseConflict, SelfChatNotAllowed, UserNotFound)
-from .serializers import (AttachmentSerializer, ConversationSerializer,
-                          MessageSerializer, RequestSerializer,
-                          ResponseSerializer, TextMessageSerializer,
-                          UserSerializer)
+from .errors import (ConversationNotFound, InvalidMessageType, RequestNotFound, ResponseConflict,
+                     SelfChatNotAllowed, UserNotFound)
+from .serializers import (AttachmentSerializer, ConversationSerializer, MessageSerializer,
+                          RequestSerializer, ResponseSerializer, TextMessageSerializer)
 
 User = get_user_model()
 
@@ -115,19 +112,9 @@ class MessagesAPI(GenericAPIView):
     new_message.save()
     return TextMessageSerializer(new_message).data
 
-  def post(self, request, convid):
-    """
-    Sends a new message
-    """
-    user = request.user
-    conversation = Conversation.objects.filter(id=convid, participants=user).first()
-
-    if not conversation:
-      raise ConversationNotFound(convid)
-
+  @staticmethod
+  def handle_message(message_type, message_data):
     created = None
-    message_data = {"sender": user, "conversation": conversation, "message": request.data['data']}
-    message_type = request.data['type']
 
     if message_type == MessageTypes.REQUEST:
       created = MessagesAPI.handle_request_message(**message_data)
@@ -140,6 +127,23 @@ class MessagesAPI(GenericAPIView):
     else:
       raise InvalidMessageType(message_type)
 
+    return created
+
+  def post(self, request, convid):
+    """
+    Sends a new message
+    """
+    user = request.user
+    conversation = Conversation.objects.filter(id=convid, participants=user).first()
+
+    if not conversation:
+      raise ConversationNotFound(convid)
+
+    message_data = {"sender": user, "conversation": conversation, "message": request.data['data']}
+    message_type = request.data['type']
+
+    created = MessagesAPI.handle_message(message_type, message_data)
+
     # TODO(ukaya) Handle firebase here
 
     # TODO check for a quicker way of created and/or forbidden
@@ -151,5 +155,16 @@ class MessagesAPI(GenericAPIView):
     """
     # TODO fix this to use generic foreign keys to figure out how to serialize each message based
     # on its type
-    messages = Message.objects.filter(conversation__id=convid)
-    return Response({"messages": MessageSerializer(messages, many=True).data})
+
+    text_messages = TextMessage.objects.filter(conversation__id=convid)
+    request_messages = RequestMessage.objects.filter(conversation__id=convid)
+    response_messages = ResponseMessage.objects.filter(conversation__id=convid)
+    attachment_messages = AttachmentMessage.objects.filter(conversation__id=convid)
+
+    text_messages = TextMessageSerializer(text_messages, many=True).data
+    request_messages = RequestSerializer(request_messages, many=True).data
+    response_messages = ResponseSerializer(response_messages, many=True).data
+    attachment_messages = AttachmentSerializer(attachment_messages, many=True).data
+
+    return Response(
+      {"messages": text_messages + request_messages + response_messages + attachment_messages})
