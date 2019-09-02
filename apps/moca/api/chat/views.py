@@ -11,7 +11,36 @@ from .serializers import (AttachmentSerializer, ConversationSerializer, MessageS
                           RequestSerializer, ResponseSerializer, TextMessageSerializer,
                           UserSerializer)
 
+from rest_framework.exceptions import APIException, NotFound
+
 User = get_user_model()
+
+
+class SelfChatNotAllowed(APIException):
+  status_code = status.HTTP_400_BAD_REQUEST
+  default_detail = "A chat with one participant is not allowed"
+
+
+class UserNotFound(NotFound):
+  def __init__(self, id):
+    self.detail = f'User with id {id} not found'
+
+
+class ConversationNotFound(NotFound):
+  def __init__(self, id):
+    self.detail = f'Conversation with id {id} not found'
+
+
+class RequestNotFound(NotFound):
+  def __init__(self, id, convid):
+    self.detail = f'No request with id {id} found in conversation with id {convid}'
+
+
+class ResponseConflict(APIException):
+  status_code = status.HTTP_409_CONFLICT
+
+  def __init__(self, requestId, existingResponseId):
+    self.detail = f'A response for request with id {requestId} is already provided in response {existingResponseId}'
 
 
 class ChatAPI(GenericAPIView):
@@ -30,14 +59,14 @@ class ChatAPI(GenericAPIView):
     conversation = Conversation.objects.create()
 
     if len(participant_ids) < 2:
-      return Response(status=400, data={"error": "Can't create a chat with yourself"})
+      raise SelfChatNotAllowed()
 
     for participant_id in participant_ids:
       try:
         new_participant = User.objects.get(id=participant_id)
         conversation.participants.add(new_participant)
       except User.DoesNotExist:
-        return Response(status=404, data={"error": f"User with id {participant_id} not found"})
+        raise UserNotFound(participant_id)
 
     conversation.save()
     return Response(ConversationSerializer(conversation).data)
@@ -72,28 +101,30 @@ class MessagesAPI(GenericAPIView):
     reply_to = message['reply_to']
     selection = message['selection']
 
-    request = RequestMessage.objects.filter(id=reply_to).first()
+    request = RequestMessage.objects.filter(id=reply_to, conversation=conversation).first()
+
+    print(request.responsemessage_set.count())
+
+    if not request:
+      raise RequestNotFound(reply_to, conversation.id)
+    elif request.responsemessage_set.count() > 0:
+      raise ResponseConflict(request.id, request.responsemessage_set.first().id)
+
     answer = request.options[selection]
 
-    if request.responsemessage_set.count() > 0:
-      # TODO this should be an exception, or the callee needs to handle different kinds
-      # of return values
-      # for now it's bogus. follow up coming soon
-      return {"error": f"This request has a reply already with id {request.responsemessage_set.first()}"}
-
-    responseMessage = ResponseMessage.objects.create(user=sender,
-                                                     conversation=conversation,
-                                                     reply_to=request,
-                                                     selection=selection)
+    response_message = ResponseMessage.objects.create(user=sender,
+                                                      conversation=conversation,
+                                                      reply_to=request,
+                                                      selection=selection)
 
     if answer == 'ACCEPT':
       # Create the appointment here based on the request being an appointment and the date
       # of the request
       pass
 
-    responseMessage.save()
+    response_message.save()
 
-    return ResponseSerializer(responseMessage).data
+    return ResponseSerializer(response_message).data
 
   @staticmethod
   def handle_attachment_message(sender, conversation, message):
@@ -115,8 +146,7 @@ class MessagesAPI(GenericAPIView):
     conversation = Conversation.objects.filter(id=convid, participants=user).first()
 
     if not conversation:
-      return Response({"error": "No such conversation for the current user"},
-                      status=status.HTTP_404_NOT_FOUND)
+      raise ConversationNotFound(convid)
 
     created = None
     message_data = {"sender": user, "conversation": conversation, "message": request.data['data']}
