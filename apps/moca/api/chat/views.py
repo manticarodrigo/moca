@@ -39,8 +39,15 @@ class RequestNotFound(NotFound):
 class ResponseConflict(APIException):
   status_code = status.HTTP_409_CONFLICT
 
-  def __init__(self, requestId, existingResponseId):
-    self.detail = f'A response for request with id {requestId} is already provided in response {existingResponseId}'
+  def __init__(self, request_id, existing_response_id):
+    self.detail = f'A response for request with id {request_id} is already provided in response {existing_response_id}'
+
+
+class InvalidMessageType(APIException):
+  status_code = status.HTTP_400_BAD_REQUEST
+
+  def __init__(self, given_type):
+    self.detail = f'Invalid message type \'{given_type}\''
 
 
 class ChatAPI(GenericAPIView):
@@ -161,7 +168,7 @@ class MessagesAPI(GenericAPIView):
     elif message_type == MessageTypes.ATTACHMENT:
       created = MessagesAPI.handle_attachment_message(**message_data)
     else:
-      return Response({"error": "Invalid message type"}, status=status.HTTP_400_BAD_REQUEST)
+      raise InvalidMessageType(message_type)
 
     # TODO(ukaya) Handle firebase here
 
