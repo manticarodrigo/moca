@@ -4,50 +4,18 @@ from rest_framework import permissions, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from moca.models import (AttachmentMessage, Conversation, Message, MessageTypes, RequestMessage,
-                         ResponseMessage, TextMessage)
+from moca.models import (AttachmentMessage, Conversation, Message,
+                         MessageTypes, RequestMessage, ResponseMessage,
+                         TextMessage)
 
-from .serializers import (AttachmentSerializer, ConversationSerializer, MessageSerializer,
-                          RequestSerializer, ResponseSerializer, TextMessageSerializer,
+from .errors import (ConversationNotFound, InvalidMessageType, RequestNotFound,
+                     ResponseConflict, SelfChatNotAllowed, UserNotFound)
+from .serializers import (AttachmentSerializer, ConversationSerializer,
+                          MessageSerializer, RequestSerializer,
+                          ResponseSerializer, TextMessageSerializer,
                           UserSerializer)
 
-from rest_framework.exceptions import APIException, NotFound
-
 User = get_user_model()
-
-
-class SelfChatNotAllowed(APIException):
-  status_code = status.HTTP_400_BAD_REQUEST
-  default_detail = "A chat with one participant is not allowed"
-
-
-class UserNotFound(NotFound):
-  def __init__(self, id):
-    self.detail = f'User with id {id} not found'
-
-
-class ConversationNotFound(NotFound):
-  def __init__(self, id):
-    self.detail = f'Conversation with id {id} not found'
-
-
-class RequestNotFound(NotFound):
-  def __init__(self, id, convid):
-    self.detail = f'No request with id {id} found in conversation with id {convid}'
-
-
-class ResponseConflict(APIException):
-  status_code = status.HTTP_409_CONFLICT
-
-  def __init__(self, request_id, existing_response_id):
-    self.detail = f'A response for request with id {request_id} is already provided in response {existing_response_id}'
-
-
-class InvalidMessageType(APIException):
-  status_code = status.HTTP_400_BAD_REQUEST
-
-  def __init__(self, given_type):
-    self.detail = f'Invalid message type \'{given_type}\''
 
 
 class ChatAPI(GenericAPIView):
@@ -114,8 +82,10 @@ class MessagesAPI(GenericAPIView):
 
     if not request:
       raise RequestNotFound(reply_to, conversation.id)
-    elif request.responsemessage_set.count() > 0:
-      raise ResponseConflict(request.id, request.responsemessage_set.first().id)
+
+    if request.responsemessage_set.count() > 0:
+      raise ResponseConflict(request_id=request.id,
+                             existing_response_id=request.responsemessage_set.first().id)
 
     answer = request.options[selection]
 
