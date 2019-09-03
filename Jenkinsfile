@@ -7,7 +7,7 @@ node {
     PATH = './integration/wait-for-it:$PATH'
   }
 
-  sh label: 'Start db and service'  , script: 'docker-compose up -d'
+  sh label: 'build db and service'  , script: 'docker-compose build --no-cache'
 
   DB_CONNECTION = sh(
     returnStdout: true,
