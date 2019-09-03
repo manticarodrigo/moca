@@ -9,7 +9,7 @@ node {
 
   sh 'ls -la'
   sh label: 'build db and service'  , script: 'docker-compose build --pull --force-rm --no-cache'
-  sh label: 'Start db and service'  , script: 'docker-compose up --force-recreate'
+  sh label: 'Start db and service'  , script: 'docker-compose up -d'
 
   DB_CONNECTION = sh(
     returnStdout: true,
