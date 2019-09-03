@@ -1,7 +1,13 @@
 properties([gitLabConnection('jenkins-gitlab')])
 
 node {
-  checkout scm
+  checkout([
+    $class: 'GitSCM',
+    branches: scm.branches,
+    doGenerateSubmoduleConfigurations: true,
+    extensions: scm.extensions + [[$class: 'SubmoduleOption', parentCredentials: false]],
+    userRemoteConfigs: scm.userRemoteConfigs
+  ])
 
   environment {
     PATH = './integration/wait-for-it:$PATH'
