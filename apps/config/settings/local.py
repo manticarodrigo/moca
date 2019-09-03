@@ -11,7 +11,7 @@ DATABASES = {
     'NAME': 'moca_db',
     'USER': 'moca_user',
     'PASSWORD': 'moca_password',
-    'HOST': 'db',  # set in docker-compose.yml
+    'HOST': 'moca_db',  # set in docker-compose.yml
     'PORT': 5432
   }
 }

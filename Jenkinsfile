@@ -7,12 +7,13 @@ node {
     PATH = './integration/wait-for-it:$PATH'
   }
 
-  sh label: 'build db and service'  , script: 'docker-compose build --no-cache'
-  sh label: 'Start db and service'  , script: 'docker-compose up'
+  sh 'ls -la'
+  sh label: 'build db and service'  , script: 'docker-compose build --pull --force-rm --no-cache'
+  sh label: 'Start db and service'  , script: 'docker-compose up --force-recreate'
 
   DB_CONNECTION = sh(
     returnStdout: true,
-    script: 'docker-compose port db 5432'
+    script: 'docker-compose port moca_db 5432'
   )
 
   SERVICE_CONNECTION = sh(
