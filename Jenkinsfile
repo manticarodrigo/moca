@@ -9,14 +9,14 @@ node {
 
   DB_CONNECTION = sh(
     returnStdout: true,
-    script: 'docker-compose port moca_db 5432'
+    script: 'docker-compose port moca_db 5432 | cut -d: -f2'
   )
 
   SERVICE_CONNECTION = sh(
     returnStdout: true,
-    script: 'docker-compose port moca_service 8000'
+    script: 'docker-compose port moca_service 8000 | cut -d: -f2'
   )
 
-  sh label: 'Wait for db'           , script: """./integration/wait-for-it/wait-for-it.sh ${DB_CONNECTION}"""
-  sh label: 'Wait for moca service' , script: """./integration/wait-for-it/wait-for-it.sh ${SERVICE_CONNECTION}"""
+  sh label: 'Wait for db'           , script: """./integration/wait-for-it/wait-for-it.sh -p ${DB_CONNECTION}"""
+  sh label: 'Wait for moca service' , script: """./integration/wait-for-it/wait-for-it.sh -p ${SERVICE_CONNECTION}"""
 }
