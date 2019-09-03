@@ -2,11 +2,7 @@ properties([gitLabConnection('jenkins-gitlab')])
 
 node {
   checkout([
-    $class: 'GitSCM',
-    branches: scm.branches,
-    doGenerateSubmoduleConfigurations: true,
-    extensions: scm.extensions + [[$class: 'SubmoduleOption', parentCredentials: false]],
-    userRemoteConfigs: scm.userRemoteConfigs
+    doGenerateSubmoduleConfigurations: true
   ])
 
   environment {
