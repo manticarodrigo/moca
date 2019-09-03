@@ -17,6 +17,6 @@ node {
     script: 'docker-compose port moca_service 8000'
   )
 
-  sh label: 'Wait for db'           , script: './integration/wait-for-it/wait-for-it.sh $DB_CONNECTION'
-  sh label: 'Wait for moca service' , script: './integration/wait-for-it/wait-for-it.sh $SERVICE_CONNECTION'
+  sh label: 'Wait for db'           , script: './integration/wait-for-it/wait-for-it.sh ${DB_CONNECTION}'
+  sh label: 'Wait for moca service' , script: './integration/wait-for-it/wait-for-it.sh ${SERVICE_CONNECTION}'
 }
