@@ -19,10 +19,9 @@ services:
     expose:
       - 5432
     ports:
-      - 5432:5432
+      - 5432
 
-  web:
-    container_name: 'moca_service'
+  moca_service:
     build: .
     image: moca_service:latest
     command: |
@@ -40,7 +39,9 @@ services:
         source: python-libs
         target: /usr/lib/python3.7
         consistency: consistent
+    expose:
+      - 8000
     ports:
-      - "8000:8000"
+      - 8000
     depends_on:
       - db
