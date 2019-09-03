@@ -1,9 +1,7 @@
 properties([gitLabConnection('jenkins-gitlab')])
 
 node {
-  checkout([
-    doGenerateSubmoduleConfigurations: true
-  ])
+  checkout scm
 
   environment {
     PATH = './integration/wait-for-it:$PATH'
