@@ -8,6 +8,7 @@ node {
   }
 
   sh label: 'build db and service'  , script: 'docker-compose build --no-cache'
+  sh label: 'Start db and service'  , script: 'docker-compose up'
 
   DB_CONNECTION = sh(
     returnStdout: true,
