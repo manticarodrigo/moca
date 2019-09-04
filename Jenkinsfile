@@ -3,18 +3,19 @@ properties([gitLabConnection('jenkins-gitlab')])
 node {
   checkout scm
 
-  sh 'ls -la'
-  sh label: 'build db and service'  , script: 'docker-compose build --pull --force-rm --no-cache'
-  sh label: 'Start db and service'  , script: 'docker-compose up -d'
+  composeCommand = """docker-compose -p ${env.BRANCH_NAME}_${env.BUILD_ID}"""
+
+  sh label: 'build db and service', script: """${composeCommand} build --pull --force-rm --no-cache"""
+  sh label: 'Start db and service', script: """${composeCommand} up -d"""
 
   DB_PORT = sh(
     returnStdout: true,
-    script: 'docker-compose port moca_db 5432 | cut -d: -f2'
+    script: """${composeCommand} port moca_db 5432 | cut -d: -f2"""
   )
 
   SERVICE_PORT = sh(
     returnStdout: true,
-    script: 'docker-compose port moca_service 8000 | cut -d: -f2'
+    script: """${composeCommand} port moca_service 8000 | cut -d: -f2"""
   )
 
   sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh localhost:${DB_PORT}"""
@@ -22,5 +23,5 @@ node {
 
   sh label: 'Run all tests', script: 'echo Tests go here'
 
-  sh label: 'Tear down everything', script: 'docker-compose rm -s'
+  sh label: 'Tear down everything', script: """${composeCommand} rm -s"""
 }
