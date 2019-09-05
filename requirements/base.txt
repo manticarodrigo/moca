@@ -5,3 +5,5 @@ django-admin==1.3.2
 djangorestframework==3.9.4
 djangorestframework-camel-case
 django-cors-headers
+django-rest-knox
+djangorestframework-gis

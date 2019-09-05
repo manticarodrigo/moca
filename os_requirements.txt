@@ -2,3 +2,4 @@ python
 python-pip
 postgresql-libs
 gcc
+gdal

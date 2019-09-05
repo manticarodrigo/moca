@@ -1,5 +1,6 @@
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
+
 class IsParticipant(IsAuthenticated):
   message = 'You are not a participant in this conversation.'
 

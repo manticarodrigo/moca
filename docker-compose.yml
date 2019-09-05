@@ -8,7 +8,7 @@ volumes:
 services:
   db:
     container_name: 'moca_db'
-    image: postgres
+    image: mdillon/postgis
     restart: always
     environment:
       - POSTGRES_USER=moca_user
