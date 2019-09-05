@@ -1,4 +1,4 @@
-properties([gitLabConnection('jenkins-gitlab')])
+properties([gitLabConnection('approdite-gitlab')])
 
 node {
   checkout scm
