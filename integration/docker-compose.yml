@@ -19,7 +19,9 @@ services:
       - 5432
 
   moca_service:
-    build: .
+    build:
+      context: .
+      dockerfile: integration/docker-compose.yml
     image: moca_service:latest
     command: |
       bash -c "

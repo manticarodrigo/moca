@@ -3,7 +3,7 @@ properties([gitLabConnection('approdite-gitlab')])
 node {
   checkout scm
 
-  composeCommand = """docker-compose -p ${env.BRANCH_NAME}_${env.BUILD_ID}"""
+  composeCommand = """docker-compose -p ${env.BRANCH_NAME}_${env.BUILD_ID} -f integration/docker-compose.yml"""
 
   gitlabBuilds(builds: ["build", "test"]) {
     stage("build") {
