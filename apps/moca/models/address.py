@@ -15,7 +15,13 @@ class Address(models.Model):
                            related_name="addresses",
                            on_delete=models.CASCADE)
 
-  # street = models.CharField(max_length=50)
+  def __str__(self):
+      return f"name: {self.name},text: {self.text}, " \
+             f"primary:{self.primary},location:{self.location}"\
+             + self.location
+
+      # street = models.CharField(max_length=50)
+
   # zip_code = models.SmallIntegerField()
   # city = models.CharField(max_length=50)
   # state = models.CharField(max_length=2)
