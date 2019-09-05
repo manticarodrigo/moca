@@ -21,7 +21,7 @@ services:
   moca_service:
     build:
       context: .
-      dockerfile: integration/docker-compose.yml
+      dockerfile: integration/Dockerfile
     image: moca_service:latest
     command: |
       bash -c "
