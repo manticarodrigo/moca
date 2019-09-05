@@ -20,8 +20,7 @@ services:
 
   moca_service:
     build:
-      context: .
-      dockerfile: integration/Dockerfile
+      context: ..
     image: moca_service:latest
     command: |
       bash -c "
