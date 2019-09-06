@@ -3,7 +3,7 @@ properties([gitLabConnection('approdite-gitlab')])
 node {
   checkout scm
 
-  composeCommand = """docker-compose -p ${env.BRANCH_NAME}_${env.BUILD_ID} -f integration/docker-compose.yml"""
+  composeCommand = """docker-compose -f integration/docker-compose.yml -p ${env.BRANCH_NAME}_${env.BUILD_ID}"""
 
   gitlabBuilds(builds: ["build", "test"]) {
     stage("build") {
@@ -29,8 +29,12 @@ node {
         sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh localhost:${DB_PORT}"""
         sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh localhost:${SERVICE_PORT}"""
 
-        sh label: 'Run all tests', script: 'echo Tests go here'
+        sh label: 'Run all tests', script: 'exit 1'
+      }
+    }
 
+    post {
+      always {
         sh label: 'Tear down everything', script: """${composeCommand} rm -s"""
       }
     }
