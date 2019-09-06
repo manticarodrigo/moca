@@ -1,10 +1,5 @@
 version: '3.7'
 
-volumes:
-  moca-db-volume:
-  arch-packages-cache:
-  python-libs:
-
 services:
   moca_db:
     image: mdillon/postgis
