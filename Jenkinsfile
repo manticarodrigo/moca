@@ -4,7 +4,7 @@ pipeline {
   agent any
 
   stages {
-    stage("Minding my own business here...") {
+    stage("Build and test") {
 
       steps {
         script {
@@ -36,7 +36,7 @@ pipeline {
                 sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh localhost:${DB_PORT}"""
                 sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh localhost:${SERVICE_PORT}"""
 
-                sh label: 'Run all tests', script: 'exit 1'
+                sh label: 'Run all tests', script: 'echo Tests go here'
               }
             }
           }
