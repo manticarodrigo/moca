@@ -11,38 +11,11 @@ class AddressSerializer(serializers.ModelSerializer):
         model = Address
         fields = '__all__'
 
-    def create(self, validated_data):
-        return Address.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.primary = validated_data.get('primary', instance.primary)
-        instance.apartment = validated_data.get('apartment', instance.apartment)
-        instance.location = validated_data.get('location', instance.location)
-        instance.user = validated_data.get('user', instance.user)
-        instance.save()
-        return instance
-
 
 class FCMDeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = FCMDevice
-        exclude = ['user']
-
-    def create(self, validated_data):
-        return FCMDevice.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        print(instance.user)
-        instance.registration_id = validated_data.get('registration_id', instance.registration_id)
-        instance.name = validated_data.get('name', instance.name)
-        instance.active = validated_data.get('active', instance.active)
-        instance.user = validated_data.get('user', instance.user)
-        instance.device_id = validated_data.get('device_id', instance.device_id)
-        instance.type = validated_data.get('type', instance.type)
-        instance.save()
-        return instance
+        fields = '__all__'
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -60,6 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
         fcm_device = validated.pop('fcmdevice_set')
         user = User.objects.create_user(**validated)
         for address in addresses:
+            print('in user create while running create')
             address = Address.objects.create(user=user, **address)
             user.addresses.add(address)
 
@@ -68,12 +42,10 @@ class UserSerializer(serializers.ModelSerializer):
             user.fcmdevice_set.add(device)
         return user
 
-
-class UserSerializerForUpdate(serializers.ModelSerializer):
-    addresses = AddressSerializer(many=True, required=True)
-    fcmdevice_set = FCMDeviceSerializer(many=True, required=True)
-
-    class Meta:
-        model = User
-        fields = '__all__'
-        depth = 1
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.gender = validated_data.get('gender', instance.gender)
+        instance.date_of_birth = validated_data.get('date_of_birth', instance.date_of_birth)
+        instance.save()
+        return instance
