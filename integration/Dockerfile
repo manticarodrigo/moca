@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt /app/
 COPY os_requirements.txt /app/
 COPY requirements /app/requirements
-COPY apps apps
 COPY integration/wait-for-it/wait-for-it.sh wait-for-it.sh
 RUN xargs -a /app/os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --force --noconfirm
 RUN pip install -r /app/requirements.txt --exists-action i
+COPY apps apps
