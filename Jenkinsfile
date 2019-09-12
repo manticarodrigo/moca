@@ -4,15 +4,14 @@ pipeline {
   agent any
 
   stages {
-    stage("Build and test") {
-
+    stage("Build") {
       steps {
         script {
           checkout scm
 
           composeCommand = """docker-compose -f ./integration/docker-compose.yml -p ${env.BRANCH_NAME}_${env.BUILD_ID}"""
 
-          gitlabBuilds(builds: ["build", "test"]) {
+          gitlabBuilds(builds: ["build"]) {
             stage("build") {
               gitlabCommitStatus("build") {
                 sh label: 'build db and service', script: """${composeCommand} build --pull"""
@@ -30,15 +29,26 @@ pipeline {
               script: """${composeCommand} port moca_service 8000 | cut -d: -f2"""
             )
 
-            stage("test") {
-              gitlabCommitStatus("test") {
+          }
+        }
+      }
+    }
 
-                sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh localhost:${DB_PORT}"""
-                sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh localhost:${SERVICE_PORT}"""
+    stage("test") {
+      agent {
+        dockerfile {
+          filename 'Dockerfile.tester'
+          dir './integration'
+        }
+      }
 
-                sh label: 'Run all tests', script: 'echo Tests go here'
-              }
-            }
+      steps {
+        script {
+          sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh localhost:${DB_PORT}"""
+          sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh localhost:${SERVICE_PORT}"""
+
+          withEnv(["""service=http://${MOCA_SERVICE}"""]) {
+            sh label: 'Run all tests', script: "tavern-ci integration/tests/test_*.yaml"
           }
         }
       }

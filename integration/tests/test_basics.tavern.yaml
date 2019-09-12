@@ -1,0 +1,42 @@
+test_name: Register a new user
+
+stages:
+  - name: register
+    request:
+      url: "{tavern.env_vars.service:s}/api/authenticate/register"
+      method: POST
+      json:
+        email: fo1obar3112@world.com
+        firstName: Jimmy
+        lastName: Falon
+        gender: M
+        dateOfBirth: '1990-01-01'
+        type: PA
+        password: asdbfasdcasd
+        addresses:
+        - name: Home
+          text: 12345, high way to hell
+          apartment: '666'
+          primary: true
+          location:
+            type: Point
+            coordinates:
+            - 125.6
+            - 10.1
+        - name: Home
+          text: 12345, high way to hell
+          apartment: '666'
+          primary: true
+          location:
+            type: Point
+            coordinates:
+            - 125.6
+            - 10.1
+    response:
+      status_code: 200
+      body:
+        user:
+          id: !anyint
+      save:
+        body:
+          user_id: user.id
