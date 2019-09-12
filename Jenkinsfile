@@ -60,5 +60,10 @@ pipeline {
     always {
       sh label: 'Tear down everything', script: """${composeCommand} rm -s"""
     }
+
+    unsuccessful {
+      sh label: 'Service logs', script: """${composeCommand} logs moca_service"""
+      sh label: 'DB logs', script: """${composeCommand} logs moca_db"""
+    }
   }
 }
