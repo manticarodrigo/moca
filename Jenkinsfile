@@ -39,6 +39,7 @@ pipeline {
         dockerfile {
           filename 'Dockerfile.tester'
           dir './integration'
+          args '--network host'
         }
       }
 
