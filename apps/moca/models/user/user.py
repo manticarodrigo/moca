@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.postgres.fields import JSONField
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
@@ -63,10 +64,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         (ADMIN, "Admin"),
     ]
 
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    gender = models.CharField(max_length=2, choices=GENDERS)
-    date_of_birth = models.DateField()
+    first_name = models.CharField(null=True, blank=True, max_length=50)
+    last_name = models.CharField(null=True, blank=True, max_length=50)
+    gender = models.CharField(max_length=2, choices=GENDERS, null=True, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     type = models.CharField(max_length=2, choices=USER_TYPES, default=AGENT)
 
@@ -78,7 +79,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     is_active = models.BooleanField(
         _("active"),
-        default=True,
+        default=False,
         help_text=_("Designates whether this user should be treated as active. "
                     "Unselect this instead of deleting accounts."),
     )
@@ -95,3 +96,21 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.email
+
+
+class Patient(User):
+    pass
+
+
+class Therapist(User):
+    AVAILABLE, BUSY = 'A', 'B'
+    QUALIFICATIONS = ['Ankle/Foot', 'Arm', 'Hip', 'Knee', 'Lower Back', 'Neck', 'Pelvis', 'Shoulder', 'Upper Back',
+                      'Other']
+    STATUS = [(AVAILABLE, 'Available'), (BUSY, 'Busy')]
+    bio = models.CharField(max_length=200, blank=True)
+    cert_date = models.DateField(blank=True, null=True)
+    operation_radius = models.IntegerField(max_length=2, default=10)
+    qualifications = models.ArrayField(models.CharField(max_length=30), null=True, blank=True,
+                                       choices=QUALIFICATIONS)
+    interests = models.CharField(max_length=100)
+    status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
