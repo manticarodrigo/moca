@@ -19,14 +19,14 @@ pipeline {
               }
             }
 
-            DB_PORT = sh(
+            DB_SERVICE = sh(
               returnStdout: true,
-              script: """${composeCommand} port moca_db 5432 | cut -d: -f2"""
+              script: """${composeCommand} port moca_db 5432"""
             )
 
-            SERVICE_PORT = sh(
+            MOCA_SERVICE = sh(
               returnStdout: true,
-              script: """${composeCommand} port moca_service 8000 | cut -d: -f2"""
+              script: """${composeCommand} port moca_service 8000"""
             )
 
           }
@@ -44,8 +44,8 @@ pipeline {
 
       steps {
         script {
-          sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh localhost:${DB_PORT}"""
-          sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh localhost:${SERVICE_PORT}"""
+          sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh ${DB_SERVICE}"""
+          sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh ${MOCA_SERVICE}"""
 
           withEnv(["""service=http://${MOCA_SERVICE}"""]) {
             sh label: 'Run all tests', script: "tavern-ci integration/tests/test_*.yaml"
