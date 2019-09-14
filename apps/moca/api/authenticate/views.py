@@ -2,13 +2,14 @@ from knox.models import AuthToken
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 
-from moca.api.user.serializers import PatientSerializer
+from moca.api.user.serializers import UserSerializer
 
 from .serializers import LoginSerializer
 
 
 class RegisterAPIView(generics.GenericAPIView):
-  serializer_class = PatientSerializer
+  serializer_class = UserSerializer
+
 
 class LoginAPIView(generics.GenericAPIView):
   serializer_class = LoginSerializer
@@ -18,6 +19,6 @@ class LoginAPIView(generics.GenericAPIView):
     serializer.is_valid(raise_exception=True)
     user = serializer.validated_data
     return Response({
-      "user": PatientSerializer(user, context=self.get_serializer_context()).data,
+      "user": UserSerializer(user, context=self.get_serializer_context()).data,
       "token": AuthToken.objects.create(user)[1]
     })
