@@ -1,3 +1,4 @@
+from django.forms.models import model_to_dict
 from django.http import Http404
 from knox.models import AuthToken
 from rest_framework import status
@@ -12,23 +13,32 @@ from django.shortcuts import get_object_or_404
 
 from moca.models import User
 from moca.models.user import Patient
-from .serializers import AddressSerializer, FCMDeviceSerializer, PatientSerializer, TherapistSerializer
-from .serializers import UserSerializer
+from .serializers import AddressSerializer, FCMDeviceSerializer, PatientSerializer, TherapistSerializer, UserSerializer, \
+  UserRequestSerializer
+from .serializers import PatientSerializer
 
 
 # {{ENV}}/api/user/patient
 class PatientAPIView(APIView):
   def post(self, request, format=None):
-    user_serializer = UserSerializer(data=request.data)
-    if not user_serializer.is_valid():
-      return Response(user_serializer.errors, status.HTTP_400_BAD_REQUEST)
-    user = user_serializer.save()
-    print('patientpost1')
-    patient = Patient.objects.get_patient(id=user.patient)
-    return Response({
-      "user": PatientSerializer(patient).data,
-      "token": AuthToken.objects.create(user)[1]
-    })
+
+    print(f'patientpost0 REQUEST.DATA : {request.data}')
+    request_serializer = UserRequestSerializer(data=request.data)
+    print(f'patientpost1')
+    request_serializer.is_valid(raise_exception=True)
+    print(f'patientpost2')
+    user = request_serializer.save()
+    print(f'patientpost3')
+    user = User.objects.get(id=user.id)
+    user_dict = model_to_dict(user, fields=User._meta.get_fields())
+    add_dict = model_to_dict(user.addresses, fields=Address._meta.get_fields())
+    dev_dict = model_to_dict(user.fcmdevice_set, fields=FCMDevice._meta.get_fields())
+    print(f'patientpost4 user:{user}' f'add_dict:{add_dict}' f'dev_dict:{dev_dict} ')
+    response = {'user': user_dict, 'addresses': add_dict, 'fcmdevice_set': dev_dict}
+    response = UserRequestSerializer(data=user)
+    print(f'patientpost5')
+    response.is_valid(raise_exception=True)
+    return Response({"user": response.data, "token": AuthToken.objects.create(user)[1]})
 
 
 # {{ENV}}/api/user/patient/id
@@ -46,47 +56,7 @@ class PatientAPIDetail(APIView):
     request_body = request.data
     self.is_belong_to_auth_user(request, url_user)
 
-    ############################## DEVICE #################################
-    device_serializers = {}
-    index = 0
-    for device in request.get('fcmdevices', []):
-      self.set_user_id_if_nonexists(device, request)
-      if self.is_update(device):
-        existing_device = get_object_or_404(FCMDevice, pk=device['id'])
-        device_serializer = FCMDeviceSerializer(existing_device, data=device)
-      else:
-        device_serializer = FCMDeviceSerializer(data=device)
-
-      if not device_serializer.is_valid():
-        return Response(device_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-      device_serializers[index] = device_serializer
-      index += 1
-
-    ############################## ADDRESSS #################################
-    self.validate_addresses(request.data['addresses'], user_id)
-    address_serializers = {}
-    index = 0
-    for addr in request.data['addresses']:
-      self.set_user_id_if_nonexists(addr, request)
-      if self.is_update(addr):
-        existing_address = get_object_or_404(Address, pk=addr['id'])
-        address_serializer = AddressSerializer(existing_address, data=addr)
-      else:
-        address_serializer = AddressSerializer(data=addr)
-      if not address_serializer.is_valid():
-        return Response(address_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-      address_serializers[index] = address_serializer
-      index += 1
-    # Saving all validated devices and addresses at once
-    for ind in device_serializers:
-      device_serializers[ind].save()
-    for ind in address_serializers:
-      address_serializers[ind].save()
-    user_serializer = UserSerializer(url_user, data=request_body)
-    if not user_serializer.is_valid():
-      return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    latest_user = user_serializer.save()
-    return Response({"user": UserSerializer(latest_user).data})
+    return Response({"user": PatientSerializer().data})
 
   def set_user_id_if_nonexists(self, addr, request):
     try:

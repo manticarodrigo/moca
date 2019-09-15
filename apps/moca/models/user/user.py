@@ -25,8 +25,9 @@ class MyUserManager(BaseUserManager):
     email = self.normalize_email(email)
     user = self.model(email=email, **extra_fields)
     user.set_password(password)
-    print('in _create_user ')
+    print('in _create_user0')
     setattr(user, 'created_at', datetime.datetime.now)
+    print('in _create_user1')
     user.save()
     return user
 
@@ -72,7 +73,7 @@ class User(AbstractBaseUser, PermissionsMixin):
   last_name = models.CharField(null=True, blank=True, max_length=50)
   gender = models.CharField(max_length=2, choices=GENDERS, null=True, blank=True)
   date_of_birth = models.DateField(null=True, blank=True)
-  created_at = models.DateTimeField(auto_now_add=True)
+  created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
   type = models.CharField(max_length=2, choices=USER_TYPES, default=AGENT)
 
   email = models.EmailField(unique=True, null=True)
@@ -103,26 +104,20 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
 class PatientManager(MyUserManager):
-  def get_patient(self, id):
-    print('ingetpatient')
-    patient = Patient.objects.get(id=id)
-    user = User.objects.get(id=patient.user.id)
-    print(f'userid: {user.id}, patientid : {patient.id}')
-    setattr(user, 'id', patient.id)
-    return user
+  pass
 
 
-class Patient(User):
-  user = models.OneToOneField(User,
-                              on_delete=models.CASCADE,
-                              parent_link=True,
-                              related_name='patient')
-  objects = PatientManager()
+class Patient(models.Model):
+  user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+  objects = MyUserManager
 
 
-class Therapist(User):
-  user = models.OneToOneField(User, on_delete=models.CASCADE, parent_link=True)
+class TherapistManager(MyUserManager):
+  pass
 
+
+class Therapist(models.Model):
+  user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
   AVAILABLE, BUSY = 'A', 'B'
   QUALIFICATIONS = [
     'Ankle/Foot', 'Arm', 'Hip', 'Knee', 'Lower Back', 'Neck', 'Pelvis', 'Shoulder', 'Upper Back',
@@ -135,3 +130,5 @@ class Therapist(User):
   qualifications = JSONField(default=dict)
   interests = models.CharField(max_length=100, blank=True, null=True)
   status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
+
+  objects = TherapistManager()
