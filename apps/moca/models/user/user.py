@@ -109,7 +109,7 @@ class PatientManager(MyUserManager):
 
 class Patient(models.Model):
   user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-  objects = MyUserManager
+  objects = PatientManager()
 
 
 class TherapistManager(MyUserManager):
