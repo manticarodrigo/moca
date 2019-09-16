@@ -7,3 +7,4 @@ djangorestframework-camel-case
 django-cors-headers
 django-rest-knox
 djangorestframework-gis
+fcm-django
