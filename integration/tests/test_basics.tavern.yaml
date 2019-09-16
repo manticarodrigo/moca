@@ -3,40 +3,35 @@ test_name: Register a new user
 stages:
   - name: register
     request:
-      url: "{tavern.env_vars.service:s}/api/authenticate/register"
+      url: "{tavern.env_vars.service:s}/api/user/patient/"
       method: POST
       json:
-        email: fo1obar3112@world.com
-        firstName: Jimmy
-        lastName: Falon
-        gender: M
-        dateOfBirth: '1990-01-01'
-        type: PA
-        password: asdbfasdcasd
+        user:
+          email: clean_email@approdite.com
+          firstName: Ugur
+          lastName: Kaya
+          password: pass1234
         addresses:
         - name: Home
           text: 12345, high way to hell
-          apartment: '666'
           primary: true
+          apartment: '666'
           location:
             type: Point
             coordinates:
             - 125.6
             - 10.1
-        - name: Home
-          text: 12345, high way to hell
-          apartment: '666'
-          primary: true
-          location:
-            type: Point
-            coordinates:
-            - 125.6
-            - 10.1
+        fcmdevice_set:
+        - registrationId: '2342'
+          name: test_device
+          active: 'true'
+          device_id: '21231'
+          type: android
+
     response:
-      status_code: 200
+      status_code: 201
       body:
-        user:
-          id: !anyint
+        id: !anyint
       save:
         body:
-          user_id: user.id
+          user_id: id

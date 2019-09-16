@@ -29,17 +29,16 @@ class PatientAPIView(APIView):
     # user_dict = model_to_dict(user, fields=User._meta.get_fields())
     # add_dict = model_to_dict(user.addresses, fields=Address._meta.get_fields())
     # dev_dict = model_to_dict(user.fcmdevice_set, fields=FCMDevice._meta.get_fields())
-    print(f'patientpost4 user:{user}' f'add_dict:{user.addresses}')
-    print(f'dev_dict:{user.fcmdevice_set}')
-    response = {
-      'user': user.__dict__,
-      'addresses': user.addresses[0],
-      'fcmdevice_set': user.fcmdevice_set[0]
-    }
-    response = UserRequestSerializer(data=user)
-    print(f'patientpost5')
-    response.is_valid(raise_exception=True)
-    return Response({"user": response.data, "token": AuthToken.objects.create(user)[1]})
+    # print(f'patientpost4 user:{user}' f'add_dict:{user.addresses}')
+    # print(f'dev_dict:{user.fcmdevice_set}')
+    # response = {
+    #   'user': user.__dict__,
+    #   'addresses': user.addresses[0],
+    #   'fcmdevice_set': user.fcmdevice_set[0]
+    # }
+    response = UserSerializer(user)
+    print(f'patientpost6')
+    return Response( response.data,status.HTTP_201_CREATED )
 
 
 # {{ENV}}/api/user/patient/id
