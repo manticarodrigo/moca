@@ -4,14 +4,13 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.forms import model_to_dict
-from rest_framework import serializers
+from fcm_django.models import FCMDevice
+from rest_framework import serializers, status
+from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
 
-from moca.models.user import User, Patient, Therapist
-from rest_framework.response import Response
-from rest_framework import status
 from moca.models.address import Address
-from fcm_django.models import FCMDevice
+from moca.models.user import Patient, Therapist, User
 
 User = get_user_model()
 

@@ -1,21 +1,18 @@
-from django.forms.models import model_to_dict
 from django.http import Http404
-from knox.models import AuthToken
-from rest_framework import status
-from rest_framework.exceptions import MethodNotAllowed, AuthenticationFailed
-import json
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
-from rest_framework.views import (APIView)
-from moca.models.address import Address
-from fcm_django.models import FCMDevice, Device
 from django.shortcuts import get_object_or_404
+from fcm_django.models import FCMDevice
+from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed, MethodNotAllowed
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from moca.models import User
+from moca.models.address import Address
 from moca.models.user import Patient
-from .serializers import AddressSerializer, FCMDeviceSerializer, PatientSerializer, TherapistSerializer, UserSerializer, \
-  UserRequestSerializer
-from .serializers import PatientSerializer
+
+from .serializers import (FCMDeviceSerializer, PatientSerializer,
+                          TherapistSerializer, UserRequestSerializer,
+                          UserSerializer)
 
 
 # {{ENV}}/api/user/patient
@@ -26,13 +23,12 @@ class PatientAPIView(APIView):
     user = request_serializer.save()
     user = User.objects.get(id=user.id)
     response = UserSerializer(user)
-    return Response( response.data,status.HTTP_201_CREATED )
+    return Response(response.data, status.HTTP_201_CREATED)
 
 
 # {{ENV}}/api/user/patient/id
 class PatientAPIDetail(APIView):
-
-  # todo prevent post request coming this view
+  # TODO prevent post request coming this view
   def get(self, request, patient_id, format=None):
     patient = Patient.objects.get_patient(patient_id)
     serializer = PatientSerializer(patient)

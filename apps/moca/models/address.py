@@ -1,6 +1,6 @@
-from django.db import models
 from django.conf import settings
 from django.contrib.gis.db import models as gisModels
+from django.db import models
 
 
 class Address(models.Model):
