@@ -13,13 +13,13 @@ from django.contrib.auth.models import (
 
 class MyUserManager(BaseUserManager):
   """
-      A custom user manager to deal with emails as unique identifiers for auth
-      instead of usernames. The default that's used is "UserManager"
-      """
+  A custom user manager to deal with emails as unique identifiers for auth
+  instead of usernames. The default that's used is "UserManager"
+  """
   def _create_user(self, email, password, **extra_fields):
     """
-            Creates and saves a User with the given email and password.
-            """
+    Creates and saves a User with the given email and password.
+    """
     if not email:
       raise ValueError("The Email must be set")
     email = self.normalize_email(email)
