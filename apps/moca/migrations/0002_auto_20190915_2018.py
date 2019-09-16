@@ -5,19 +5,19 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('moca', '0001_initial'),
-    ]
+  dependencies = [
+    ('moca', '0001_initial'),
+  ]
 
-    operations = [
-        migrations.RenameField(
-            model_name='patient',
-            old_name='user_ptr',
-            new_name='user',
-        ),
-        migrations.RenameField(
-            model_name='therapist',
-            old_name='user_ptr',
-            new_name='user',
-        ),
-    ]
+  operations = [
+    migrations.RenameField(
+      model_name='patient',
+      old_name='user_ptr',
+      new_name='user',
+    ),
+    migrations.RenameField(
+      model_name='therapist',
+      old_name='user_ptr',
+      new_name='user',
+    ),
+  ]

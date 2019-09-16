@@ -4,23 +4,26 @@ from django.contrib.gis.db import models as gisModels
 
 
 class Address(models.Model):
-    # Address label
-    name = models.CharField(max_length=50)
-    # Actual adress
-    text = models.CharField(max_length=300)
-    primary = models.BooleanField()
-    apartment = models.CharField(max_length=50)
-    location = gisModels.PointField()
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             related_name="addresses",
-                             on_delete=models.CASCADE, blank=True, null=True)
+  # Address label
+  name = models.CharField(max_length=50)
+  # Actual adress
+  text = models.CharField(max_length=300)
+  primary = models.BooleanField()
+  apartment = models.CharField(max_length=50)
+  location = gisModels.PointField()
+  user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                           related_name="addresses",
+                           on_delete=models.CASCADE,
+                           blank=True,
+                           null=True)
 
-    def __str__(self):
-        return f"name: {self.name},text: {self.text}, " \
-               f"primary:{self.primary},location:{self.location}" \
-               f" user:{self.user}"
+  def __str__(self):
+    return f"name: {self.name},text: {self.text}, " \
+           f"primary:{self.primary},location:{self.location}" \
+           f" user:{self.user}"
 
-        # street = models.CharField(max_length=50)
-    # zip_code = models.SmallIntegerField()
-    # city = models.CharField(max_length=50)
-    # state = models.CharField(max_length=2)
+    # street = models.CharField(max_length=50)
+
+  # zip_code = models.SmallIntegerField()
+  # city = models.CharField(max_length=50)
+  # state = models.CharField(max_length=2)

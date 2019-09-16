@@ -1,8 +1,8 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from moca.models import (AttachmentMessage, Conversation, Message,
-                         RequestMessage, ResponseMessage, TextMessage)
+from moca.models import (AttachmentMessage, Conversation, Message, RequestMessage, ResponseMessage,
+                         TextMessage)
 
 
 class MessageSerializer(serializers.ModelSerializer):
