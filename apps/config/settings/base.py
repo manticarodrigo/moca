@@ -41,6 +41,7 @@ INSTALLED_APPS = [
   # Apps
   'moca.apps.MocaConfig',
 ]
+
 LOGGING = {
   'version': 1,
   'filters': {
@@ -56,7 +57,7 @@ LOGGING = {
     }
   },
   'loggers': {
-    'django.db.backends': {
+    'django': {
       'level': 'DEBUG',
       'handlers': ['console'],
     }

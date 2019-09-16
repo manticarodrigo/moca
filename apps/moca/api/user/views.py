@@ -21,23 +21,11 @@ from .serializers import PatientSerializer
 # {{ENV}}/api/user/patient
 class PatientAPIView(APIView):
   def post(self, request, format=None):
-
     request_serializer = UserRequestSerializer(data=request.data)
     request_serializer.is_valid(raise_exception=True)
     user = request_serializer.save()
     user = User.objects.get(id=user.id)
-    # user_dict = model_to_dict(user, fields=User._meta.get_fields())
-    # add_dict = model_to_dict(user.addresses, fields=Address._meta.get_fields())
-    # dev_dict = model_to_dict(user.fcmdevice_set, fields=FCMDevice._meta.get_fields())
-    # print(f'patientpost4 user:{user}' f'add_dict:{user.addresses}')
-    # print(f'dev_dict:{user.fcmdevice_set}')
-    # response = {
-    #   'user': user.__dict__,
-    #   'addresses': user.addresses[0],
-    #   'fcmdevice_set': user.fcmdevice_set[0]
-    # }
     response = UserSerializer(user)
-    print(f'patientpost6')
     return Response( response.data,status.HTTP_201_CREATED )
 
 
@@ -46,7 +34,6 @@ class PatientAPIDetail(APIView):
 
   # todo prevent post request coming this view
   def get(self, request, patient_id, format=None):
-    print('get0')
     patient = Patient.objects.get_patient(patient_id)
     serializer = PatientSerializer(patient)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -100,14 +87,10 @@ class PatientAPIDetail(APIView):
 
 class TherapistAPIView(APIView):
   def post(self, request, format=None):
-    print('therapost0')
     therapist_serializer = TherapistSerializer(data=request.data)
-    print('therapost1')
-    #todo decide which one is correct by testing
+    # TODO decide which one is correct by testing
     therapist_serializer.is_valid(raise_exception=True)
-    print('therapost2')
     therapist = therapist_serializer.save()
-    print('therapost3')
     return Response(therapist_serializer.data, status.HTTP_201_CREATED)
 
 

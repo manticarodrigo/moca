@@ -25,9 +25,7 @@ class MyUserManager(BaseUserManager):
     email = self.normalize_email(email)
     user = self.model(email=email, **extra_fields)
     user.set_password(password)
-    print('in _create_user0')
     setattr(user, 'created_at', datetime.datetime.now)
-    print('in _create_user1')
     user.save()
     return user
 

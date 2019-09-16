@@ -36,9 +36,6 @@ class UserSerializer(serializers.ModelSerializer):
     extra_kwargs = {'password': {'write_only': True}}
 
   def create(self, validated_user):
-    print(f'validated_user : {validated_user}')
-    print('userserializer create0')
-    print(f'userserializer create4 {validated_user}')
     user = User.objects.create_user(**validated_user)
     return user
 
@@ -51,9 +48,7 @@ class PatientSerializer(serializers.ModelSerializer):
     extra_kwargs = {'password': {'write_only': True}}
 
   def create(self, validated_patient):
-    print(f'serializer create0 VALIDATED_PATIENT : {validated_patient}')
     user = User.objects.create_user(**validated_patient)
-    print(f'SAVED USER :{user}')
     patient = Patient(user_ptr=user)
     patient.save()
     return patient
@@ -74,13 +69,10 @@ class UserRequestSerializer(serializers.Serializer):
   fcmdevice_set = FCMDeviceSerializer(many=True, required=False)
 
   def create(self, validated):
-    print('request serializer create0')
     user = validated.pop('user')
-    print('request serializer create1')
-    # therapist = validated.pop('therapist')
+    # TODO therapist = validated.pop('therapist')
     addresses_list = validated.pop('addresses', [])
     devices = validated.pop('fcmdevice_set', [])
-    print(f'validated : {validated}')
     user_serializer = UserSerializer(data=user)
     user_serializer.is_valid(raise_exception=True)
     user = user_serializer.save()
@@ -104,13 +96,11 @@ class UserRequestSerializer(serializers.Serializer):
                                     'registration_id', None),
                                   type=device_serializer.data.get('type', None))
 
-    print(f'therasera7 <user> : {user}')
     patient = Patient.objects.create(user=user)
     return user
 
 
 def set_user_id(list_obj, user_id):
-  print('in setuser0')
   for obj in list_obj:
     obj["user"] = user_id
   return list_obj
