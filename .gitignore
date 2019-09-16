@@ -197,3 +197,4 @@ data
 # Editors
 .vscode
 .vim
+apps/.idea
