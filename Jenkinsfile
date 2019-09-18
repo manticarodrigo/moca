@@ -49,7 +49,7 @@ pipeline {
           sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh ${MOCA_SERVICE}"""
 
           withEnv(["""service=http://${MOCA_SERVICE}"""]) {
-            sh label: 'Run all tests', script: "bash -c 'cd integration/tests; PYTHONPATH=\$(pwd) py.test'"
+            sh label: 'Run all tests', script: "./integration/run_tests.sh"
           }
         }
       }
