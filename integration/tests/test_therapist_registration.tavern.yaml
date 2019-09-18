@@ -1,0 +1,18 @@
+test_name: Register a new therapist
+
+stages:
+  - name: register therapist
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_therapist_create_body
+    response:
+      status_code: 201
+      body:
+        user:
+          id: !anyint
+      save:
+        body:
+          user_id: user.id

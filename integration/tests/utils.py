@@ -16,6 +16,18 @@ def fake_user():
   return Box(user)
 
 
+def fake_therapist():
+  therapist = {
+    "therapist": {
+      "email": fake.email(),
+      "firstName": fake.first_name(),
+      "lastName": fake.last_name(),
+      "password": fake.pystr(min_chars=10, max_chars=20)
+    }
+  }
+  return Box(therapist)
+
+
 def fake_device():
   device = {
     "fcmdevice_set": [{
@@ -47,5 +59,8 @@ def fake_address():
   return Box(address)
 
 
-def fake_user_device_address():
+def fake_patient_create_body():
   return Box({**fake_user(), **fake_device(), **fake_address()})
+
+def fake_therapist_create_body():
+  return Box({**fake_user(), **fake_therapist(), **fake_device(), **fake_address()})

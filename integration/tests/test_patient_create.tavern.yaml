@@ -7,7 +7,7 @@ stages:
       method: POST
       json:
         $ext:
-          function: utils:fake_user_device_address
+          function: utils:fake_patient_create_body
     response:
       status_code: 201
       body:
