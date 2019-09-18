@@ -11,7 +11,8 @@ stages:
     response:
       status_code: 201
       body:
-        id: !anyint
+        user:
+          id: !anyint
       save:
         body:
-          user_id: id
+          user_id: user.id
