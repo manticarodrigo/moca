@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import (PatientAPIDetail, PatientAPIView, TherapistAPIDetailView,
-                    TherapistAPIView, UserDeviceView)
+from .views import (PatientAPIDetail, PatientAPIView, TherapistAPIDetailView, TherapistAPIView,
+                    UserDeviceView)
 
 urlpatterns = [
   # post, get(for search)

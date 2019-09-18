@@ -1,23 +1,23 @@
+import json
+
 from django.forms.models import model_to_dict
 from django.http import Http404
+from django.shortcuts import get_object_or_404
+from fcm_django.models import Device, FCMDevice
 from knox.models import AuthToken
 from rest_framework import status
-from rest_framework.exceptions import MethodNotAllowed, AuthenticationFailed
-import json
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.exceptions import AuthenticationFailed, MethodNotAllowed
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import (APIView)
-from moca.models.address import Address
-from fcm_django.models import FCMDevice, Device
-from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
 
 from moca.models import User
-from moca.models.user import Patient
+from moca.models.address import Address
+from moca.models.user import Patient, Therapist
 
-from moca.models.user import Therapist
-from .serializers import AddressSerializer, FCMDeviceSerializer, PatientSerializer, TherapistSerializer, UserSerializer, \
-  UserRequestSerializer, PatientRequestSerializer, TherapistRequestSerializer
-from .serializers import PatientSerializer
+from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
+                          PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
+                          UserRequestSerializer, UserSerializer)
 
 
 # {{ENV}}/api/user/patient
