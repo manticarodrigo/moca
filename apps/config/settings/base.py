@@ -44,23 +44,30 @@ INSTALLED_APPS = [
 
 LOGGING = {
   'version': 1,
-  'filters': {
-    'require_debug_true': {
-      '()': 'django.utils.log.RequireDebugTrue',
-    }
-  },
+  'disable_existing_loggers': False,
   'handlers': {
     'console': {
-      'level': 'DEBUG',
-      'filters': ['require_debug_true'],
       'class': 'logging.StreamHandler',
     }
   },
   'loggers': {
+    'moca.userapi': {
+      'level': 'DEBUG',
+      'handlers': ['console']
+    },
     'django': {
       'level': 'DEBUG',
       'handlers': ['console'],
-    }
+    },
+    'django.server': {
+      'level': 'DEBUG',
+      'handlers': ['console'],
+    },
+    'django.request': {
+      'handlers': ['console'],
+      'level': 'DEBUG',  # change debug level as appropiate
+      'propagate': False,
+    },
   }
 }
 
@@ -85,6 +92,7 @@ MIDDLEWARE = [
   'django.contrib.auth.middleware.AuthenticationMiddleware',
   'django.contrib.messages.middleware.MessageMiddleware',
   'django.middleware.clickjacking.XFrameOptionsMiddleware',
+  'request_logging.middleware.LoggingMiddleware',
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
