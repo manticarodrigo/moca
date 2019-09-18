@@ -127,3 +127,6 @@ class Therapist(models.Model):
   status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
 
   objects = TherapistManager()
+
+  def __str__(self):
+    return f'Therapist Object user: {self.user} bio : {self.bio} cert_date : {self.cert_date}  operation_radius : {self.operation_radius }  qualifications : {self.qualifications }  status: {self.status} '
