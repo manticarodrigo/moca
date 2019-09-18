@@ -1,3 +1,4 @@
-from .chat import Conversation, Message, TextMessage, RequestMessage, ResponseMessage, AttachmentMessage, MessageTypes
-from .user import User
 from .address import Address
+from .chat import (AttachmentMessage, Conversation, Message, MessageTypes,
+                   RequestMessage, ResponseMessage, TextMessage)
+from .user import User
