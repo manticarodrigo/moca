@@ -22,26 +22,17 @@ services:
       - 5432:5432
 
   web:
+    restart: always
     container_name: 'moca_service'
     build: .
     image: moca_service:latest
-    command: |
-      bash -c "
-      xargs -a os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --force --noconfirm &&
-      pip install -qqq -r requirements.txt --exists-action i &&
-      python apps/manage.py runserver 0.0.0.0:8000"
+    command:
+      python apps/manage.py runserver 0.0.0.0:8000
     volumes:
       - ./:/app
-      - type: volume
-        source: arch-packages-cache
-        target: /pacman/cache
-        consistency: consistent
-      - type: volume
-        source: python-libs
-        target: /usr/lib/python3.7
-        consistency: consistent
     ports:
       - "8000:8000"
+      - "6899:6899"
     depends_on:
       - db
 
