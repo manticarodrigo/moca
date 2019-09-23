@@ -1,7 +1,12 @@
 from box import Box
 from faker import Faker
 
+import random
+
 fake = Faker()
+
+therapists = []
+patients = []
 
 
 def fake_user():
@@ -10,7 +15,8 @@ def fake_user():
       "email": fake.email(),
       "firstName": fake.first_name(),
       "lastName": fake.last_name(),
-      "password": fake.pystr(min_chars=10, max_chars=20)
+      "password": "ABCD", # fake.pystr(min_chars=10, max_chars=20),
+      "gender": random.choice(['M', 'F'])
     }
   }
   return Box(user)
@@ -45,7 +51,7 @@ def fake_device():
 def fake_address():
   address = {
     "addresses": [{
-      "name": "Home",
+      "name": random.choice(["Home", "Work", "Dumpster"]),
       "text": fake.address(),
       "primary": True,
       "apartment": fake.numerify(text="##"),
@@ -60,7 +66,16 @@ def fake_address():
 
 
 def fake_patient_create_body():
-  return Box({**fake_user(), **fake_device(), **fake_address()})
+  patient = {**fake_user(), **fake_device(), **fake_address()}
+  patients.append(patient)
+  return Box(patient)
+
 
 def fake_therapist_create_body():
-  return Box({**fake_user(), **fake_therapist(), **fake_device(), **fake_address()})
+  therapist = {**fake_user(), **fake_therapist(), **fake_device(), **fake_address()}
+  therapists.append(therapist)
+  return Box(therapist)
+
+
+def test_scope(request):
+  return Box({"moca": globals()})

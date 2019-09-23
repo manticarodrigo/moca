@@ -16,3 +16,30 @@ stages:
       save:
         body:
           user_id: user.id
+
+  - name: successful login
+    request:
+      url: "{tavern.env_vars.service:s}/api/authenticate/login"
+      method: POST
+      json:
+        username: "{moca.therapists[0].user.email}"
+        email: "{moca.therapists[0].user.email}"
+        password: "{moca.therapists[0].user.password}"
+    response:
+      status_code: 200
+      body:
+        token: !anystr
+
+  - name: failed login
+    request:
+      url: "{tavern.env_vars.service:s}/api/authenticate/login"
+      method: POST
+      json:
+        username: "{moca.therapists[0].user.email}"
+        email: "{moca.therapists[0].user.email}"
+        password: "{moca.therapists[0].user.email}"
+    response:
+      status_code: 400
+      body:
+        nonFieldErrors:
+          - "Incorrect Credentials"
