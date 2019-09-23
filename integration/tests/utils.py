@@ -15,7 +15,7 @@ def fake_user():
       "email": fake.email(),
       "firstName": fake.first_name(),
       "lastName": fake.last_name(),
-      "password": "ABCD", # fake.pystr(min_chars=10, max_chars=20),
+      "password": fake.pystr(min_chars=10, max_chars=20),
       "gender": random.choice(['M', 'F'])
     }
   }

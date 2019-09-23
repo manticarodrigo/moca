@@ -75,8 +75,6 @@ class MessagesAPI(GenericAPIView):
 
     request = RequestMessage.objects.filter(id=reply_to, conversation=conversation).first()
 
-    print(request.responsemessage_set.count())
-
     if not request:
       raise RequestNotFound(reply_to, conversation.id)
 

@@ -25,21 +25,14 @@ class PatientAPIView(APIView):
   def post(self, request, format=None):
     patient_req_serializer = PatientRequestSerializer(data=request.data)
     patient_req_serializer.is_valid(raise_exception=True)
-    print(f'post1')
-    (user, addresses, devices, patient) = patient_req_serializer.save()
-    print(f'post2 addresses {addresses}')
-    print(f'post3 devices {devices}')
-    user = User.objects.filter(patient=patient)[0]
+    patient = patient_req_serializer.save()
     return Response(
       {
-        "user": UserSerializer(user).data,
-        # todo deserializer only accepts one object.
-        #  find a way to deserialize array for device and addresses
-        "addresses": AddressSerializer(addresses[0]).data,
-        "devices": FCMDeviceSerializer(devices[0]).data,
-        "token": AuthToken.objects.create(user)[1]
-      },
-      status.HTTP_201_CREATED)
+        "user": UserSerializer(patient.user).data,
+        "addresses": AddressSerializer(patient.user.addresses, many=True).data,
+        "devices": FCMDeviceSerializer(patient.user.fcmdevice_set_set.data, many=True).data,
+        "token": AuthToken.objects.create(patient.user)[1]
+      }, status.HTTP_201_CREATED)
 
 
 # {{ENV}}/api/user/patient/id
@@ -47,23 +40,16 @@ class PatientAPIDetail(APIView):
 
   # todo prevent post request coming this view
   def get(self, request, patient_id, format=None):
-    print('get0')
     patient = Patient.objects.get(pk=patient_id)
     serializer = UserSerializer(patient.user)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
   def put(self, request, patient_id, format=None):
-    print('api0')
     patient = get_object_or_404(Patient, patient_id)
-    print('api1')
     existing = get_object_or_404(User, patient.user_id)
-    print('api2')
     self.is_belong_to_auth_user(request, existing)
-    print('api3')
     req_serializer = UserRequestSerializer(instance=existing, data=request.data)
-    print('api4')
     req_serializer.is_valid(raise_exception=True)
-    print('api5')
     user, addresses, devices = req_serializer.save()
 
     return Response({
@@ -107,25 +93,34 @@ class PatientAPIDetail(APIView):
 
 
 class TherapistAPIView(APIView):
+  valid_criteria = ['gender', 'orderby']
+
   def post(self, request, format=None):
-    print('therapost0')
     therapist_req_serializer = TherapistRequestSerializer(data=request.data)
-    print('therapost1')
     therapist_req_serializer.is_valid(raise_exception=True)
-    print('therapost2')
-    user, addresses, devices, therapist = therapist_req_serializer.save()
-    print(f'therapost3 {therapist}')
+    therapist = therapist_req_serializer.save()
 
     return Response(
       {
-        "user": UserSerializer(user).data,
+        "user": UserSerializer(therapist.user).data,
         "therapist": TherapistSerializer(therapist).data,
-        # todo deserializer only accepts one object.
-        #  find a way to deserialize array for device and addresses
-        "addresses": AddressSerializer(addresses[0]).data,
-        "devices": FCMDeviceSerializer(devices[0]).data,
-      },
-      status.HTTP_201_CREATED)
+        "addresses": AddressSerializer(therapist.user.addresses, many=True).data,
+        "devices": FCMDeviceSerializer(therapist.user.fcmdevice_set, many=True).data,
+      }, status.HTTP_201_CREATED)
+
+  def get(self, request):
+    from django.contrib.gis.db.models.functions import Distance
+    from .serializers import TherapistSerializer
+    criteria = request.query_params
+
+    # TODO add location filter for out-of-area therapists
+
+    therapists = Therapist.objects
+
+    if 'gender' in criteria:
+      therapists = therapists.filter(user__gender=criteria['gender'])
+
+    return Response(TherapistSerializer(therapists, many=True).data)
 
 
 class TherapistAPIDetailView(APIView):
