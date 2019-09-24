@@ -68,6 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
   last_name = models.CharField(null=True, blank=True, max_length=50)
   gender = models.CharField(max_length=2, choices=GENDERS, null=True, blank=True)
   date_of_birth = models.DateField(null=True, blank=True)
+  # todo needs to be non-null field
   created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
   type = models.CharField(max_length=2, choices=USER_TYPES, default=AGENT)
 
@@ -103,7 +104,10 @@ class PatientManager(MyUserManager):
 
 
 class Patient(models.Model):
-  user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+  user = models.OneToOneField(User,
+                              on_delete=models.CASCADE,
+                              primary_key=True,
+                              related_name="patient")
   objects = PatientManager()
 
 
@@ -112,7 +116,10 @@ class TherapistManager(MyUserManager):
 
 
 class Therapist(models.Model):
-  user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+  user = models.OneToOneField(User,
+                              on_delete=models.CASCADE,
+                              primary_key=True,
+                              related_name="therapist")
   AVAILABLE, BUSY = 'A', 'B'
   QUALIFICATIONS = [
     'Ankle/Foot', 'Arm', 'Hip', 'Knee', 'Lower Back', 'Neck', 'Pelvis', 'Shoulder', 'Upper Back',

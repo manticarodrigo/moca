@@ -11,9 +11,9 @@ services:
     image: mdillon/postgis
     restart: always
     environment:
-      - POSTGRES_USER=moca_user
-      - POSTGRES_PASSWORD=moca_password
-      - POSTGRES_DB=moca_db
+      POSTGRES_USER: moca_user
+      POSTGRES_PASSWORD: moca_password
+      POSTGRES_DB: moca_db
     volumes:
       - moca-db-volume:/var/lib/postgresql/data
     expose:
@@ -35,4 +35,16 @@ services:
       - "6899:6899"
     depends_on:
       - db
+
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    ports:
+      - "5555:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    restart: unless-stopped
+
 
