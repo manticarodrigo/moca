@@ -4,7 +4,9 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
-from moca.api.appointment.serializers import AppointmentSerializer, ReviewSerializer, AppointmentDeserializer
+from moca.api.appointment.serializers import AppointmentSerializer,  AppointmentDeserializer, \
+  ReviewSerializer
+from moca.api.chat.errors import AppointmentNotFound
 from moca.models.appointment import Appointment, Review
 
 
@@ -27,29 +29,41 @@ class AppointmentAPIDetailView(APIView):
     return Response(appointment.data, status=status.HTTP_200_OK)
 
   def put(self, request, appointment_id, format=None):
-    existing = get_object_or_404(Appointment, appointment_id)
+    existing = self.get_appointment(appointment_id)
+    # todo check schedule API if new time is available
     appointment = AppointmentSerializer(instance=existing, data=request.data)
     appointment.is_valid(raise_exception=True)
     appointment = appointment.save()
-    return Response({AppointmentSerializer(appointment).data}, status.HTTP_202_ACCEPTED)
+    return Response({"appointment": AppointmentSerializer(appointment).data},
+                    status.HTTP_202_ACCEPTED)
 
   # Used for cancellation
   def delete(self, request, appointment_id, format=None):
-    appointment = get_object_or_404(appointment_id)
-    appointment.set__is_cancelled(True)
-    appointment = appointment.save()
-    return Response({AppointmentSerializer(appointment).data}, status.HTTP_202_ACCEPTED)
+    appointment = self.get_appointment(appointment_id)
+    appointment.is_cancelled = True
+    appointment.save()
+    appointment = self.get_appointment(appointment_id)
+    return Response({'appointment': AppointmentSerializer(appointment).data},
+                    status.HTTP_202_ACCEPTED)
+
+  def get_appointment(self, appointment_id):
+    try:
+      existing = Appointment.objects.get(id=appointment_id)
+    except Appointment.DoesNotExist:
+      raise AppointmentNotFound(appointment_id)
+    return existing
 
 
 class ReviewAPIView(APIView):
   permission_classes = [IsAuthenticated]
 
   def post(self, request, appointment_id, format=None):
-    request.data.add("appointment", appointment_id)
+    request.data["appointment"] = appointment_id
     review = ReviewSerializer(data=request.data)
-    review.is_valid()
+    review.is_valid(raise_exception=True)
+    # todo calculate average rating and update therapist table
     review = review.save()
-    return Response({ReviewSerializer(review).data}, status.HTTP_201_CREATED)
+    return Response({"review": ReviewSerializer(review).data}, status.HTTP_201_CREATED)
 
 
 class ReviewAPIDetailView(APIView):
@@ -58,9 +72,24 @@ class ReviewAPIDetailView(APIView):
     review = ReviewSerializer(review)
     return Response(review.data, status=status.HTTP_200_OK)
 
-  def put(self, request, review_id, format=None):
-    existing = get_object_or_404(Review, review_id)
+  def put(self, request, appointment_id, review_id, format=None):
+    request.data["appointment"] = appointment_id
+    existing = self.get_review(review_id)
     review = ReviewSerializer(instance=existing, data=request.data)
     review.is_valid(raise_exception=True)
-    appointment = review.save()
-    return Response({ReviewSerializer(appointment).data}, status.HTTP_202_ACCEPTED)
+    review = review.save()
+    return Response({'review': ReviewSerializer(review).data}, status.HTTP_202_ACCEPTED)
+
+  def delete(self, request, appointment_id, review_id, format=None):
+    review = self.get_review(review_id)
+    # todo remove from average rating
+    review = review.delete()
+    return Response({'result': f'Review with id : {review_id} is deleted'},
+                    status.HTTP_202_ACCEPTED)
+
+  def get_review(self, review_id):
+    try:
+      existing = Review.objects.get(id=review_id)
+    except Review.DoesNotExist:
+      raise Review(review_id)
+    return existing

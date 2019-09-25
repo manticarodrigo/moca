@@ -12,6 +12,16 @@ class UserNotFound(NotFound):
     self.detail = f'User with id {id} not found'
 
 
+class AppointmentNotFound(NotFound):
+  def __init__(self, id):
+    self.detail = f'Appointment with id {id} not found'
+
+
+class ReviewNotFound(NotFound):
+  def __init__(self, id):
+    self.detail = f'Review with id {id} not found'
+
+
 class ConversationNotFound(NotFound):
   def __init__(self, id):
     self.detail = f'Conversation with id {id} not found'

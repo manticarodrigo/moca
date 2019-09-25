@@ -1,5 +1,6 @@
 from box import Box
 from faker import Faker
+from datetime import datetime
 
 import random
 
@@ -75,6 +76,15 @@ def fake_therapist_create_body():
   therapist = {**fake_user(), **fake_therapist(), **fake_device(), **fake_address()}
   therapists.append(therapist)
   return Box(therapist)
+
+def fake_appointment_create_body():
+  fake_patient_create_body()
+  fake_therapist_create_body()
+  appointment = {"patient":patients[0].id}
+  datetime.datetime.now() + datetime.timedelta(days=2)
+
+def fake_end_time():
+  return datetime.datetime.now() + datetime.timedelta(days=2,hours=1)
 
 
 def test_scope(request):

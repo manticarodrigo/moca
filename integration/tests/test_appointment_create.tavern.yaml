@@ -1,0 +1,51 @@
+test_name: Register a new therapist
+
+stages:
+  - name: register patient
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/patient/"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_patient_create_body
+    response:
+      status_code: 201
+      body:
+        user:
+          id: !anyint
+      save:
+        body:
+          patient_id: user.id
+        $ext:
+          function: utils:test_scope
+  - name: register therapist
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_therapist_create_body
+    response:
+      status_code: 201
+      body:
+        user:
+          id: !anyint
+      save:
+        body:
+          user_id: user.id
+
+  - name: set appointment 
+    request:
+      url: "{tavern.env_vars.service:s}/api/appointment/create"
+      method: POST
+      json:
+        patient: "{moca.patients[0].user.id}"
+        therapist: "{moca.therapists[0].user.id}"
+        address: "{moca.therapists[0].patient.addresses.id}"
+        start_time: "2019-11-02T09:00:00.000Z"
+        end_time: "2019-11-02T09:00:00.000Z"
+        price : "60"  
+    response:
+      status_code: 200
+      body:
+        token: !anystr

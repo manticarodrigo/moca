@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from moca.api.user.serializers import PatientSerializer, TherapistSerializer, AddressSerializer
 from moca.models import Address
-from moca.models.appointment import Appointment
+from moca.models.appointment import Appointment, Review
 from moca.models.user import Patient, Therapist
 
 
@@ -44,6 +44,7 @@ class AppointmentDeserializer(serializers.Serializer):
   class Meta:
     fields = '__all__'
 
+  # todo activate input validations. after validations values are being set to None. Fix needed
   # def validate_price(self, value):
   #   if value < 0:
   #     return serializers.ValidationError('Price should be higher than 0')
@@ -94,16 +95,30 @@ class AppointmentDeserializer(serializers.Serializer):
     return instance
 
 
-class ReviewSerializer(serializers.Serializer):
-  appointment = serializers.IntegerField(required=True)
-  rating = serializers.IntegerField(required=True)
-  comment = serializers.IntegerField(required=False)
+class ReviewSerializer(serializers.ModelSerializer):
+  # appointment = serializers.IntegerField(required=True)
+  # rating = serializers.IntegerField(required=True)
+  # comment = serializers.CharField(required=False)
+  class Meta:
+    model = Review
+    fields = '__all__'
 
-  def validate_appointment(self, value):
-    appointment = Appointment.objects.get(id=value)
-    if appointment is None:
-      return serializers.ValidationError(f'appointment_id: {value} not found ')
+  # todo activate validations for inputs
+  # def validate_rating(self, value):
+  #   if 0 > value > 5:
+  #     return serializers.ValidationError(f'rating: {value} should be between 0 and 5')
 
-  def validate_rating(self, value):
-    if 0 > value > 5:
-      return serializers.ValidationError(f'rating: {value} should be between 0 and 5')
+  #
+  # def validate_comment(self, value):
+  #   self.comment = value
+
+  # def create(self, validated_data):
+  #   # appointment_id = validated_data.get("appointment")
+  #   # print(f'========> in create : appointmentid {self.appointment} rating:{self.rating}')
+  #   appointment = Appointment.objects.get(id=validated_data.pop('appointment'))
+  #   print(f'========> in create : {appointment}')
+  #   review = ReviewSerializer(data=validated_data)
+  #   review.is_valid(raise_exception=True)
+  #   review.save()
+  #   appointment.review_set = review
+  #   return review
