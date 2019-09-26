@@ -1,0 +1,46 @@
+test_name: Therapist search
+
+stages:
+  - name: register therapist
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_therapist_create_body
+    response:
+      status_code: 201
+      body:
+        user:
+          id: !anyint
+      save:
+        body:
+          user_id: user.id
+
+  - name: successful login
+    request:
+      url: "{tavern.env_vars.service:s}/api/authenticate/login"
+      method: POST
+      json:
+        username: "{moca.therapists[0].user.email}"
+        email: "{moca.therapists[0].user.email}"
+        password: "{moca.therapists[0].user.password}"
+    response:
+      status_code: 200
+      body:
+        token: !anystr
+      save:
+        body:
+          token: token
+
+
+  - name: search therapist
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={moca.therapists[0].user.gender}"
+      headers:
+        Authorization: "Token {token:s}"
+    response:
+      status_code: 200
+      body:
+        - user:
+            id: !anyint

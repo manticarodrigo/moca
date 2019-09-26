@@ -1,16 +1,17 @@
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from knox.models import AuthToken
-from rest_framework import status
+from rest_framework import permissions, status
 from rest_framework.exceptions import AuthenticationFailed, MethodNotAllowed
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from moca.models import User
 from moca.models.user import Patient, Therapist
-from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
-                          TherapistRequestSerializer, TherapistSerializer, UserRequestSerializer,
-                          UserSerializer)
+from .serializers import (AddressSerializer, FCMDeviceSerializer,
+                          PatientRequestSerializer, PatientSerializer,
+                          TherapistRequestSerializer, TherapistSerializer,
+                          UserRequestSerializer, UserSerializer)
 
 
 # {{ENV}}/api/user/patient
@@ -87,15 +88,22 @@ class TherapistAPIView(APIView):
       }, status.HTTP_201_CREATED)
 
   def get(self, request):
+    from django.contrib.gis.measure import D, Distance
+    from django.db.models import F, Q
     from .serializers import TherapistSerializer
     criteria = request.query_params
 
-    # TODO add location filter for out-of-area therapists
-
     therapists = Therapist.objects
+
+    user_location = request.user.addresses.get(primary=True).location
 
     if 'gender' in criteria:
       therapists = therapists.filter(user__gender=criteria['gender'])
+
+    # TODO here need to write the query manually or figure out a way
+    # to keep the 'D(mi=10000)' something similar to D('operation_radius')
+    therapists = therapists.filter(primary_location__distance_lt=(user_location,
+                                                                  Distance(mi=10000)))
 
     return Response(TherapistSerializer(therapists, many=True).data)
 

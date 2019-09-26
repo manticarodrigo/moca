@@ -3,6 +3,8 @@ import datetime
 from django.conf import settings
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
                                         PermissionsMixin)
+from django.contrib.gis.db import models as gisModels
+from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -132,6 +134,7 @@ class Therapist(models.Model):
   qualifications = JSONField(default=dict)
   interests = models.CharField(max_length=100, blank=True, null=True)
   status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
+  primary_location = gisModels.PointField(default=Point(0, 0))
 
   objects = TherapistManager()
 

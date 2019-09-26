@@ -95,6 +95,7 @@ class PatientRequestSerializer(serializers.Serializer):
   fcmdevice_set = FCMDeviceSerializer(many=True, required=False)
 
   def create(self, validated):
+    validated['user']['type'] = User.PATIENT
     user = UserRequestSerializer(data=validated)
     user.is_valid(raise_exception=True)
 
@@ -112,8 +113,14 @@ class TherapistRequestSerializer(serializers.Serializer):
   def create(self, validated):
     therapist = validated.pop('therapist')
 
+    validated['user']['type'] = User.THERAPIST
+
     user = UserRequestSerializer(data=validated)
     user.is_valid(raise_exception=True)
     user = user.save()
+
+    lng, lat = AddressSerializer(user.addresses.get(primary=True)).data['location']['coordinates']
+
+    therapist['primary_location'] = Point(lng, lat)
 
     return Therapist.objects.create(user=user, **therapist)

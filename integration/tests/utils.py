@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 import random
 
 fake = Faker()
+fake.seed(9001)
+random.seed(9001)
 
 therapists = []
 patients = []
@@ -51,30 +53,36 @@ def fake_device():
 
 
 def fake_address():
-  address = {
-    "addresses": [{
-      "name": random.choice(["Home", "Work", "Dumpster"]),
-      "text": fake.address(),
-      "primary": True,
-      "apartment": fake.numerify(text="##"),
-      "location": {
-        "type": "Point",
-        "coordinates": [float(fake.longitude()), float(fake.latitude())]
-      }
-    }]
+  return {
+    "name": random.choice(["Home", "Work", "Dumpster"]),
+    "text": fake.address(),
+    "primary": False,
+    "apartment": fake.numerify(text="##"),
+    "location": {
+      "type": "Point",
+      "coordinates": [float(fake.longitude()), float(fake.latitude())]
+    }
   }
 
-  return Box(address)
+
+def fake_addresses():
+  address_count = random.randint(1, 3)
+  addresses = {"addresses": list(map(lambda _: fake_address(), range(address_count)))}
+
+  primary = random.choice(addresses['addresses'])
+  primary['primary'] = True
+
+  return Box(addresses)
 
 
 def fake_patient_create_body():
-  patient = {**fake_user(), **fake_device(), **fake_address()}
+  patient = {**fake_user(), **fake_device(), **fake_addresses()}
   patients.append(patient)
   return Box(patient)
 
 
 def fake_therapist_create_body():
-  therapist = {**fake_user(), **fake_therapist(), **fake_device(), **fake_address()}
+  therapist = {**fake_user(), **fake_therapist(), **fake_device(), **fake_addresses()}
   therapists.append(therapist)
   return Box(therapist)
 
