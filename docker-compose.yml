@@ -2,8 +2,6 @@ version: '3.7'
 
 volumes:
   moca-db-volume:
-  arch-packages-cache:
-  python-libs:
 
 services:
   db:
