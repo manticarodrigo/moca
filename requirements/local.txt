@@ -2,3 +2,5 @@
 pylint
 pylint-django
 yapf
+tavern
+pytest-faker
