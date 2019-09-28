@@ -1,5 +1,4 @@
 from datetime import datetime
-from dateutil.parser import parse
 from django.db import models
 from rest_framework import serializers
 
