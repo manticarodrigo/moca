@@ -8,9 +8,8 @@ from rest_framework.views import APIView
 
 from moca.models import User
 from moca.models.user import Patient, Therapist
-from .serializers import (AddressSerializer, FCMDeviceSerializer,
-                          PatientRequestSerializer, PatientSerializer,
-                          TherapistRequestSerializer, TherapistSerializer,
+from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
+                          PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
                           UserRequestSerializer, UserSerializer)
 
 
@@ -100,10 +99,11 @@ class TherapistAPIView(APIView):
     if 'gender' in criteria:
       therapists = therapists.filter(user__gender=criteria['gender'])
 
-    # TODO here need to write the query manually or figure out a way
-    # to keep the 'D(mi=10000)' something similar to D('operation_radius')
+    METERS_PER_MILE = 1609.34
+
     therapists = therapists.filter(primary_location__distance_lt=(user_location,
-                                                                  Distance(mi=10000)))
+                                                                  F('operation_radius') *
+                                                                  METERS_PER_MILE))
 
     return Response(TherapistSerializer(therapists, many=True).data)
 
