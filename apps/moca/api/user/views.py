@@ -83,10 +83,7 @@ class TherapistAPIView(APIView):
 
     return Response(
       {
-        "user": UserSerializer(therapist.user).data,
-        "therapist": TherapistSerializer(therapist).data,
-        "addresses": AddressSerializer(therapist.user.addresses, many=True).data,
-        "devices": FCMDeviceSerializer(therapist.user.fcmdevice_set, many=True).data,
+        **TherapistSerializer(therapist).data, "token": AuthToken.objects.create(therapist.user)[1]
       }, status.HTTP_201_CREATED)
 
   def get(self, request):

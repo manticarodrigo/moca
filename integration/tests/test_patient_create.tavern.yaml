@@ -18,15 +18,18 @@ stages:
           user_id: user.id
         $ext:
           function: utils:test_scope
+          extra_kwargs:
+            password: 'test1234'
+            response_type: 'patient'
 
   - name: successful login
     request:
       url: "{tavern.env_vars.service:s}/api/authenticate/login"
       method: POST
       json:
-        username: "{moca.patients[0].user.email}"
-        email: "{moca.patients[0].user.email}"
-        password: "{moca.patients[0].user.password}"
+        username: "{moca.patient.user.email}"
+        email: "{moca.patient.user.email}"
+        password: "{moca.kwargs.password}"
     response:
       status_code: 200
       body:
@@ -37,9 +40,9 @@ stages:
       url: "{tavern.env_vars.service:s}/api/authenticate/login"
       method: POST
       json:
-        username: "{moca.patients[0].user.email}"
-        email: "{moca.patients[0].user.email}"
-        password: "{moca.patients[0].user.email}"
+        username: "{moca.patient.user.email}"
+        email: "{moca.patient.user.email}"
+        password: "{moca.patient.user.email}"
     response:
       status_code: 400
       body:

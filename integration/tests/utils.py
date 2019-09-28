@@ -1,6 +1,6 @@
 from box import Box
 from faker import Faker
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import random
 
@@ -16,7 +16,8 @@ def fake_user():
       "email": fake.email(),
       "firstName": fake.first_name(),
       "lastName": fake.last_name(),
-      "password": fake.pystr(min_chars=10, max_chars=20),
+      # "password": fake.pystr(min_chars=10, max_chars=20),
+      "password": 'test1234',
       "gender": random.choice(['M', 'F'])
     }
   }
@@ -29,7 +30,7 @@ def fake_therapist():
       "email": fake.email(),
       "firstName": fake.first_name(),
       "lastName": fake.last_name(),
-      "password": fake.pystr(min_chars=10, max_chars=20)
+      "password": 'test1234'
     }
   }
   return Box(therapist)
@@ -77,15 +78,23 @@ def fake_therapist_create_body():
   therapists.append(therapist)
   return Box(therapist)
 
+
 def fake_appointment_create_body():
   fake_patient_create_body()
   fake_therapist_create_body()
-  appointment = {"patient":patients[0].id}
-  datetime.datetime.now() + datetime.timedelta(days=2)
+  datetime.now() + timedelta(days=2)
+
 
 def fake_end_time():
-  return datetime.datetime.now() + datetime.timedelta(days=2,hours=1)
+  return datetime.now() + timedelta(days=2, hours=1)
 
 
-def test_scope(request):
-  return Box({"moca": globals()})
+def test_scope(response, **kwargs):
+  response_type = kwargs.pop('response_type')
+  saved_box = Box(
+    {"moca": {
+      "globals": globals(),
+      response_type: response.json(),
+      "kwargs": kwargs
+    }})
+  return saved_box
