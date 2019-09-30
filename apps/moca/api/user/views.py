@@ -1,3 +1,4 @@
+from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from knox.models import AuthToken
@@ -8,8 +9,10 @@ from rest_framework.views import APIView
 
 from moca.models import User
 from moca.models.user import Patient, Therapist
-from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
-                          PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
+
+from .serializers import (AddressSerializer, FCMDeviceSerializer,
+                          PatientRequestSerializer, PatientSerializer,
+                          TherapistRequestSerializer, TherapistSerializer,
                           UserRequestSerializer, UserSerializer)
 
 
@@ -87,9 +90,6 @@ class TherapistAPIView(APIView):
       }, status.HTTP_201_CREATED)
 
   def get(self, request):
-    from django.contrib.gis.measure import D, Distance
-    from django.db.models import F, Q
-    from .serializers import TherapistSerializer
     criteria = request.query_params
 
     therapists = Therapist.objects
