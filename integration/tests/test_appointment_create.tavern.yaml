@@ -1,4 +1,4 @@
-test_name: Register a new therapist
+test_name: Test appointment creation
 
 stages:
   - name: register patient
@@ -43,7 +43,7 @@ stages:
             password: 'test1234'
             response_type: 'therapist'
             patient_id: "{moca.patient.user.id}"
-            patient_address_id: "{moca.patient.user.id}"
+            patient_address_id: "{moca.patient.addresses[0].id}"
 
   - name: set appointment 
     request:
