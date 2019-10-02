@@ -1,7 +1,9 @@
 from datetime import datetime
 from django.db import models
 from rest_framework import serializers
-
+from decimal import *
+from moca.api.appointment.errors import AppointmentAlreadyReviewed
+from moca.api.appointment.errors import AppointmentNotFound
 from moca.api.user.serializers import PatientSerializer, TherapistSerializer, AddressSerializer
 from moca.models import Address, User
 from moca.models.appointment import Appointment, Review
@@ -88,30 +90,66 @@ class AppointmentDeserializer(serializers.Serializer):
     return instance
 
 
-class ReviewSerializer(serializers.ModelSerializer):
-  # appointment = serializers.IntegerField(required=True)
-  # rating = serializers.IntegerField(required=True)
-  # comment = serializers.CharField(required=False)
+class ReviewSerializer(serializers.Serializer):
+  appointment_id = serializers.IntegerField(required=True)
+  rating = serializers.FloatField(required=True)
+  comment = serializers.CharField(required=False)
+
   class Meta:
-    model = Review
     fields = '__all__'
 
-  # todo activate validations for inputs
-  # def validate_rating(self, value):
-  #   if 0 > value > 5:
-  #     return serializers.ValidationError(f'rating: {value} should be between 0 and 5')
+  def validate_rating(self, value):
+    getcontext().prec = 2
+    value = Decimal(str(value))
+    if not value <= Decimal(0) and value >= Decimal(5):
+      raise serializers.ValidationError(f'rating: {value} should be between 0.0 and 5.0')
+    return value
 
-  #
-  # def validate_comment(self, value):
-  #   self.comment = value
+  def create(self, validated_data):
+    try:
+      appointment_id = validated_data.pop("appointment_id")
+      appointment = Appointment.objects.get(pk=appointment_id)
+    except Appointment.DoesNotExist:
+      raise AppointmentNotFound(appointment_id)
+    already_reviewed = Review.objects.filter(appointment_id=appointment_id)
+    if already_reviewed:
+      raise AppointmentAlreadyReviewed(appointment_id)
+    review = appointment.review.create(rating=validated_data.get('rating'),
+                                       comment=validated_data.get('comment'))
+    self.calculate_therapist_rating(appointment, validated_data.get('rating'))
+    return review
 
-  # def create(self, validated_data):
-  #   # appointment_id = validated_data.get("appointment")
-  #   # print(f'========> in create : appointmentid {self.appointment} rating:{self.rating}')
-  #   appointment = Appointment.objects.get(id=validated_data.pop('appointment'))
-  #   print(f'========> in create : {appointment}')
-  #   review = ReviewSerializer(data=validated_data)
-  #   review.is_valid(raise_exception=True)
-  #   review.save()
-  #   appointment.review_set = review
-  #   return review
+  def update(self, instance, validated_data):
+    try:
+      appointment_id = validated_data.pop("appointment_id")
+      appointment = Appointment.objects.get(pk=appointment_id)
+    except Appointment.DoesNotExist:
+      raise AppointmentNotFound(appointment_id)
+    instance.rating = validated_data.get('rating', instance.rating)
+    instance.comment = validated_data.get('comment', instance.comment)
+    instance.save()
+    if instance.rating != validated_data.get('rating', None):
+      self.calculate_therapist_rating(appointment, validated_data.get('rating'))
+    return instance
+
+  @staticmethod
+  def calculate_therapist_rating(appointment, new_rating, is_deletion=False):
+    getcontext().prec = 2
+    therapist = appointment.therapist
+    avg_rating = therapist.rating
+    nb_review = therapist.review_count
+    if not is_deletion:
+      therapist.rating = (Decimal(str(avg_rating)) * nb_review +
+                          Decimal(str(new_rating))) / (nb_review + 1)
+      therapist.review_count = nb_review + 1
+    else:
+      if nb_review > 1:
+        therapist.rating = (Decimal(str(avg_rating)) * nb_review -
+                            Decimal(str(new_rating))) / (nb_review - 1)
+        therapist.review_count = nb_review - 1
+      else:
+        therapist.rating = 0
+        therapist.review_count = 0
+    therapist.save()
+
+    return

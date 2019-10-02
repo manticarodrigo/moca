@@ -20,6 +20,9 @@ class Appointment(models.Model):
 
 
 class Review(models.Model):
-  appointment = models.ForeignKey(Appointment, on_delete=models.CASCADE)
-  rating = models.IntegerField()
+  appointment = models.ForeignKey(Appointment,
+                                  on_delete=models.CASCADE,
+                                  related_name='review',
+                                  primary_key=False)
+  rating = models.FloatField()
   comment = models.CharField(blank=True, null=True, max_length=200)

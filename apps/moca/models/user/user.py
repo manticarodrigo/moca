@@ -1,8 +1,7 @@
 import datetime
 
 from django.conf import settings
-from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
-                                        PermissionsMixin)
+from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager, PermissionsMixin)
 from django.contrib.gis.db import models as gisModels
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import JSONField
@@ -135,6 +134,8 @@ class Therapist(models.Model):
   interests = models.CharField(max_length=100, blank=True, null=True)
   status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
   primary_location = gisModels.PointField(default=Point(0, 0))
+  rating = models.FloatField(default=0)
+  review_count = models.IntegerField(default=0)
 
   objects = TherapistManager()
 
