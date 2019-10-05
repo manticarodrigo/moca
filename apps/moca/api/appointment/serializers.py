@@ -1,5 +1,5 @@
 from datetime import datetime
-from django.db import models
+from django.db import models, transaction
 from rest_framework import serializers
 from decimal import *
 from moca.api.appointment.errors import AppointmentAlreadyReviewed
@@ -8,6 +8,7 @@ from moca.api.user.serializers import PatientSerializer, TherapistSerializer, Ad
 from moca.models import Address, User
 from moca.models.appointment import Appointment, Review
 from moca.models.user import Patient, Therapist
+from enum import *
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -52,12 +53,6 @@ class AppointmentDeserializer(serializers.Serializer):
       raise serializers.ValidationError(f'therapist_id:{value} doesnt exists')
     return value
 
-  def validate_therapist(self, value):
-    address = Address.objects.get(pk=value)
-    if address is None:
-      raise serializers.ValidationError(f'address_id:{value} doesnt exists')
-    return value
-
   def validate_start_time(self, value):
     if value.replace(tzinfo=None) < datetime.utcnow().replace(tzinfo=None):
       raise serializers.ValidationError(f'Start time :{value} should be a future time')
@@ -66,11 +61,19 @@ class AppointmentDeserializer(serializers.Serializer):
   def validate(self, data):
     if data['end_time'] < data['start_time']:
       raise serializers.ValidationError(f'End Time can not be before than Start Time')
+    patient_id = data['patient']
+    address_id = data['address']
+    patient_address = Address.objects.filter(user_id__exact=patient_id).filter(id=address_id)
+    if not patient_address:
+      raise serializers.ValidationError(
+        f'Address Id: {address_id} doesnt belong to patient Id: {patient_id}  ')
     return data
 
+  @transaction.atomic
   def create(self, validated_data):
     patient = Patient.objects.get(user_id=validated_data.pop("patient"))
     therapist = Therapist.objects.get(user_id=validated_data.pop("therapist"))
+    print('checking addresss')
     address = Address.objects.get(id=validated_data.pop("address"))
     appointment = Appointment.objects.create(patient=patient,
                                              therapist=therapist,
@@ -79,6 +82,7 @@ class AppointmentDeserializer(serializers.Serializer):
     return appointment
     # return Appointment(address=address, **validated_data).save()
 
+  @transaction.atomic
   def update(self, instance, validated_data):
     instance.start_time = validated_data.get('start_time', instance.start_time)
     instance.end_time = validated_data.get('end_time', instance.start_time)
@@ -91,6 +95,7 @@ class AppointmentDeserializer(serializers.Serializer):
 
 
 class ReviewSerializer(serializers.Serializer):
+
   appointment_id = serializers.IntegerField(required=True)
   rating = serializers.FloatField(required=True)
   comment = serializers.CharField(required=False)
@@ -100,11 +105,11 @@ class ReviewSerializer(serializers.Serializer):
 
   def validate_rating(self, value):
     getcontext().prec = 2
-    value = Decimal(str(value))
-    if not value <= Decimal(0) and value >= Decimal(5):
+    if not dec(value) <= Decimal(0.00) and dec(value) >= Decimal(5.001):
       raise serializers.ValidationError(f'rating: {value} should be between 0.0 and 5.0')
     return value
 
+  @transaction.atomic
   def create(self, validated_data):
     try:
       appointment_id = validated_data.pop("appointment_id")
@@ -116,40 +121,58 @@ class ReviewSerializer(serializers.Serializer):
       raise AppointmentAlreadyReviewed(appointment_id)
     review = appointment.review.create(rating=validated_data.get('rating'),
                                        comment=validated_data.get('comment'))
-    self.calculate_therapist_rating(appointment, validated_data.get('rating'))
+    rating_service = Rating(Rating.Type.CREATE)
+    rating_service.calculate(therapist=appointment.therapist, new=validated_data.get('rating'))
     return review
 
+  @transaction.atomic
   def update(self, instance, validated_data):
     try:
       appointment_id = validated_data.pop("appointment_id")
       appointment = Appointment.objects.get(pk=appointment_id)
     except Appointment.DoesNotExist:
       raise AppointmentNotFound(appointment_id)
-    instance.rating = validated_data.get('rating', instance.rating)
+    old_rating = instance.rating
+    new_rating = validated_data.get('rating')
+    if old_rating != new_rating:
+      rating_service = Rating(Rating.Type.UPDATE)
+      rating_service.calculate(therapist=appointment.therapist, new=new_rating, old=old_rating)
+      instance.rating = new_rating
+
     instance.comment = validated_data.get('comment', instance.comment)
     instance.save()
-    if instance.rating != validated_data.get('rating', None):
-      self.calculate_therapist_rating(appointment, validated_data.get('rating'))
     return instance
 
-  @staticmethod
-  def calculate_therapist_rating(appointment, new_rating, is_deletion=False):
-    getcontext().prec = 2
-    therapist = appointment.therapist
-    avg_rating = therapist.rating
+
+def dec(db_value):
+  getcontext().prec = 2
+  return Decimal(str(db_value))
+
+
+class Rating:
+  def __init__(self, rating_type):
+    print(f'defining rating_type mk {rating_type}')
+    self.rating_type = rating_type
+
+  class Type(Enum):
+    CREATE = 'CREATE'
+    UPDATE = 'UPDATE'
+    DELETE = 'DELETE'
+
+  def calculate(self, therapist, new=None, old=None):
+    average = therapist.rating
     nb_review = therapist.review_count
-    if not is_deletion:
-      therapist.rating = (Decimal(str(avg_rating)) * nb_review +
-                          Decimal(str(new_rating))) / (nb_review + 1)
+    if self.rating_type.value == self.Type.CREATE.value:
+      therapist.rating = (dec(average) * nb_review + dec(new)) / (nb_review + 1)
       therapist.review_count = nb_review + 1
-    else:
+    elif self.rating_type.value == self.Type.UPDATE.value:
+      therapist.rating = (dec(average) * nb_review - dec(old) + dec(new)) / nb_review
+      therapist.review_count = nb_review
+    elif self.rating_type.value == self.Type.DELETE.value:
       if nb_review > 1:
-        therapist.rating = (Decimal(str(avg_rating)) * nb_review -
-                            Decimal(str(new_rating))) / (nb_review - 1)
+        therapist.rating = (dec(average) * nb_review - dec(old)) / (nb_review - 1)
         therapist.review_count = nb_review - 1
       else:
         therapist.rating = 0
         therapist.review_count = 0
     therapist.save()
-
-    return

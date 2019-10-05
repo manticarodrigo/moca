@@ -4,8 +4,8 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 
 from rest_framework.response import Response
-from moca.api.appointment.serializers import AppointmentSerializer,  AppointmentDeserializer, \
-  ReviewSerializer
+from moca.api.appointment.serializers import AppointmentSerializer, AppointmentDeserializer, \
+  ReviewSerializer, Rating
 from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
 from moca.models.appointment import Appointment, Review
 
@@ -82,8 +82,9 @@ class ReviewAPIDetailView(APIView):
 
   def delete(self, request, appointment_id, review_id, format=None):
     review = self.get_review(review_id)
-    ReviewSerializer.calculate_therapist_rating(review.appointment, review.rating, True)
-    review = review.delete()
+    rating_service = Rating(Rating.Type.DELETE)
+    rating_service.calculate(therapist=review.appointment.therapist, old=review.rating)
+    review.delete()
     return Response({'result': f'Review with id : {review_id} is deleted'},
                     status.HTTP_202_ACCEPTED)
 
