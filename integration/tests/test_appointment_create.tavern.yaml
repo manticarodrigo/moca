@@ -66,3 +66,19 @@ stages:
           id: !anyint
 
 
+  - name: try to set another appointment for same timeline
+    request:
+      url: "{tavern.env_vars.service:s}/api/appointment/create/"
+      headers:
+        Authorization: "Token {moca.therapist.token}"
+        Content-Type: "application/json"
+      method: POST
+      json:
+        patient: "{moca.kwargs.patient_id}"
+        therapist: "{moca.therapist.user.id}"
+        address: "{moca.kwargs.patient_address_id}"
+        start_time: "2019-11-02T09:30:00.000Z"
+        end_time: "2019-11-02T10:00:00.000Z"
+        price : "60"
+    response:
+      status_code: 400

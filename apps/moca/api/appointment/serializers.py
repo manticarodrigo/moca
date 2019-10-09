@@ -58,15 +58,38 @@ class AppointmentDeserializer(serializers.Serializer):
       raise serializers.ValidationError(f'Start time :{value} should be a future time')
     return value
 
+  def validate_end_time(self, value):
+    if value.replace(tzinfo=None) < datetime.utcnow().replace(tzinfo=None):
+      raise serializers.ValidationError(f'End time :{value} should be a future time')
+    return value
+
   def validate(self, data):
-    if data['end_time'] < data['start_time']:
+    start_time = data['start_time']
+    end_time = data['end_time']
+    if end_time < start_time:
       raise serializers.ValidationError(f'End Time can not be before than Start Time')
+
+    # Check if session address belongs to user or not
     patient_id = data['patient']
     address_id = data['address']
     patient_address = Address.objects.filter(user_id__exact=patient_id).filter(id=address_id)
     if not patient_address:
       raise serializers.ValidationError(
         f'Address Id: {address_id} doesnt belong to patient Id: {patient_id}  ')
+    # Check if appointment overlaps with another one
+    overlapped_appointment = Appointment.objects.filter(
+      start_time__range=[start_time, end_time]).first()
+    if not overlapped_appointment is None:
+      raise serializers.ValidationError(
+        f'Requested appointment is overlapping with following appointment time {overlapped_appointment.id}'
+      )
+    overlapped_appointment = Appointment.objects.filter(
+      end_time__range=[start_time, end_time]).first()
+    if not overlapped_appointment is None:
+      raise serializers.ValidationError(
+        f'Requested appointment is overlapping with following appointment time {overlapped_appointment.id}'
+      )
+    # todo Check if requested appointment in away day
     return data
 
   @transaction.atomic
