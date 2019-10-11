@@ -82,3 +82,37 @@ stages:
         price : "60"
     response:
       status_code: 400
+
+  - name: set away day
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/away/"
+      headers:
+        Authorization: "Token {moca.therapist.token}"
+        Content-Type: "application/json"
+      method: POST
+      json:
+        therapist: "{moca.therapist.user.id}"
+        start_date: "2020-11-02"
+        end_date: "2020-11-03"
+    response:
+      status_code: 201
+      body:
+          id: !anyint
+      save:
+        body:
+          awayid: id
+        $ext:
+          function: utils:test_scope
+          extra_kwargs:
+            response_type: 'awayday'
+            therapist_token: "{moca.therapist.token}"
+
+  - name: delete away day
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/away/{moca.awayday.id}"
+      headers:
+        Authorization: "Token {moca.kwargs.therapist_token}"
+        Content-Type: "application/json"
+      method: DELETE
+    response:
+      status_code: 200

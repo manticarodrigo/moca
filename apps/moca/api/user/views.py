@@ -13,7 +13,8 @@ from moca.models.user.user import AwayDays
 
 from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
                           PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
-                          UserRequestSerializer, UserSerializer, LeaveSerializer)
+                          UserRequestSerializer, UserSerializer, LeaveSerializer,
+                          LeaveResponseSerializer)
 
 
 # {{ENV}}/api/user/patient
@@ -116,9 +117,16 @@ class TherapistAPIDetailView(APIView):
     pass
 
 
-class TherapistLeaveView(APIView):
-  def post(self, request, therapist_id, format=None):
-    leave = LeaveSerializer(data=request.data)
+class TherapistLeaveAPIView(APIView):
+  def post(self, request, format=None):
+    awaydays = LeaveSerializer(data=request.data)
+    awaydays.is_valid(raise_exception=True)
+    awaydays = awaydays.save()
+    awaydays = AwayDays.objects.get(pk=awaydays.id)
+    return Response(LeaveResponseSerializer(awaydays).data, status.HTTP_201_CREATED)
 
-  # new_start_date = request.data[]
-  # AwayDays.objects.filter(therapist_id=therapist_id).filter(start_date__range=)
+
+class TherapistLeaveDetailView(APIView):
+  def delete(self, request, leave_id, format=None):
+    AwayDays.objects.get(id=leave_id).delete()
+    return Response('Leave succesfully deleted', status.HTTP_200_OK)

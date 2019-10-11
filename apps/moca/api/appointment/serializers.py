@@ -10,7 +10,7 @@ from moca.models.appointment import Appointment, Review
 from moca.models.user import Patient, Therapist
 from enum import *
 
-from apps.moca.api.util.Validator import RequestValidator
+from moca.api.util.Validator import RequestValidator
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -42,24 +42,19 @@ class AppointmentDeserializer(serializers.Serializer):
     return value
 
   def validate_patient(self, value):
-    RequestValidator.patient()
+    RequestValidator.patient(value)
     return value
 
   def validate_therapist(self, value):
-    RequestValidator.therapist()
+    RequestValidator.therapist(value)
     return value
 
   def validate_address(self, value):
-    RequestValidator.address()
+    RequestValidator.address(value)
     return value
 
   def validate_start_time(self, value):
     RequestValidator.future_time(value)
-    return value
-
-  def validate_end_time(self, value):
-    if value.replace(tzinfo=None) < datetime.utcnow().replace(tzinfo=None):
-      raise serializers.ValidationError(f'End time :{value} should be a future time')
     return value
 
   def validate(self, data):

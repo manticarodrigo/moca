@@ -147,6 +147,6 @@ class AwayDays(models.Model):
   therapist = models.ForeignKey(Therapist,
                                 on_delete=models.CASCADE,
                                 primary_key=False,
-                                related_name='leaves')
+                                related_name='awaydays')
   start_date = models.DateField()
   end_date = models.DateField()

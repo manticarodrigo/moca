@@ -14,6 +14,7 @@ from rest_framework_gis.fields import GeoJsonDict
 from moca.api.util.Validator import RequestValidator
 from moca.models.address import Address
 from moca.models.user import Patient, Therapist, User
+from moca.models.user.user import AwayDays
 
 User = get_user_model()
 
@@ -132,6 +133,16 @@ class LeaveSerializer(serializers.Serializer):
   start_date = serializers.DateField(required=True)
   end_date = serializers.DateField(required=True)
 
+  class Meta:
+    fields = '__all__'
+
+  def create(self, validated):
+    therapist = Therapist.objects.get(user_id=validated.pop('therapist'))
+    awaydays = therapist.awaydays.create(start_date=validated.get('start_date'),
+                                         end_date=validated.get('end_date'))
+    print(f'I passed here {awaydays} ')
+    return awaydays
+
   def validate_therapist(self, value):
     RequestValidator.therapist(value)
     return value
@@ -140,5 +151,17 @@ class LeaveSerializer(serializers.Serializer):
     RequestValidator.future_date(value)
     return value
 
-  def validate(self, value):
-    RequestValidator.end_after_start('end_date', 'start_date')
+  def validate(self, data):
+    RequestValidator.end_after_start(data, 'end_date', 'start_date')
+    return data
+
+
+class LeaveResponseSerializer(serializers.Serializer):
+  id = serializers.IntegerField(required=False)
+  therapist = TherapistSerializer(required=True)
+  start_date = serializers.DateField(required=True)
+  end_date = serializers.DateField(required=True)
+
+  class Meta:
+    fields = '__all__'
+    depth = 1
