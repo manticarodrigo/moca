@@ -9,11 +9,11 @@ from rest_framework.views import APIView
 
 from moca.models import User
 from moca.models.user import Patient, Therapist
+from moca.models.user.user import AwayDays
 
-from .serializers import (AddressSerializer, FCMDeviceSerializer,
-                          PatientRequestSerializer, PatientSerializer,
-                          TherapistRequestSerializer, TherapistSerializer,
-                          UserRequestSerializer, UserSerializer)
+from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
+                          PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
+                          UserRequestSerializer, UserSerializer, LeaveSerializer)
 
 
 # {{ENV}}/api/user/patient
@@ -109,8 +109,16 @@ class TherapistAPIView(APIView):
 
 
 class TherapistAPIDetailView(APIView):
-  def get(self, request, patient_id, format=None):
+  def get(self, request, therapist_id, format=None):
     pass
 
-  def put(self, request, patient_id, format=None):
+  def put(self, request, therapist_id, format=None):
     pass
+
+
+class TherapistLeaveView(APIView):
+  def post(self, request, therapist_id, format=None):
+    leave = LeaveSerializer(data=request.data)
+
+  # new_start_date = request.data[]
+  # AwayDays.objects.filter(therapist_id=therapist_id).filter(start_date__range=)

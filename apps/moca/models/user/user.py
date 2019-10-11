@@ -141,3 +141,12 @@ class Therapist(models.Model):
 
   def __str__(self):
     return f'Therapist Object user: {self.user} bio : {self.bio} cert_date : {self.cert_date}  operation_radius : {self.operation_radius }  qualifications : {self.qualifications }  status: {self.status} '
+
+
+class AwayDays(models.Model):
+  therapist = models.ForeignKey(Therapist,
+                                on_delete=models.CASCADE,
+                                primary_key=False,
+                                related_name='leaves')
+  start_date = models.DateField()
+  end_date = models.DateField()

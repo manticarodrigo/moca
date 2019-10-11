@@ -11,6 +11,7 @@ from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
 
+from moca.api.util.Validator import RequestValidator
 from moca.models.address import Address
 from moca.models.user import Patient, Therapist, User
 
@@ -124,3 +125,20 @@ class TherapistRequestSerializer(serializers.Serializer):
     therapist['primary_location'] = Point(lng, lat)
 
     return Therapist.objects.create(user=user, **therapist)
+
+
+class LeaveSerializer(serializers.Serializer):
+  therapist = serializers.IntegerField(required=True)
+  start_date = serializers.DateField(required=True)
+  end_date = serializers.DateField(required=True)
+
+  def validate_therapist(self, value):
+    RequestValidator.therapist(value)
+    return value
+
+  def validate_start_date(self, value):
+    RequestValidator.future_date(value)
+    return value
+
+  def validate(self, value):
+    RequestValidator.end_after_start('end_date', 'start_date')

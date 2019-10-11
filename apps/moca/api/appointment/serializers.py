@@ -5,6 +5,8 @@ from decimal import *
 from moca.api.appointment.errors import AppointmentAlreadyReviewed
 from moca.api.appointment.errors import AppointmentNotFound
 from moca.api.user.serializers import PatientSerializer, TherapistSerializer, AddressSerializer
+from moca.api.util import Validator
+from moca.api.util.Validator import RequestValidator
 from moca.models import Address, User
 from moca.models.appointment import Appointment, Review
 from moca.models.user import Patient, Therapist
@@ -40,27 +42,19 @@ class AppointmentDeserializer(serializers.Serializer):
     return value
 
   def validate_patient(self, value):
-    try:
-      patient = Patient.objects.get(user_id=value)
-    except Patient.DoesNotExist:
-      raise serializers.ValidationError(f'patient_id:{value} doesnt exists')
+    RequestValidator.patient(value)
     return value
 
   def validate_therapist(self, value):
-    try:
-      therapist = Therapist.objects.get(user_id=value)
-    except Therapist.DoesNotExist:
-      raise serializers.ValidationError(f'therapist_id:{value} doesnt exists')
+    RequestValidator.therapist(value)
+    return value
+
+  def validate_address(self, value):
+    RequestValidator.address(value)
     return value
 
   def validate_start_time(self, value):
-    if value.replace(tzinfo=None) < datetime.utcnow().replace(tzinfo=None):
-      raise serializers.ValidationError(f'Start time :{value} should be a future time')
-    return value
-
-  def validate_end_time(self, value):
-    if value.replace(tzinfo=None) < datetime.utcnow().replace(tzinfo=None):
-      raise serializers.ValidationError(f'End time :{value} should be a future time')
+    RequestValidator.future_time(value)
     return value
 
   def validate(self, data):
@@ -96,7 +90,6 @@ class AppointmentDeserializer(serializers.Serializer):
   def create(self, validated_data):
     patient = Patient.objects.get(user_id=validated_data.pop("patient"))
     therapist = Therapist.objects.get(user_id=validated_data.pop("therapist"))
-    print('checking addresss')
     address = Address.objects.get(id=validated_data.pop("address"))
     appointment = Appointment.objects.create(patient=patient,
                                              therapist=therapist,
