@@ -64,7 +64,7 @@ class TherapistSerializer(serializers.ModelSerializer):
   class Meta:
     model = Therapist
     fields = ('bio', 'cert_date', 'operation_radius', 'qualifications', 'interests', 'status',
-              'user')
+              'user', 'tariffs')
 
 
 class UserRequestSerializer(serializers.Serializer):
@@ -126,6 +126,9 @@ class TherapistRequestSerializer(serializers.Serializer):
     therapist['primary_location'] = Point(lng, lat)
 
     return Therapist.objects.create(user=user, **therapist)
+
+  def update(self, validated):
+    pass
 
 
 class LeaveSerializer(serializers.Serializer):

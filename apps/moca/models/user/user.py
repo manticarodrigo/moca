@@ -136,6 +136,7 @@ class Therapist(models.Model):
   primary_location = gisModels.PointField(default=Point(0, 0))
   rating = models.FloatField(default=0)
   review_count = models.IntegerField(default=0)
+  tariffs = JSONField(default=dict, blank=True, null=True)
 
   objects = TherapistManager()
 
