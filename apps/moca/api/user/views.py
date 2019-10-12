@@ -108,6 +108,21 @@ class TherapistAPIView(APIView):
       ailments = json.loads(criteria['ailments'])
       therapists = therapists.filter(preferred_ailments__contains=ailments)
 
+    if 'max_price' in criteria:
+      pass
+      # TODO either this works, or a pricing table might be needed. For now, it
+      # doesn't seem to be working
+      """
+      max_price = int(criteria['max_price'])
+      from django.db.models import Q
+      price_in_range = (
+        (Q(tariffs__thirty__isnull=False) & Q(tariffs__thirty__lt=max_price)) |
+        (Q(tariffs__fourtyfive__isnull=False) & Q(tariffs__fourtyfive__lt=max_price)) |
+        (Q(tariffs__sixty__isnull=False) & Q(tariffs__sixty__lt=max_price)) |
+        (Q(tariffs__evaluation__isnull=False) & Q(tariffs__evaluation__lt=max_price)))
+      therapists = therapists.filter(price_in_range)
+      """
+
     METERS_PER_MILE = 1609.34
 
     therapists = therapists.filter(primary_location__distance_lt=(user_location,

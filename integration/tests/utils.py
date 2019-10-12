@@ -13,6 +13,8 @@ AILMENTS = [
   "Other"
 ]
 
+SESSION_TYPES = ["thirty", "fourtyfive", "sixty", "evaluation"]
+
 therapists = []
 patients = []
 
@@ -31,14 +33,17 @@ def fake_user(gender=None):
   return Box(user)
 
 
-def fake_therapist(ailments=None):
+def fake_therapist(ailments=None, tariffs=None):
+  priced = random.choices(SESSION_TYPES, k=random.randint(0, len(SESSION_TYPES)))
+  random_tariffs = {session_type: random.randint(10, 50) for session_type in priced}
   therapist = {
     "therapist": {
       "email": fake.email(),
       "firstName": fake.first_name(),
       "lastName": fake.last_name(),
       "password": 'test1234',
-      "preferredAilments": random.choices(AILMENTS, k=random.randint(0, len(AILMENTS)))
+      "preferredAilments": random.choices(AILMENTS, k=random.randint(0, len(AILMENTS))),
+      "tariffs": random_tariffs if not tariffs else tariffs
     }
   }
 
@@ -93,10 +98,10 @@ def fake_patient_create_body():
   return Box(patient)
 
 
-def fake_therapist_create_body(ailments=None, gender=None):
+def fake_therapist_create_body(ailments=None, gender=None, tariffs=None):
   therapist = {
     **fake_user(gender),
-    **fake_therapist(ailments),
+    **fake_therapist(ailments, tariffs),
     **fake_device(),
     **fake_addresses()
   }

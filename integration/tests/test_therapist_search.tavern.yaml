@@ -14,6 +14,11 @@ stages:
               - 'Elbow'
               - 'WeirdPart'
             gender: 'M'
+            tariffs:
+              thirty: 10
+              fourtyfive: 15
+              sixty: 20
+              evaluation: 100
     response:
       status_code: 201
       body:
@@ -57,6 +62,17 @@ stages:
   - name: search therapist by ailment and gender
     request:
       url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}&ailments=[\"Hip/Pelvis\", \"Elbow\", \"WeirdPart\"]"
+      headers:
+        Authorization: "Token {token:s}"
+    response:
+      status_code: 200
+      body:
+        - user:
+            id: !int "{created_therapist.user.id:d}"
+
+  - name: search therapist by ailment, gender and price
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}&ailments=[\"Hip/Pelvis\", \"Elbow\", \"WeirdPart\"]&max_price=10"
       headers:
         Authorization: "Token {token:s}"
     response:
