@@ -140,7 +140,6 @@ class LeaveSerializer(serializers.Serializer):
     therapist = Therapist.objects.get(user_id=validated.pop('therapist'))
     awaydays = therapist.awaydays.create(start_date=validated.get('start_date'),
                                          end_date=validated.get('end_date'))
-    print(f'I passed here {awaydays} ')
     return awaydays
 
   def validate_therapist(self, value):
