@@ -25,7 +25,6 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
   # Django
-  'fcm_django',
   'django.contrib.admin',
   'django.contrib.auth',
   'django.contrib.contenttypes',
@@ -38,6 +37,7 @@ INSTALLED_APPS = [
   'corsheaders',
   'knox',
   'rest_framework_gis',
+  'exponent_server_sdk',
   # Apps
   'moca.apps.MocaConfig',
 ]
@@ -153,18 +153,3 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # APPEND_SLASH=False
-
-FCM_DJANGO_SETTINGS = {
-  "APP_VERBOSE_NAME": "LoyalSpots",
-  # default: _('FCM Django')
-  "FCM_SERVER_KEY": "AIzaSyD - jU8Bh5L9BRYpBLlz - 9v2EElcy_3sxYs",
-  # true if you want to have only one active device per registered user at a time
-  # default: False
-  "ONE_DEVICE_PER_USER": False,
-  # devices to which notifications cannot be sent,
-  # are deleted upon receiving error response from FCM
-  # default: False
-  "DELETE_INACTIVE_DEVICES": False,
-}
-
-FCM_DJANGO_SETTINGS.setdefault("USER_MODEL", AUTH_USER_MODEL)

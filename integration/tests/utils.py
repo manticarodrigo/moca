@@ -49,20 +49,6 @@ def fake_therapist(ailments=None, tariffs=None):
   return Box(therapist)
 
 
-def fake_device():
-  device = {
-    "fcmdevice_set": [{
-      "registrationId": fake.uuid4(),
-      "name": fake.user_name(),
-      "active": True,
-      "device_id": fake.uuid4(),
-      "type": "android"
-    }]
-  }
-
-  return Box(device)
-
-
 def fake_address():
   return {
     "primary": False,
@@ -90,7 +76,7 @@ def fake_addresses():
 
 
 def fake_patient_create_body():
-  patient = {**fake_user(), **fake_device(), **fake_addresses()}
+  patient = {**fake_user(), **fake_addresses()}
   patients.append(patient)
   return Box(patient)
 
@@ -99,7 +85,6 @@ def fake_therapist_create_body(ailments=None, gender=None, tariffs=None):
   therapist = {
     **fake_user(gender),
     **fake_therapist(ailments, tariffs),
-    **fake_device(),
     **fake_addresses()
   }
   therapists.append(therapist)

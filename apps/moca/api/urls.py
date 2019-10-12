@@ -6,4 +6,5 @@ urlpatterns = [
   path('user/', include('moca.api.user.urls')),
   path('authenticate/', include('moca.api.authenticate.urls')),
   path('appointment/', include('moca.api.appointment.urls')),
+  path('device/', include('moca.api.device.urls')),
 ]

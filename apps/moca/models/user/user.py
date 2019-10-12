@@ -155,3 +155,8 @@ class AwayDays(models.Model):
                                 related_name='awaydays')
   start_date = models.DateField()
   end_date = models.DateField()
+
+class Device(models.Model):
+  user = models.ForeignKey(User, on_delete=models.CASCADE)
+  token = models.CharField(max_length=50)
+  type = models.CharField(max_length=20)

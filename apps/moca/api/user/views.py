@@ -17,10 +17,9 @@ from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 
 from .errors import EditsNotAllowed
-from .serializers import (AddressSerializer, FCMDeviceSerializer, LeaveResponseSerializer,
-                          LeaveSerializer, PatientRequestSerializer, PatientSerializer,
-                          TherapistRequestSerializer, TherapistSerializer, UserRequestSerializer,
-                          UserSerializer, PriceSerializer)
+from .serializers import (AddressSerializer, PatientRequestSerializer, PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
+                          UserRequestSerializer, UserSerializer, LeaveSerializer,
+                          LeaveResponseSerializer)
 
 
 # {{ENV}}/api/user/patient
@@ -33,7 +32,6 @@ class PatientAPIView(APIView):
       {
         "user": UserSerializer(patient.user).data,
         "addresses": AddressSerializer(patient.user.addresses, many=True).data,
-        "devices": FCMDeviceSerializer(patient.user.fcmdevice_set_set.data, many=True).data,
         "token": AuthToken.objects.create(patient.user)[1]
       }, status.HTTP_201_CREATED)
 
@@ -53,14 +51,13 @@ class PatientAPIDetail(APIView):
     self.is_belong_to_auth_user(request, existing)
     req_serializer = UserRequestSerializer(instance=existing, data=request.data)
     req_serializer.is_valid(raise_exception=True)
-    user, addresses, devices = req_serializer.save()
+    user, addresses = req_serializer.save()
 
     return Response({
       "user": UserSerializer(user).data,
       # todo deserializer only accepts one object.
-      #  find a way to deserialize array for device and addresses
+      #  find a way to deserialize array for addresses
       "addresses": AddressSerializer(addresses[0]).data,
-      "devices": FCMDeviceSerializer(devices[0]).data
     })
 
   def set_user_id_if_nonexists(self, addr, request):

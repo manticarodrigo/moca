@@ -6,7 +6,6 @@ from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
-from fcm_django.models import FCMDevice
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
@@ -25,12 +24,6 @@ SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 class AddressSerializer(serializers.ModelSerializer):
   class Meta:
     model = Address
-    fields = '__all__'
-
-
-class FCMDeviceSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = FCMDevice
     fields = '__all__'
 
 
@@ -92,7 +85,6 @@ class TherapistSerializer(serializers.ModelSerializer):
 class UserRequestSerializer(serializers.Serializer):
   user = UserSerializer(many=False, required=True)
   addresses = AddressSerializer(many=True, required=False)
-  fcmdevice_set = FCMDeviceSerializer(many=True, required=False)
 
   @transaction.atomic
   def create(self, validated):
@@ -103,11 +95,6 @@ class UserRequestSerializer(serializers.Serializer):
     addresses = addresses.save()
     user.addresses.set(addresses)
 
-    fcmdevices = FCMDeviceSerializer(data=validated.pop("fcmdevice_set"), many=True)
-    fcmdevices.is_valid(raise_exception=True)
-    fcmdevices.save()
-    user.fcmdevice_set_set = fcmdevices
-
     user.save()
 
     return user
@@ -116,7 +103,6 @@ class UserRequestSerializer(serializers.Serializer):
 class PatientRequestSerializer(serializers.Serializer):
   user = UserSerializer()
   addresses = AddressSerializer(many=True, required=False)
-  fcmdevice_set = FCMDeviceSerializer(many=True, required=False)
 
   def create(self, validated):
     validated['user']['type'] = User.PATIENT
@@ -132,7 +118,6 @@ class TherapistRequestSerializer(serializers.Serializer):
   user = UserSerializer(many=False, required=True)
   therapist = TherapistSerializer(required=True)
   addresses = AddressSerializer(many=True, required=False)
-  fcmdevice_set = FCMDeviceSerializer(many=True, required=False)
 
   def create(self, validated):
     therapist = validated.pop('therapist')
