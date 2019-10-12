@@ -127,9 +127,6 @@ class TherapistRequestSerializer(serializers.Serializer):
 
     return Therapist.objects.create(user=user, **therapist)
 
-  def update(self, validated):
-    pass
-
 
 class LeaveSerializer(serializers.Serializer):
   therapist = serializers.IntegerField(required=True)
