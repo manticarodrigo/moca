@@ -9,3 +9,4 @@ django-rest-knox==4.1.0
 djangorestframework-gis==0.14
 fcm-django==0.2.21
 django-request-logging==0.7.0
+Pillow==6.2.0
