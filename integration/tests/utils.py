@@ -54,10 +54,13 @@ def fake_device():
 
 def fake_address():
   return {
-    "name": random.choice(["Home", "Work", "Dumpster"]),
-    "text": fake.address(),
     "primary": False,
+    "name": random.choice(["Home", "Work", "Dumpster"]),
+    "street": fake.street_address(),
     "apartment": fake.numerify(text="##"),
+    "zip_code": fake.postcode(),
+    "city": fake.city(),
+    "state": fake.state_abbr(),
     "location": {
       "type": "Point",
       "coordinates": [float(fake.longitude()), float(fake.latitude())]
