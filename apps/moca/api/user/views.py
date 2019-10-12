@@ -1,3 +1,5 @@
+import json
+
 from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -12,10 +14,10 @@ from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 
 from .errors import EditsNotAllowed
-from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
-                          PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
-                          UserRequestSerializer, UserSerializer, LeaveSerializer,
-                          LeaveResponseSerializer)
+from .serializers import (AddressSerializer, FCMDeviceSerializer, LeaveResponseSerializer,
+                          LeaveSerializer, PatientRequestSerializer, PatientSerializer,
+                          TherapistRequestSerializer, TherapistSerializer, UserRequestSerializer,
+                          UserSerializer)
 
 
 # {{ENV}}/api/user/patient
@@ -79,7 +81,7 @@ class PatientAPIDetail(APIView):
 
 
 class TherapistAPIView(APIView):
-  valid_criteria = ['gender', 'orderby']
+  valid_criteria = ['gender', 'ailments', 'orderby']
 
   def post(self, request, format=None):
     therapist_req_serializer = TherapistRequestSerializer(data=request.data)
@@ -99,7 +101,12 @@ class TherapistAPIView(APIView):
     user_location = request.user.addresses.get(primary=True).location
 
     if 'gender' in criteria:
-      therapists = therapists.filter(user__gender=criteria['gender'])
+      gender = criteria['gender']
+      therapists = therapists.filter(user__gender=gender)
+
+    if 'ailments' in criteria:
+      ailments = json.loads(criteria['ailments'])
+      therapists = therapists.filter(preferred_ailments__contains=ailments)
 
     METERS_PER_MILE = 1609.34
 

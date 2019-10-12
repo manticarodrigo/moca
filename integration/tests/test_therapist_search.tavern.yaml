@@ -8,6 +8,12 @@ stages:
       json:
         $ext:
           function: utils:fake_therapist_create_body
+          extra_kwargs:
+            ailments:
+              - 'Hip/Pelvis'
+              - 'Elbow'
+              - 'WeirdPart'
+            gender: 'M'
     response:
       status_code: 201
       body:
@@ -16,15 +22,19 @@ stages:
       save:
         body:
           user_id: user.id
+        $ext:
+          function: utils:test_scope
+          extra_kwargs:
+            response_type: created_therapist
 
   - name: successful login
     request:
       url: "{tavern.env_vars.service:s}/api/authenticate/login"
       method: POST
       json:
-        username: "{globals.therapists[0].user.email}"
-        email: "{globals.therapists[0].user.email}"
-        password: "{globals.therapists[0].user.password}"
+        username: "{created_therapist.user.email}"
+        email: "{created_therapist.user.email}"
+        password: "test1234"
     response:
       status_code: 200
       body:
@@ -33,10 +43,9 @@ stages:
         body:
           token: token
 
-
-  - name: search therapist
+  - name: search therapist by gender
     request:
-      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={globals.therapists[0].user.gender}"
+      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}"
       headers:
         Authorization: "Token {token:s}"
     response:
@@ -44,3 +53,14 @@ stages:
       body:
         - user:
             id: !anyint
+
+  - name: search therapist by ailment and gender
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}&ailments=[\"Hip/Pelvis\", \"Elbow\", \"WeirdPart\"]"
+      headers:
+        Authorization: "Token {token:s}"
+    response:
+      status_code: 200
+      body:
+        - user:
+            id: !int "{created_therapist.user.id:d}"

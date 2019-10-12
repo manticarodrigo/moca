@@ -1,8 +1,7 @@
 from django.contrib import admin
 
-from .models import (Address, AttachmentMessage, Conversation, Patient,
-                     RequestMessage, ResponseMessage, TextMessage, Therapist,
-                     User)
+from .models import (Address, AttachmentMessage, Conversation, Patient, RequestMessage,
+                     ResponseMessage, TextMessage, Therapist, User)
 
 admin.site.register(User)
 admin.site.register(Address)

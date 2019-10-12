@@ -17,7 +17,7 @@ therapists = []
 patients = []
 
 
-def fake_user():
+def fake_user(gender=None):
   user = {
     "user": {
       "email": fake.email(),
@@ -25,13 +25,13 @@ def fake_user():
       "lastName": fake.last_name(),
       # "password": fake.pystr(min_chars=10, max_chars=20),
       "password": 'test1234',
-      "gender": random.choice(['M', 'F'])
+      "gender": random.choice(['M', 'F']) if not gender else gender
     }
   }
   return Box(user)
 
 
-def fake_therapist():
+def fake_therapist(ailments=None):
   therapist = {
     "therapist": {
       "email": fake.email(),
@@ -41,6 +41,9 @@ def fake_therapist():
       "preferredAilments": random.choices(AILMENTS, k=random.randint(0, len(AILMENTS)))
     }
   }
+
+  if ailments:
+    therapist['therapist']['preferredAilments'] = ailments
   return Box(therapist)
 
 
@@ -90,8 +93,13 @@ def fake_patient_create_body():
   return Box(patient)
 
 
-def fake_therapist_create_body():
-  therapist = {**fake_user(), **fake_therapist(), **fake_device(), **fake_addresses()}
+def fake_therapist_create_body(ailments=None, gender=None):
+  therapist = {
+    **fake_user(gender),
+    **fake_therapist(ailments),
+    **fake_device(),
+    **fake_addresses()
+  }
   therapists.append(therapist)
   return Box(therapist)
 
@@ -107,15 +115,24 @@ def fake_end_time():
 
 
 last_box = {}
+
+
 def test_scope(response, **kwargs):
   global last_box
   response_type = kwargs.pop('response_type')
 
-  saved_box = Box({**last_box, "globals": globals(), response_type:
-    {**response.json(), **kwargs}, "kwargs": kwargs})
+  saved_box = Box({
+    **last_box, "globals": globals(),
+    response_type: {
+      **response.json(),
+      **kwargs
+    },
+    "kwargs": kwargs
+  })
   last_box = saved_box
 
   return saved_box
+
 
 def return_(name=None):
   if name:
