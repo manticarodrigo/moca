@@ -115,7 +115,6 @@ def test_scope(response, **kwargs):
     {**response.json(), **kwargs}, "kwargs": kwargs})
   last_box = saved_box
 
-  # print(repr(saved_box))
   return saved_box
 
 def return_(name=None):
