@@ -30,7 +30,6 @@ class AppointmentDeserializer(serializers.Serializer):
   start_time_expected = serializers.DateTimeField(required=False)
   end_time_expected = serializers.DateTimeField(required=False)
   price = serializers.IntegerField(required=True)
-  notes = serializers.CharField(required=False)
   is_cancelled = serializers.BooleanField(required=False, default=False)
 
   class Meta:
@@ -104,7 +103,6 @@ class AppointmentDeserializer(serializers.Serializer):
     instance.end_time = validated_data.get('end_time', instance.start_time)
     instance.start_time_expected = validated_data.get('start_time_expected', instance.start_time)
     instance.end_time_expected = validated_data.get('end_time_expected', instance.start_time)
-    instance.notes = validated_data.get('notes', instance.notes)
     instance.modified_at = datetime.now()
     instance = instance.save()
     return instance
