@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager, PermissionsMixin)
 from django.contrib.gis.db import models as gisModels
 from django.contrib.gis.geos import Point
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -138,6 +138,7 @@ class Therapist(models.Model):
   rating = models.FloatField(default=0)
   review_count = models.IntegerField(default=0)
   tariffs = JSONField(default=dict, blank=True, null=True)
+  preferred_ailments = ArrayField(models.CharField(max_length=20), size=20)
 
   objects = TherapistManager()
 

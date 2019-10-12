@@ -11,6 +11,7 @@ from moca.models import User
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 
+from .errors import EditsNotAllowed
 from .serializers import (AddressSerializer, FCMDeviceSerializer, PatientRequestSerializer,
                           PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
                           UserRequestSerializer, UserSerializer, LeaveSerializer,
@@ -114,9 +115,16 @@ class TherapistAPIDetailView(APIView):
     pass
 
   def put(self, request, therapist_id, format=None):
-    pass
+    existing = Therapist.objects.get(user_id=therapist_id)
+    modified = TherapistSerializer(instance=existing, data=request.data, partial=True)
 
+    if not request.user == existing.user:
+      raise EditsNotAllowed(request.user.id, existing.user.id)
 
+    modified.is_valid(raise_exception=True)
+    modified.save()
+
+    return Response(modified.data)
 class TherapistLeaveAPIView(APIView):
   def post(self, request, format=None):
     awaydays = LeaveSerializer(data=request.data)

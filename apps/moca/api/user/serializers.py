@@ -59,12 +59,12 @@ class PatientSerializer(serializers.ModelSerializer):
 
 
 class TherapistSerializer(serializers.ModelSerializer):
-  user = UserSerializer(required=False)
+  user = UserSerializer(required=False, read_only=True)
 
   class Meta:
     model = Therapist
     fields = ('bio', 'cert_date', 'operation_radius', 'qualifications', 'status',
-              'user', 'tariffs')
+              'user', 'tariffs', 'preferred_ailments')
 
 
 class UserRequestSerializer(serializers.Serializer):

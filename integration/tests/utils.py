@@ -8,6 +8,11 @@ fake = Faker()
 fake.seed(9001)
 random.seed(9001)
 
+AILMENTS = [
+  "Neck", "Shoulder", "Elbow", "Write/Hand", "Low Back", "Hip/Pelvis", "Knee", "Ankle/Foot",
+  "Other"
+]
+
 therapists = []
 patients = []
 
@@ -32,7 +37,8 @@ def fake_therapist():
       "email": fake.email(),
       "firstName": fake.first_name(),
       "lastName": fake.last_name(),
-      "password": 'test1234'
+      "password": 'test1234',
+      "preferredAilments": random.choices(AILMENTS, k=random.randint(0, len(AILMENTS)))
     }
   }
   return Box(therapist)
@@ -100,12 +106,20 @@ def fake_end_time():
   return datetime.now() + timedelta(days=2, hours=1)
 
 
+last_box = {}
 def test_scope(response, **kwargs):
+  global last_box
   response_type = kwargs.pop('response_type')
-  saved_box = Box(
-    {"moca": {
-      "globals": globals(),
-      response_type: response.json(),
-      "kwargs": kwargs
-    }})
+
+  saved_box = Box({**last_box, "globals": globals(), response_type:
+    {**response.json(), **kwargs}, "kwargs": kwargs})
+  last_box = saved_box
+
+  # print(repr(saved_box))
   return saved_box
+
+def return_(name=None):
+  if name:
+    return last_box[name]
+  else:
+    return {}
