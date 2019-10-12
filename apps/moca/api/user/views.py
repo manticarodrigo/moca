@@ -125,6 +125,8 @@ class TherapistAPIDetailView(APIView):
     modified.save()
 
     return Response(modified.data)
+
+
 class TherapistLeaveAPIView(APIView):
   def post(self, request, format=None):
     awaydays = LeaveSerializer(data=request.data)
