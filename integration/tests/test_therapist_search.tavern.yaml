@@ -22,9 +22,9 @@ stages:
       url: "{tavern.env_vars.service:s}/api/authenticate/login"
       method: POST
       json:
-        username: "{moca.globals.therapists[0].user.email}"
-        email: "{moca.globals.therapists[0].user.email}"
-        password: "{moca.globals.therapists[0].user.password}"
+        username: "{globals.therapists[0].user.email}"
+        email: "{globals.therapists[0].user.email}"
+        password: "{globals.therapists[0].user.password}"
     response:
       status_code: 200
       body:
@@ -36,7 +36,7 @@ stages:
 
   - name: search therapist
     request:
-      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={moca.globals.therapists[0].user.gender}"
+      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={globals.therapists[0].user.gender}"
       headers:
         Authorization: "Token {token:s}"
     response:

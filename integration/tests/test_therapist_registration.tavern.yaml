@@ -27,9 +27,9 @@ stages:
       url: "{tavern.env_vars.service:s}/api/authenticate/login"
       method: POST
       json:
-        username: "{moca.therapist.user.email}"
-        email: "{moca.therapist.user.email}"
-        password: "{moca.kwargs.password}"
+        username: "{therapist.user.email}"
+        email: "{therapist.user.email}"
+        password: "{kwargs.password}"
     response:
       status_code: 200
       body:
@@ -40,9 +40,9 @@ stages:
       url: "{tavern.env_vars.service:s}/api/authenticate/login"
       method: POST
       json:
-        username: "{moca.therapist.user.email}"
-        email: "{moca.therapist.user.email}"
-        password: "{moca.therapist.user.email}"
+        username: "{therapist.user.email}"
+        email: "{therapist.user.email}"
+        password: "{therapist.user.email}"
     response:
       status_code: 400
       body:
