@@ -34,8 +34,6 @@ def fake_user(gender=None):
 
 
 def fake_therapist(ailments=None, tariffs=None):
-  priced = random.choices(SESSION_TYPES, k=random.randint(0, len(SESSION_TYPES)))
-  random_tariffs = {session_type: random.randint(10, 50) for session_type in priced}
   therapist = {
     "therapist": {
       "email": fake.email(),
@@ -43,7 +41,6 @@ def fake_therapist(ailments=None, tariffs=None):
       "lastName": fake.last_name(),
       "password": 'test1234',
       "preferredAilments": random.choices(AILMENTS, k=random.randint(0, len(AILMENTS))),
-      "tariffs": random_tariffs if not tariffs else tariffs
     }
   }
 

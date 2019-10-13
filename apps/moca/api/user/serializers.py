@@ -13,10 +13,13 @@ from rest_framework_gis.fields import GeoJsonDict
 
 from moca.api.util.Validator import RequestValidator
 from moca.models.address import Address
+from moca.models import Price
 from moca.models.user import Patient, Therapist, User
 from moca.models.user.user import AwayDays
 
 User = get_user_model()
+
+SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -58,13 +61,32 @@ class PatientSerializer(serializers.ModelSerializer):
     depth = 2
 
 
+class PriceSerializer(serializers.ModelSerializer):
+  therapist = serializers.PrimaryKeyRelatedField(read_only=True)
+
+  class Meta:
+    model = Price
+    fields = ('therapist', 'session_type', 'price')
+
+  def create(self, validated_data):
+    validated_data['therapist'] = Therapist.objects.get(user=self.context['request'].user)
+    price = validated_data.pop('price')
+    Price.objects.filter(**validated_data).delete()
+    return Price.objects.create(**validated_data, price=price)
+
+  def validate_session_type(self, session_type):
+    if session_type not in SESSION_TYPES:
+      raise serializers.ValidationError(f"Invalid session type should be one of {SESSION_TYPES}")
+    return session_type
+
+
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer(required=False, read_only=True)
 
   class Meta:
     model = Therapist
-    fields = ('bio', 'cert_date', 'operation_radius', 'qualifications', 'status',
-              'user', 'tariffs', 'preferred_ailments')
+    fields = ('bio', 'cert_date', 'operation_radius', 'qualifications', 'status', 'user',
+              'preferred_ailments')
 
 
 class UserRequestSerializer(serializers.Serializer):

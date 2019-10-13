@@ -1,4 +1,4 @@
-test_name: Therapist search
+test_name: Therapist tariffs
 
 stages:
   - name: register therapist
@@ -43,20 +43,33 @@ stages:
         body:
           token: token
 
-  - name: search therapist by gender
+  - name: edit prices
     request:
-      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}"
+      url: "{tavern.env_vars.service:s}/api/user/therapist/{created_therapist.user.id}/tariffs"
+      method: POST
       headers:
         Authorization: "Token {token:s}"
+      json:
+        session_type: thirty
+        price: 10
     response:
-      status_code: 200
-      body:
-        - user:
-            id: !anyint
+      status_code: 201
 
-  - name: search therapist by ailment and gender
+  - name: edit same price
     request:
-      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}&ailments=[\"Hip/Pelvis\", \"Elbow\", \"WeirdPart\"]"
+      url: "{tavern.env_vars.service:s}/api/user/therapist/{created_therapist.user.id}/tariffs"
+      method: POST
+      headers:
+        Authorization: "Token {token:s}"
+      json:
+        session_type: thirty
+        price: 10
+    response:
+      status_code: 201
+
+  - name: search therapist by ailment, gender and price
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}&ailments=[\"Hip/Pelvis\", \"Elbow\", \"WeirdPart\"]&max_price=10"
       headers:
         Authorization: "Token {token:s}"
     response:

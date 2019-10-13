@@ -1,5 +1,8 @@
 import json
 
+
+from rest_framework import generics
+
 from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404
@@ -9,7 +12,7 @@ from rest_framework.exceptions import AuthenticationFailed, MethodNotAllowed
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from moca.models import User
+from moca.models import User, Price
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 
@@ -17,7 +20,7 @@ from .errors import EditsNotAllowed
 from .serializers import (AddressSerializer, FCMDeviceSerializer, LeaveResponseSerializer,
                           LeaveSerializer, PatientRequestSerializer, PatientSerializer,
                           TherapistRequestSerializer, TherapistSerializer, UserRequestSerializer,
-                          UserSerializer)
+                          UserSerializer, PriceSerializer)
 
 
 # {{ENV}}/api/user/patient
@@ -109,19 +112,9 @@ class TherapistAPIView(APIView):
       therapists = therapists.filter(preferred_ailments__contains=ailments)
 
     if 'max_price' in criteria:
-      pass
-      # TODO either this works, or a pricing table might be needed. For now, it
-      # doesn't seem to be working
-      """
       max_price = int(criteria['max_price'])
-      from django.db.models import Q
-      price_in_range = (
-        (Q(tariffs__thirty__isnull=False) & Q(tariffs__thirty__lt=max_price)) |
-        (Q(tariffs__fourtyfive__isnull=False) & Q(tariffs__fourtyfive__lt=max_price)) |
-        (Q(tariffs__sixty__isnull=False) & Q(tariffs__sixty__lt=max_price)) |
-        (Q(tariffs__evaluation__isnull=False) & Q(tariffs__evaluation__lt=max_price)))
-      therapists = therapists.filter(price_in_range)
-      """
+      therapists_in_price_range = Price.objects.filter(price__lte=max_price).values('therapist')
+      therapists = therapists.filter(user_id__in=therapists_in_price_range)
 
     METERS_PER_MILE = 1609.34
 
@@ -162,3 +155,6 @@ class TherapistLeaveDetailView(APIView):
   def delete(self, request, leave_id, format=None):
     AwayDays.objects.get(id=leave_id).delete()
     return Response('Leave succesfully deleted', status.HTTP_200_OK)
+
+class TherapistPricing(generics.CreateAPIView):
+  serializer_class = PriceSerializer
