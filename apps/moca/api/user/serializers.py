@@ -40,7 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
         'required': True
       },
       'gender': {
-        'required': True
+        'required': False
       }
     }
 
