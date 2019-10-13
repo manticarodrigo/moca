@@ -1,14 +1,11 @@
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework import serializers
 
-from moca.models.user import Device, User
+from moca.models.user import Device
 
 
 class DeviceSerializer(serializers.ModelSerializer):
-  user = serializers.PrimaryKeyRelatedField(
-        required=False,
-        read_only=True,
-        default=serializers.CurrentUserDefault())
+  user = serializers.PrimaryKeyRelatedField(read_only=True)
 
   class Meta:
     model = Device

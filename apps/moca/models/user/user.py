@@ -91,14 +91,14 @@ class User(AbstractBaseUser, PermissionsMixin):
   objects = MyUserManager()
 
   def __str__(self):
-    return f'id:{self.id}, email:{self.email}, first_name:{self.first_name}, last_name:{self.last_name}' \
-           f'gender:{self.gender}, date_of_birth:{self.date_of_birth},created_at:{self.created_at}'
+    return f"{self.get_full_name()} - {self.email}"
 
+  
   def get_full_name(self):
-    return self.email
+    return f"{self.first_name} {self.last_name}"
 
   def get_short_name(self):
-    return self.email
+    return f"{self.first_name}"
 
 
 class PatientManager(MyUserManager):

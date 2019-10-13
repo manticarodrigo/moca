@@ -38,6 +38,7 @@ INSTALLED_APPS = [
   'knox',
   'rest_framework_gis',
   'exponent_server_sdk',
+  'drf_yasg',
   # Apps
   'moca.apps.MocaConfig',
 ]
