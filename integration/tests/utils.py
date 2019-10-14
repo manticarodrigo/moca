@@ -76,7 +76,7 @@ def fake_addresses():
 
 
 def fake_patient_create_body():
-  patient = {**fake_user(), **fake_addresses()}
+  patient = fake_user()
   patients.append(patient)
   return Box(patient)
 

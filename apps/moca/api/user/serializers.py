@@ -1,4 +1,5 @@
 from datetime import datetime
+from knox.models import AuthToken
 
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.gis.db.models import PointField
@@ -11,38 +12,52 @@ from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
 
 from moca.api.util.Validator import RequestValidator
-from moca.models.address import Address
+from moca.models.user import Patient, Therapist
 from moca.models import Price
-from moca.models.user import Patient, Therapist, User
 from moca.models.user.user import AwayDays
-
-User = get_user_model()
+from moca.models.address import Address
 
 SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 
 class AddressSerializer(serializers.ModelSerializer):
+  user = serializers.PrimaryKeyRelatedField(read_only=True)
+
   class Meta:
     model = Address
     fields = '__all__'
+  
+  def create(self, validated_data):
+    validated_data['user'] = self.context['request'].user
+    return Address.objects.create(**validated_data)
 
+
+User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-  addresses = AddressSerializer(many=True, required=False)
 
   class Meta:
     model = User
-    fields = ('id', 'first_name', 'last_name', 'gender', 'date_of_birth', 'created_at', 'type',
-              'email', 'is_staff', 'is_active', 'password', 'addresses')
+    fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type',
+              'email', 'password', 'is_active')
     extra_kwargs = {
       'password': {
         'write_only': True,
         'required': True
-      },
-      'gender': {
-        'required': False
       }
     }
+
+  def create(self, validated_data):
+    user = User.objects.create_user(**validated_data)
+    return user
+
+  def update(self, instance, validated_data):
+    password = validated_data.pop("password")
+    instance.__dict__.update(validated_data)
+    if password:
+      instance.set_password(password)
+      instance.save()
+    return instance
 
 
 class PatientSerializer(serializers.ModelSerializer):
@@ -51,9 +66,6 @@ class PatientSerializer(serializers.ModelSerializer):
   class Meta:
     model = Patient
     fields = '__all__'
-    depth = 2
-
-
 class PriceSerializer(serializers.ModelSerializer):
   therapist = serializers.PrimaryKeyRelatedField(read_only=True)
 
@@ -73,66 +85,37 @@ class PriceSerializer(serializers.ModelSerializer):
     return session_type
 
 
+
+class PatientCreateSerializer(PatientSerializer):
+  token = serializers.SerializerMethodField()
+
+  def get_token(self, patient):
+    return AuthToken.objects.create(patient.user)[1]
+
+  def create(self, validated_data):
+    validated_data['user']['type'] = User.PATIENT
+    user = UserSerializer().create(validated_data['user'])
+    return Patient.objects.create(user=user)
+
+
 class TherapistSerializer(serializers.ModelSerializer):
-  user = UserSerializer(required=False, read_only=True)
+  user = UserSerializer()
 
   class Meta:
     model = Therapist
-    fields = ('bio', 'cert_date', 'operation_radius', 'qualifications', 'status', 'user',
-              'preferred_ailments')
+    fields = '__all__'
 
 
-class UserRequestSerializer(serializers.Serializer):
-  user = UserSerializer(many=False, required=True)
-  addresses = AddressSerializer(many=True, required=False)
+class TherapistCreateSerializer(TherapistSerializer):
+  token = serializers.SerializerMethodField()
 
-  @transaction.atomic
-  def create(self, validated):
-    user = User.objects.create_user(**validated.pop("user"))
+  def get_token(self, therapist):
+    return AuthToken.objects.create(therapist.user)[1]
 
-    addresses = AddressSerializer(data=validated.pop("addresses"), many=True)
-    addresses.is_valid(raise_exception=True)
-    addresses = addresses.save()
-    user.addresses.set(addresses)
-
-    user.save()
-
-    return user
-
-
-class PatientRequestSerializer(serializers.Serializer):
-  user = UserSerializer()
-  addresses = AddressSerializer(many=True, required=False)
-
-  def create(self, validated):
-    validated['user']['type'] = User.PATIENT
-    user = UserRequestSerializer(data=validated)
-    user.is_valid(raise_exception=True)
-
-    patient = Patient.objects.create(user=user.save())
-    patient.save()
-    return patient
-
-
-class TherapistRequestSerializer(serializers.Serializer):
-  user = UserSerializer(many=False, required=True)
-  therapist = TherapistSerializer(required=True)
-  addresses = AddressSerializer(many=True, required=False)
-
-  def create(self, validated):
-    therapist = validated.pop('therapist')
-
-    validated['user']['type'] = User.THERAPIST
-
-    user = UserRequestSerializer(data=validated)
-    user.is_valid(raise_exception=True)
-    user = user.save()
-
-    lng, lat = AddressSerializer(user.addresses.get(primary=True)).data['location']['coordinates']
-
-    therapist['primary_location'] = Point(lng, lat)
-
-    return Therapist.objects.create(user=user, **therapist)
+  def create(self, validated_data):
+    validated_data['user']['type'] = User.THERAPIST
+    user = UserSerializer().create(validated_data['user'])
+    return Therapist.objects.create(user=user)
 
 
 class LeaveSerializer(serializers.Serializer):

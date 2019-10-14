@@ -7,7 +7,7 @@ from django.db.models import F
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from knox.models import AuthToken
-from rest_framework import permissions, status
+from rest_framework import permissions, status, generics
 from rest_framework.exceptions import AuthenticationFailed, MethodNotAllowed
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,90 +17,46 @@ from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 
 from .errors import EditsNotAllowed
-from .serializers import (AddressSerializer, PatientRequestSerializer, PatientSerializer, TherapistRequestSerializer, TherapistSerializer,
-                          UserRequestSerializer, UserSerializer, LeaveSerializer,
-                          LeaveResponseSerializer)
+from .serializers import (AddressSerializer, PatientSerializer, PatientCreateSerializer,
+                          TherapistSerializer, TherapistCreateSerializer,
+                          LeaveSerializer, LeaveResponseSerializer)
 
+# POST {{ENV}}/api/user/address
+class AddressCreateView(generics.CreateAPIView):
+  serializer_class = AddressSerializer
 
-# {{ENV}}/api/user/patient
-class PatientAPIView(APIView):
-  def post(self, request, format=None):
-    patient_req_serializer = PatientRequestSerializer(data=request.data)
-    patient_req_serializer.is_valid(raise_exception=True)
-    patient = patient_req_serializer.save()
-    return Response(
-      {
-        "user": UserSerializer(patient.user).data,
-        "addresses": AddressSerializer(patient.user.addresses, many=True).data,
-        "token": AuthToken.objects.create(patient.user)[1]
-      }, status.HTTP_201_CREATED)
+# POST {{ENV}}/api/user/patient
+class PatientCreateView(generics.CreateAPIView):
+  serializer_class = PatientCreateSerializer
 
+# GET, UPDATE {{ENV}}/api/user/patient/{id}
+class PatientDetailView(generics.RetrieveUpdateAPIView):
+  serializer_class = PatientSerializer
+  queryset = Patient.objects
 
-# {{ENV}}/api/user/patient/id
-class PatientAPIDetail(APIView):
+# POST {{ENV}}/api/user/therapist
+class TherapistCreateView(generics.CreateAPIView):
+  serializer_class = TherapistCreateSerializer
 
-  # todo prevent post request coming this view
-  def get(self, request, patient_id, format=None):
-    patient = Patient.objects.get(pk=patient_id)
-    serializer = UserSerializer(patient.user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+# GET, UPDATE {{ENV}}/api/user/therapist/{id}
+class TherapistDetailView(generics.RetrieveUpdateAPIView):
+  serializer_class = TherapistSerializer
+  queryset = Therapist.objects
 
-  def put(self, request, patient_id, format=None):
-    patient = get_object_or_404(Patient, patient_id)
-    existing = get_object_or_404(User, patient.user_id)
-    self.is_belong_to_auth_user(request, existing)
-    req_serializer = UserRequestSerializer(instance=existing, data=request.data)
-    req_serializer.is_valid(raise_exception=True)
-    user, addresses = req_serializer.save()
+# GET {{ENV}}/api/user/therapist
+class TherapistSearchView(generics.ListAPIView):
+  serializer_class = TherapistSerializer
+  queryset = Therapist.objects
+  permission_classes = [permissions.IsAuthenticated]
 
-    return Response({
-      "user": UserSerializer(user).data,
-      # todo deserializer only accepts one object.
-      #  find a way to deserialize array for addresses
-      "addresses": AddressSerializer(addresses[0]).data,
-    })
+  def filter_queryset(self, queryset):
+    criteria = self.request.query_params
+    user = self.request.user
 
-  def set_user_id_if_nonexists(self, addr, request):
-    try:
-      addr["user"] = request.user.id
-    except AttributeError:
-      addr["user"] = request.user.id
+    if user.addresses.all().exists():
+      user_location = user.addresses.get(primary=True).location
 
-  def is_belong_to_auth_user(self, request, url_user):
-    if url_user is None:
-      raise MethodNotAllowed("")
-    elif url_user != request.user:
-      raise AuthenticationFailed('UserId in URL doesnt match with the id of authenticated user')
-
-  def is_update(self, a):
-    try:
-      address_id = a['id']
-      return True
-    except KeyError:
-      return False
-
-
-class TherapistAPIView(APIView):
-  valid_criteria = ['gender', 'ailments', 'orderby']
-
-  def post(self, request, format=None):
-    therapist_req_serializer = TherapistRequestSerializer(data=request.data)
-    therapist_req_serializer.is_valid(raise_exception=True)
-    therapist = therapist_req_serializer.save()
-
-    return Response(
-      {
-        **TherapistSerializer(therapist).data, "token": AuthToken.objects.create(therapist.user)[1]
-      }, status.HTTP_201_CREATED)
-
-  def get(self, request):
-    criteria = request.query_params
-
-    therapists = Therapist.objects
-
-    user_location = request.user.addresses.get(primary=True).location
-
-    if 'gender' in criteria:
+if 'gender' in criteria:
       gender = criteria['gender']
       therapists = therapists.filter(user__gender=gender)
 
@@ -118,28 +74,10 @@ class TherapistAPIView(APIView):
     therapists = therapists.filter(primary_location__distance_lt=(user_location,
                                                                   F('operation_radius') *
                                                                   METERS_PER_MILE))
+      return therapists
+    return []
 
-    return Response(TherapistSerializer(therapists, many=True).data)
-
-
-class TherapistAPIDetailView(APIView):
-  def get(self, request, therapist_id, format=None):
-    pass
-
-  def put(self, request, therapist_id, format=None):
-    existing = Therapist.objects.get(user_id=therapist_id)
-    modified = TherapistSerializer(instance=existing, data=request.data, partial=True)
-
-    if not request.user == existing.user:
-      raise EditsNotAllowed(request.user.id, existing.user.id)
-
-    modified.is_valid(raise_exception=True)
-    modified.save()
-
-    return Response(modified.data)
-
-
-class TherapistLeaveAPIView(APIView):
+class TherapistLeaveView(APIView):
   def post(self, request, format=None):
     awaydays = LeaveSerializer(data=request.data)
     awaydays.is_valid(raise_exception=True)
