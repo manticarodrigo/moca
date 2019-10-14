@@ -15,21 +15,8 @@ from moca.api.util.Validator import RequestValidator
 from moca.models.user import Patient, Therapist
 from moca.models import Price
 from moca.models.user.user import AwayDays
-from moca.models.address import Address
-
 SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
-
-class AddressSerializer(serializers.ModelSerializer):
-  user = serializers.PrimaryKeyRelatedField(read_only=True)
-
-  class Meta:
-    model = Address
-    fields = '__all__'
-  
-  def create(self, validated_data):
-    validated_data['user'] = self.context['request'].user
-    return Address.objects.create(**validated_data)
 
 
 User = get_user_model()

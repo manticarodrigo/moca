@@ -4,7 +4,8 @@ from rest_framework import serializers
 from decimal import *
 from moca.api.appointment.errors import AppointmentAlreadyReviewed
 from moca.api.appointment.errors import AppointmentNotFound
-from moca.api.user.serializers import AddressSerializer, PatientSerializer, TherapistSerializer
+from moca.api.user.serializers import PatientSerializer, TherapistSerializer
+from moca.api.address.serializers import AddressSerializer
 from moca.models import Address, User
 from moca.models.appointment import Appointment, Review
 from moca.models.user import Patient, Therapist

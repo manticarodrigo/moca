@@ -2,13 +2,11 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import (AddressCreateView, PatientCreateView, PatientDetailView, TherapistCreateView,
+from .views import (PatientCreateView, PatientDetailView, TherapistCreateView,
                     TherapistDetailView, TherapistSearchView, TherapistLeaveView,
                     TherapistLeaveDetailView, TherapistPricing)
 
 urlpatterns = [
-  # address
-  path('address/', AddressCreateView.as_view()),
   # patient
   path('patient/', PatientCreateView.as_view()),
   path('patient/<int:pk>/', PatientDetailView.as_view()),

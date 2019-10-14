@@ -4,26 +4,17 @@ import json
 from rest_framework import generics
 
 from django.db.models import F
-from django.http import Http404
-from django.shortcuts import get_object_or_404
-from knox.models import AuthToken
 from rest_framework import permissions, status, generics
-from rest_framework.exceptions import AuthenticationFailed, MethodNotAllowed
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from moca.models import User, Price
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 
 from .errors import EditsNotAllowed
-from .serializers import (AddressSerializer, PatientSerializer, PatientCreateSerializer,
                           TherapistSerializer, TherapistCreateSerializer,
                           LeaveSerializer, LeaveResponseSerializer)
 
-# POST {{ENV}}/api/user/address
-class AddressCreateView(generics.CreateAPIView):
-  serializer_class = AddressSerializer
 
 # POST {{ENV}}/api/user/patient
 class PatientCreateView(generics.CreateAPIView):
