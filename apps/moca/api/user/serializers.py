@@ -53,24 +53,6 @@ class PatientSerializer(serializers.ModelSerializer):
   class Meta:
     model = Patient
     fields = '__all__'
-class PriceSerializer(serializers.ModelSerializer):
-  therapist = serializers.PrimaryKeyRelatedField(read_only=True)
-
-  class Meta:
-    model = Price
-    fields = ('therapist', 'session_type', 'price')
-
-  def create(self, validated_data):
-    validated_data['therapist'] = Therapist.objects.get(user=self.context['request'].user)
-    price = validated_data.pop('price')
-    Price.objects.filter(**validated_data).delete()
-    return Price.objects.create(**validated_data, price=price)
-
-  def validate_session_type(self, session_type):
-    if session_type not in SESSION_TYPES:
-      raise serializers.ValidationError(f"Invalid session type should be one of {SESSION_TYPES}")
-    return session_type
-
 
 
 class PatientCreateSerializer(PatientSerializer):
@@ -104,6 +86,24 @@ class TherapistCreateSerializer(TherapistSerializer):
     user = UserSerializer().create(validated_data['user'])
     return Therapist.objects.create(user=user)
 
+
+class PriceSerializer(serializers.ModelSerializer):
+  therapist = serializers.PrimaryKeyRelatedField(read_only=True)
+
+  class Meta:
+    model = Price
+    fields = ('therapist', 'session_type', 'price')
+
+  def create(self, validated_data):
+    validated_data['therapist'] = Therapist.objects.get(user=self.context['request'].user)
+    price = validated_data.pop('price')
+    Price.objects.filter(**validated_data).delete()
+    return Price.objects.create(**validated_data, price=price)
+
+  def validate_session_type(self, session_type):
+    if session_type not in SESSION_TYPES:
+      raise serializers.ValidationError(f"Invalid session type should be one of {SESSION_TYPES}")
+    return session_type
 
 class LeaveSerializer(serializers.Serializer):
   therapist = serializers.IntegerField(required=True)
