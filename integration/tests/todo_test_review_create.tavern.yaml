@@ -22,6 +22,39 @@ stages:
             password: 'test1234'
             response_type: 'patient'
 
+  - name: add patient address
+    request:
+      url: "{tavern.env_vars.service:s}/api/address/add/"
+      headers:
+        Authorization: "Token {patient.token}"
+        Content-Type: "application/json"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_address
+    response:
+      status_code: 201
+      body:
+        id: !anyint
+
+  - name: get patient
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/patient/{user_id}/"
+      headers:
+        Authorization: "Token {patient.token}"
+        Content-Type: "application/json"
+      method: GET
+    response:
+      status_code: 200
+      body:
+        user:
+          id: !int "{patient.user.id}"
+      save:
+        $ext:
+          function: utils:test_scope
+          extra_kwargs:
+            response_type: 'patient'
+
   - name: register therapist
     request:
       url: "{tavern.env_vars.service:s}/api/user/therapist/"
@@ -43,7 +76,7 @@ stages:
             password: 'test1234'
             response_type: 'therapist'
             patient_id: "{patient.user.id}"
-            patient_address_id: "{patient.addresses[0].id}"
+            patient_address_id: "{patient.user.addresses[0].id}"
 
   - name: set appointment 
     request:

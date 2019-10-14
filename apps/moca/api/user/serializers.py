@@ -12,9 +12,11 @@ from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
 
 from moca.api.util.Validator import RequestValidator
+from moca.api.address.serializers import AddressSerializer
 from moca.models.user import Patient, Therapist
 from moca.models import Price
 from moca.models.user.user import AwayDays
+
 SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 
@@ -22,11 +24,12 @@ SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
+  addresses = AddressSerializer(read_only=True, many=True)
 
   class Meta:
     model = User
     fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type',
-              'email', 'password', 'is_active')
+              'email', 'password', 'is_active', 'addresses')
     extra_kwargs = {
       'password': {
         'write_only': True,
