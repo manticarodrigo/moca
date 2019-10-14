@@ -25,8 +25,8 @@ class RequestNotFound(NotFound):
 class ResponseConflict(APIException):
   status_code = status.HTTP_409_CONFLICT
 
-  def __init__(self, request_id, existing_response_id):
-    self.detail = f'A response for request with id {request_id} is already provided in response {existing_response_id}'
+  def __init__(self, request_id, existing_response):
+    self.detail = f'A response for request with id {request_id} is already provided with {existing_response}'
 
 
 class InvalidMessageType(APIException):

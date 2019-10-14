@@ -2,8 +2,11 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
+from moca.models.appointment import Appointment
+
 
 class MessageTypes:
+  MEDIA = "media"
   REQUEST = "request"
   RESPONSE = "response"
   ATTACHMENT = "attachment"
@@ -19,35 +22,25 @@ class Conversation(models.Model):
 
 
 class Message(models.Model):
-  created_at = models.DateTimeField(auto_now_add=True)
-  user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
   conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+  user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+  created_at = models.DateTimeField(auto_now_add=True)
   type = None
 
   class Meta:
     abstract = True
 
 
-class TextMessage(Message):
-  type = MessageTypes.TEXT
-  text = models.TextField()
+class MediaMessage(Message):
+  type = MessageTypes.MEDIA
+  text = models.TextField(null=True)
+  file = models.FileField(null=True)
+  MEDIA_TYPES = [("PDF", "pdf"), ("JPEG", "jpeg")]
+  mediaType = models.CharField(max_length=6, choices=MEDIA_TYPES)
 
 
-# TODO maybe this should be just appointment request which
-# will contain a date and two choices accept or reject
-# rather than an array of options
-class RequestMessage(Message):
+class AppointmentMessage(Message):
   type = MessageTypes.REQUEST
-  options = ArrayField(models.TextField())
-
-
-class ResponseMessage(Message):
-  type = MessageTypes.RESPONSE
-  selection = models.IntegerField()
-  reply_to = models.ForeignKey(RequestMessage, on_delete=models.PROTECT)
-
-
-class AttachmentMessage(Message):
-  type = MessageTypes.ATTACHMENT
-  # TODO check this versus ImageField
-  url = models.FileField()
+  RESPONSE_TYPES = [('Accepted', 'Accepted'), ('Rejected', 'Rejected')]
+  appointment = models.ForeignKey(Appointment, on_delete=models.PROTECT)
+  response = models.CharField(max_length=10, choices=RESPONSE_TYPES, null=True)

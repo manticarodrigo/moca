@@ -4,13 +4,19 @@ from rest_framework import permissions, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from moca.models import (AttachmentMessage, Conversation, Message, MessageTypes, RequestMessage,
-                         ResponseMessage, TextMessage)
+from moca.api.appointment.serializers import AppointmentSerializer, AppointmentDeserializer
+from moca.models import (
+  Conversation,
+  Message,
+  MessageTypes,
+)
+from moca.models.appointment import Appointment
+from moca.models.chat import MediaMessage, AppointmentMessage
 
 from .errors import (ConversationNotFound, InvalidMessageType, RequestNotFound, ResponseConflict,
                      SelfChatNotAllowed, UserNotFound)
-from .serializers import (AttachmentSerializer, ConversationSerializer, MessageSerializer,
-                          RequestSerializer, ResponseSerializer, TextMessageSerializer)
+from .serializers import (ConversationSerializer, MessageSerializer, MediaMessageSerializer,
+                          AppointmentMessageSerializer)
 
 User = get_user_model()
 
@@ -58,57 +64,54 @@ class MessagesAPI(GenericAPIView):
   permission_classes = [permissions.IsAuthenticated]
 
   @staticmethod
+  @transaction.atomic
   def handle_request_message(sender, conversation, message):
-    new_message = RequestMessage.objects.create(user=sender,
-                                                conversation=conversation,
-                                                options=message['options'])
+    appointment = AppointmentDeserializer(data=message)
+    appointment.is_valid(raise_exception=True)
+    appointment = appointment.save()
+    new_message = AppointmentMessage.objects.create(user=sender,
+                                                    conversation=conversation,
+                                                    appointment=appointment)
+    print(f'test 8')
     new_message.save()
-    return RequestSerializer(new_message).data
+    return AppointmentMessageSerializer(new_message).data
 
   @staticmethod
   @transaction.atomic
   def handle_response_message(sender, conversation, message):
-    # TODO this will change after RequestMessage changes.
     # TODO use a serializer here
-    reply_to = message['reply_to']
-    selection = message['selection']
+    reply_to = message['request_id']
+    response = message['response']
 
-    request = RequestMessage.objects.filter(id=reply_to, conversation=conversation).first()
+    request = AppointmentMessage.objects.filter(id=reply_to, conversation=conversation).first()
 
     if not request:
       raise RequestNotFound(reply_to, conversation.id)
 
-    if request.responsemessage_set.count() > 0:
-      raise ResponseConflict(request_id=request.id,
-                             existing_response_id=request.responsemessage_set.first().id)
+    if not request.response is None:
+      raise ResponseConflict(request_id=request.id, existing_response=request.response)
 
-    answer = request.options[selection]
+    if response == 'REJECTED':
+      appointment_id = request.appointment_id
+      appointment = Appointment.objects.get(pk=appointment_id)
+      appointment.is_cancelled = True
+      appointment.save()
 
-    response_message = ResponseMessage.objects.create(user=sender,
-                                                      conversation=conversation,
-                                                      reply_to=request,
-                                                      selection=selection)
+    request.response = response
+    request.save()
+    request = AppointmentMessage.objects.filter(id=reply_to, conversation=conversation).first()
 
-    if answer == 'ACCEPT':
-      # Create the appointment here based on the request being an appointment and the date
-      # of the request
-      pass
-
-    response_message.save()
-
-    return ResponseSerializer(response_message).data
+    return AppointmentMessageSerializer(request).data
 
   @staticmethod
-  def handle_attachment_message(sender, conversation, message):
-    return AttachmentSerializer(message).data
-
-  @staticmethod
-  def handle_text_message(sender, conversation, message):
-    new_message = TextMessage.objects.create(user=sender,
-                                             conversation=conversation,
-                                             text=message['text'])
+  def handle_media_message(sender, conversation, message):
+    new_message = MediaMessage.objects.create(user=sender,
+                                              conversation=conversation,
+                                              text=message['text'],
+                                              file=message['file'],
+                                              mediaType=message['mediatype'])
     new_message.save()
-    return TextMessageSerializer(new_message).data
+    return MediaMessageSerializer(new_message).data
 
   @staticmethod
   def handle_message(message_type, message_data):
@@ -118,10 +121,8 @@ class MessagesAPI(GenericAPIView):
       created = MessagesAPI.handle_request_message(**message_data)
     elif message_type == MessageTypes.RESPONSE:
       created = MessagesAPI.handle_response_message(**message_data)
-    elif message_type == MessageTypes.TEXT:
-      created = MessagesAPI.handle_text_message(**message_data)
-    elif message_type == MessageTypes.ATTACHMENT:
-      created = MessagesAPI.handle_attachment_message(**message_data)
+    elif message_type == MessageTypes.MEDIA:
+      created = MessagesAPI.handle_media_message(**message_data)
     else:
       raise InvalidMessageType(message_type)
 
@@ -142,9 +143,8 @@ class MessagesAPI(GenericAPIView):
 
     created = MessagesAPI.handle_message(message_type, message_data)
 
-    # TODO(ukaya) Handle firebase here
+    # TODO(rodrigo) Push Notification service should be called here
 
-    # TODO check for a quicker way of created and/or forbidden
     return Response(created, status=status.HTTP_201_CREATED)
 
   def get(self, request, convid):
@@ -154,15 +154,10 @@ class MessagesAPI(GenericAPIView):
     # TODO fix this to use generic foreign keys to figure out how to serialize each message based
     # on its type
 
-    text_messages = TextMessage.objects.filter(conversation__id=convid)
-    request_messages = RequestMessage.objects.filter(conversation__id=convid)
-    response_messages = ResponseMessage.objects.filter(conversation__id=convid)
-    attachment_messages = AttachmentMessage.objects.filter(conversation__id=convid)
+    media_messages = MediaMessage.objects.filter(conversation__id=convid)
+    appointment_messages = AppointmentMessage.objects.filter(conversation__id=convid)
 
-    text_messages = TextMessageSerializer(text_messages, many=True).data
-    request_messages = RequestSerializer(request_messages, many=True).data
-    response_messages = ResponseSerializer(response_messages, many=True).data
-    attachment_messages = AttachmentSerializer(attachment_messages, many=True).data
+    media_messages = MediaMessageSerializer(media_messages, many=True).data
+    appointment_messages = AppointmentMessageSerializer(appointment_messages, many=True).data
 
-    return Response(
-      {"messages": text_messages + request_messages + response_messages + attachment_messages})
+    return Response({"messages": media_messages + appointment_messages})

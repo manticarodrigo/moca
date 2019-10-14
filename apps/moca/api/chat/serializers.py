@@ -1,8 +1,8 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from moca.models import (AttachmentMessage, Conversation, Message, RequestMessage, ResponseMessage,
-                         TextMessage)
+from moca.models import (Conversation, Message, MediaMessage, AppointmentMessage)
+from moca.models.chat import MediaMessage
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -11,35 +11,19 @@ class MessageSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
 
-class RequestSerializer(serializers.ModelSerializer):
+class AppointmentMessageSerializer(serializers.ModelSerializer):
   type = serializers.CharField(read_only=True)
 
   class Meta:
-    model = RequestMessage
+    model = AppointmentMessage
     fields = '__all__'
 
 
-class ResponseSerializer(serializers.ModelSerializer):
+class MediaMessageSerializer(serializers.ModelSerializer):
   type = serializers.CharField(read_only=True)
 
   class Meta:
-    model = ResponseMessage
-    fields = '__all__'
-
-
-class TextMessageSerializer(serializers.ModelSerializer):
-  type = serializers.CharField(read_only=True)
-
-  class Meta:
-    model = TextMessage
-    fields = '__all__'
-
-
-class AttachmentSerializer(serializers.ModelSerializer):
-  type = serializers.CharField(read_only=True)
-
-  class Meta:
-    model = AttachmentMessage
+    model = MediaMessage
     fields = '__all__'
 
 
