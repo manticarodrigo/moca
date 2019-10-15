@@ -8,12 +8,6 @@ stages:
       json:
         $ext:
           function: utils:fake_therapist_create_body
-          extra_kwargs:
-            ailments:
-              - 'Hip/Pelvis'
-              - 'Elbow'
-              - 'WeirdPart'
-            gender: 'M'
     response:
       status_code: 201
       body:
@@ -67,13 +61,69 @@ stages:
     response:
       status_code: 201
 
+  - name: add address
+    request:
+      url: "{tavern.env_vars.service:s}/api/address/add/"
+      headers:
+        Authorization: "Token {created_therapist.token}"
+        Content-Type: "application/json"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_address
+    response:
+      status_code: 201
+      body:
+        id: !anyint
+    
+  - name: update therapist
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/{user_id}/"
+      headers:
+        Authorization: "Token {created_therapist.token}"
+        Content-Type: "application/json"
+      method: PUT
+      json:
+        # TODO: use serializer to update therapist without required user and email properties
+        user:
+          email: "{created_therapist.user.email}"
+        preferredAilments:
+          - 'Hip/Pelvis'
+          - 'Elbow'
+          - 'WeirdPart'
+        gender: 'M'
+    response:
+      status_code: 200
+      body:
+        user:
+          id: !anyint
+
+  - name: get therapist
+    request:
+      url: "{tavern.env_vars.service:s}/api/user/therapist/{user_id}/"
+      headers:
+        Authorization: "Token {created_therapist.token}"
+        Content-Type: "application/json"
+      method: GET
+    response:
+      status_code: 200
+      body:
+        user:
+          id: !int "{created_therapist.user.id}"
+      save:
+        $ext:
+          function: utils:test_scope
+          extra_kwargs:
+            response_type: 'created_therapist'
+
   - name: search therapist by ailment, gender and price
     request:
-      url: "{tavern.env_vars.service:s}/api/user/therapist/?gender={created_therapist.user.gender}&ailments=[\"Hip/Pelvis\", \"Elbow\", \"WeirdPart\"]&max_price=10"
+      url: "{tavern.env_vars.service:s}/api/user/therapist/search/?gender={created_therapist.user.gender}&ailments=[\"Hip/Pelvis\", \"Elbow\", \"WeirdPart\"]&max_price=10"
       headers:
         Authorization: "Token {token:s}"
     response:
       status_code: 200
       body:
-        - user:
-            id: !int "{created_therapist.user.id:d}"
+        results:
+          - user:
+              id: !int "{created_therapist.user.id:d}"

@@ -1,6 +1,5 @@
 from rest_framework import permissions, generics
 
-from moca.models.address import Address
 from .serializers import AddressSerializer, AddressCreateSerializer
 
 # POST {{ENV}}/api/user/address

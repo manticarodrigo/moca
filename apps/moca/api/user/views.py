@@ -79,7 +79,6 @@ class TherapistSearchView(generics.ListAPIView):
 
 
     if user_location:
-      print("USER LOCATION", user_location)
       METERS_PER_MILE = 1609.34
 
       therapists = therapists.filter(primary_location__distance_lt=(user_location,

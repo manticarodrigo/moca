@@ -51,7 +51,7 @@ def fake_therapist(ailments=None, tariffs=None):
 
 def fake_address():
   return {
-    "primary": False,
+    "primary": True,
     "name": random.choice(["Home", "Work", "Dumpster"]),
     "street": fake.street_address(),
     "apartment": fake.numerify(text="##"),
