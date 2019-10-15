@@ -82,11 +82,8 @@ stages:
       headers:
         Authorization: "Token {created_therapist.token}"
         Content-Type: "application/json"
-      method: PUT
+      method: PATCH
       json:
-        # TODO: use serializer to update therapist without required user and email properties
-        user:
-          email: "{created_therapist.user.email}"
         preferredAilments:
           - 'Hip/Pelvis'
           - 'Elbow'

@@ -50,12 +50,15 @@ class PatientSerializer(serializers.ModelSerializer):
     fields = '__all__'
   
   def update(self, instance, validated_data):
-    instance.user.first_name = validated_data['user'].get('first_name', instance.user.first_name)
-    instance.user.last_name = validated_data['user'].get('last_name', instance.user.last_name)
-    instance.user.gender = validated_data['user'].get('gender', instance.user.gender)
-    instance.user.email = validated_data['user'].get('email', instance.user.email)
+    user = validated_data.get('user', instance.user.__dict__)
 
-    password = validated_data['user'].get("password")
+    # user fields
+    instance.user.email = user.get('email')
+    instance.user.first_name = user.get('first_name')
+    instance.user.last_name = user.get('last_name')
+    instance.user.gender = user.get('gender')
+
+    password = validated_data.get('user', {}).get('password')
 
     if password:
       instance.user.set_password(password)
@@ -84,13 +87,13 @@ class TherapistSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
   def update(self, instance, validated_data):
-    user = validated_data.get('user', self.context['request'].user)
+    user = validated_data.get('user', instance.user.__dict__)
 
     # user fields
-    instance.user.email = user.get('email', instance.user.email)
-    instance.user.first_name = user.get('first_name', instance.user.first_name)
-    instance.user.last_name = user.get('last_name', instance.user.last_name)
-    instance.user.gender = user.get('gender', instance.user.gender)
+    instance.user.email = user.get('email')
+    instance.user.first_name = user.get('first_name')
+    instance.user.last_name = user.get('last_name')
+    instance.user.gender = user.get('gender')
 
     # therapist fields
     instance.bio = validated_data.get('bio', instance.bio)
@@ -100,7 +103,7 @@ class TherapistSerializer(serializers.ModelSerializer):
     instance.qualifications = validated_data.get('qualifications', instance.qualifications)
     instance.preferred_ailments = validated_data.get('preferred_ailments', instance.preferred_ailments)
 
-    password = validated_data['user'].get("password")
+    password = validated_data.get('user', {}).get('password')
 
     if password:
       instance.user.set_password(password)

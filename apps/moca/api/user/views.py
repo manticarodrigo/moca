@@ -25,7 +25,7 @@ class PatientCreateView(generics.CreateAPIView):
 
 class PatientDetailView(generics.RetrieveUpdateAPIView):
   """
-  GET, PUT {{ENV}}/api/user/patient/{id}
+  GET, PATCH {{ENV}}/api/user/patient/{id}
   """
   serializer_class = PatientSerializer
   queryset = Patient.objects
@@ -40,7 +40,7 @@ class TherapistCreateView(generics.CreateAPIView):
 
 class TherapistDetailView(generics.RetrieveUpdateAPIView):
   """
-  GET, PUT {{ENV}}/api/user/therapist/{id}
+  GET, PATCH {{ENV}}/api/user/therapist/{id}
   """
   serializer_class = TherapistSerializer
   queryset = Therapist.objects

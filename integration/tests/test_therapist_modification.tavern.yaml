@@ -78,7 +78,7 @@ stages:
   - name: Try to modify first therapist using second therapist credentials
     request:
       url: "{tavern.env_vars.service:s}/api/user/therapist/{first_therapist_id}/"
-      method: PUT
+      method: PATCH
       headers:
         Authorization: "Token {second_therapist_auth_token}"
       json:
@@ -92,7 +92,7 @@ stages:
   - name: Try to modify first therapist using first therapist credentials
     request:
       url: "{tavern.env_vars.service:s}/api/user/therapist/{first_therapist_id}/"
-      method: PUT
+      method: PATCH
       headers:
         Authorization: "Token {first_therapist_auth_token}"
       json:
