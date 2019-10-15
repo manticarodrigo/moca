@@ -15,16 +15,17 @@ from moca.api.util.Validator import RequestValidator
 from moca.api.address.serializers import AddressSerializer
 from moca.models.user import Patient, Therapist
 from moca.models import Price
+from moca.models.address import Address
 from moca.models.user.user import AwayDays
 
 SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
-
-
 User = get_user_model()
+
 
 class UserSerializer(serializers.ModelSerializer):
   addresses = AddressSerializer(read_only=True, many=True)
+  email = serializers.EmailField(allow_blank=True)
 
   class Meta:
     model = User
@@ -33,22 +34,13 @@ class UserSerializer(serializers.ModelSerializer):
     extra_kwargs = {
       'password': {
         'write_only': True,
-        'required': True
-      }
+        'required': False
+      },
     }
 
   def create(self, validated_data):
     user = User.objects.create_user(**validated_data)
     return user
-
-  def update(self, instance, validated_data):
-    password = validated_data.pop("password")
-    instance.__dict__.update(validated_data)
-    if password:
-      instance.set_password(password)
-      instance.save()
-    return instance
-
 
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
@@ -56,7 +48,22 @@ class PatientSerializer(serializers.ModelSerializer):
   class Meta:
     model = Patient
     fields = '__all__'
+  
+  def update(self, instance, validated_data):
+    instance.user.first_name = validated_data['user'].get('first_name', instance.user.first_name)
+    instance.user.last_name = validated_data['user'].get('last_name', instance.user.last_name)
+    instance.user.gender = validated_data['user'].get('gender', instance.user.gender)
+    instance.user.email = validated_data['user'].get('email', instance.user.email)
 
+    password = validated_data['user'].get("password")
+
+    if password:
+      instance.user.set_password(password)
+
+    instance.user.save()
+    instance.save()
+
+    return instance
 
 class PatientCreateSerializer(PatientSerializer):
   token = serializers.SerializerMethodField()
@@ -69,7 +76,6 @@ class PatientCreateSerializer(PatientSerializer):
     user = UserSerializer().create(validated_data['user'])
     return Patient.objects.create(user=user)
 
-
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer()
 
@@ -77,7 +83,22 @@ class TherapistSerializer(serializers.ModelSerializer):
     model = Therapist
     fields = '__all__'
 
+  def update(self, instance, validated_data):
+    instance.user.first_name = validated_data['user'].get('first_name', instance.user.first_name)
+    instance.user.last_name = validated_data['user'].get('last_name', instance.user.last_name)
+    instance.user.gender = validated_data['user'].get('gender', instance.user.gender)
+    instance.user.email = validated_data['user'].get('email', instance.user.email)
 
+    password = validated_data['user'].get("password")
+
+    if password:
+      instance.user.set_password(password)
+
+    instance.user.save()
+    instance.save()
+
+    return instance
+  
 class TherapistCreateSerializer(TherapistSerializer):
   token = serializers.SerializerMethodField()
 
@@ -88,7 +109,6 @@ class TherapistCreateSerializer(TherapistSerializer):
     validated_data['user']['type'] = User.THERAPIST
     user = UserSerializer().create(validated_data['user'])
     return Therapist.objects.create(user=user)
-
 
 class PriceSerializer(serializers.ModelSerializer):
   therapist = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -133,7 +153,6 @@ class LeaveSerializer(serializers.Serializer):
   def validate(self, data):
     RequestValidator.end_after_start(data, 'end_date', 'start_date')
     return data
-
 
 class LeaveResponseSerializer(serializers.Serializer):
   id = serializers.IntegerField(required=False)

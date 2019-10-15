@@ -1,8 +1,6 @@
 import json
 
 
-from rest_framework import generics
-
 from django.db.models import F
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
@@ -12,37 +10,53 @@ from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 from moca.models.prices import Price
 
-from .errors import EditsNotAllowed
 from .serializers import (PatientSerializer, PatientCreateSerializer,
                           TherapistSerializer, TherapistCreateSerializer, PriceSerializer,
                           LeaveSerializer, LeaveResponseSerializer)
 
+from .permissions import IsSelf
 
-# POST {{ENV}}/api/user/patient
+
 class PatientCreateView(generics.CreateAPIView):
+  """
+  POST {{ENV}}/api/user/patient
+  """
   serializer_class = PatientCreateSerializer
 
-# GET, UPDATE {{ENV}}/api/user/patient/{id}
 class PatientDetailView(generics.RetrieveUpdateAPIView):
+  """
+  GET, PUT {{ENV}}/api/user/patient/{id}
+  """
   serializer_class = PatientSerializer
   queryset = Patient.objects
+  permission_classes = [IsSelf]
 
-# POST {{ENV}}/api/user/therapist
+
 class TherapistCreateView(generics.CreateAPIView):
+  """
+  POST {{ENV}}/api/user/therapist/
+  """
   serializer_class = TherapistCreateSerializer
 
-# GET, UPDATE {{ENV}}/api/user/therapist/{id}
 class TherapistDetailView(generics.RetrieveUpdateAPIView):
+  """
+  GET, PUT {{ENV}}/api/user/therapist/{id}
+  """
   serializer_class = TherapistSerializer
   queryset = Therapist.objects
+  permission_classes = [IsSelf]
 
-# GET {{ENV}}/api/user/therapist
+
 class TherapistSearchView(generics.ListAPIView):
+  """
+  GET {{ENV}}/api/user/therapist/search/
+  """
   serializer_class = TherapistSerializer
   queryset = Therapist.objects.all()
   permission_classes = [permissions.IsAuthenticated]
 
-  def filter_queryset(self, therapists):
+  def filter_queryset(self, queryset):
+    therapists = queryset
     criteria = self.request.query_params
     user = self.request.user
     user_location = None
@@ -65,12 +79,13 @@ class TherapistSearchView(generics.ListAPIView):
 
 
     if user_location:
+      print("USER LOCATION", user_location)
       METERS_PER_MILE = 1609.34
 
       therapists = therapists.filter(primary_location__distance_lt=(user_location,
                                                                     F('operation_radius') *
                                                                     METERS_PER_MILE))
-    print("QUERYSET", therapists)
+
     return therapists
 
 class TherapistLeaveView(APIView):
@@ -80,7 +95,6 @@ class TherapistLeaveView(APIView):
     awaydays = awaydays.save()
     awaydays = AwayDays.objects.get(pk=awaydays.id)
     return Response(LeaveResponseSerializer(awaydays).data, status.HTTP_201_CREATED)
-
 
 class TherapistLeaveDetailView(APIView):
   def delete(self, request, leave_id, format=None):
