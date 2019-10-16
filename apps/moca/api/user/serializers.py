@@ -18,6 +18,8 @@ from moca.models import Price
 from moca.models.address import Address
 from moca.models.user.user import AwayDays
 
+from .errors import DuplicateEmail
+
 SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 User = get_user_model()
@@ -38,8 +40,18 @@ class UserSerializer(serializers.ModelSerializer):
       },
     }
 
+  def validate_email(self, email):
+    if email:
+      existing = User.objects.filter(email__iexact=email)
+
+      if existing.exists():
+        raise DuplicateEmail(email)
+
+    return email
+
   def create(self, validated_data):
     user = User.objects.create_user(**validated_data)
+
     return user
 
 class PatientSerializer(serializers.ModelSerializer):
