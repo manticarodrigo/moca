@@ -1,3 +1,4 @@
+from box import Box
 from datetime import datetime
 from knox.models import AuthToken
 
@@ -40,8 +41,15 @@ class UserSerializer(serializers.ModelSerializer):
       },
     }
 
-  def validate_email(self, email):
-    if email:
+  def get_request_method(self):
+    context = Box(self.context)
+
+    return context.request._request.environ['REQUEST_METHOD']
+
+  def validate_email(self, email, **kwargs):
+    is_post_request = self.get_request_method() == 'POST'
+
+    if email and is_post_request:
       existing = User.objects.filter(email__iexact=email)
 
       if existing.exists():

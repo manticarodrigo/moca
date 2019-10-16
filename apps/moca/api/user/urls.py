@@ -18,4 +18,5 @@ urlpatterns = [
   path('therapist/away/', TherapistLeaveView.as_view()),
   path('therapist/away/<int:leave_id>', TherapistLeaveDetailView.as_view())
 ]
+
 urlpatterns = format_suffix_patterns(urlpatterns)
