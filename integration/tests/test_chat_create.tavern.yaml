@@ -14,13 +14,10 @@ stages:
         user:
           id: !anyint
       save:
-        body:
-          user_id: user.id
         $ext:
           function: utils:test_scope
           extra_kwargs:
-            password: 'test1234'
-            response_type: 'patient'
+            save_as: created_patient
 
   - name: register therapist
     request:
@@ -35,86 +32,105 @@ stages:
         user:
           id: !anyint
       save:
-        body:
-          user_id: user.id
         $ext:
           function: utils:test_scope
           extra_kwargs:
-            password: 'test1234'
-            response_type: 'therapist'
-            patient_id: "{patient.user.id}"
-            patient_address_id: "{patient.addresses[0].id}"
+            save_as: created_therapist
+
+
+  - name: enter address for patient
+    request:
+      url: "{tavern.env_vars.service:s}/api/address/add/"
+      headers:
+        Authorization: "Token {created_patient.token}"
+        Content-Type: "application/json"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_address
+    response:
+      status_code: 201
+      body:
+          id: !anyint
+      save:
+        body:
+          patient_address_id: id
 
   - name: create conversation
     request:
       url: "{tavern.env_vars.service:s}/api/chat/"
       headers:
-        Authorization: "Token {therapist.token}"
+        Authorization: "Token {created_therapist.token}"
         Content-Type: "application/json"
       method: POST
       json:
-        participants: ["{kwargs.patient_id}","{therapist.user.id}"]
+        participants: ["{created_patient.user.id}","{created_therapist.user.id}"]
     response:
       status_code: 201
       body:
-          id: !anyint
-          createdAt: !anystr
+        id: !anyint
+        createdAt: !anystr
       save:
         body:
-          id: id
-      $ext:
-        function: utils:test_scope
-        extra_kwargs:
-          password:
-
+          conversation_id: id
 
   - name: send media message
     request:
-      url: "{tavern.env_vars.service:s}/api/chat/{}/create/"
+      url: "{tavern.env_vars.service:s}/api/chat/{conversation_id}/messages"
       headers:
-        Authorization: "Token {therapist.token}"
+        Authorization: "Token {created_therapist.token}"
         Content-Type: "application/json"
       method: POST
       json:
-        patient: "{kwargs.patient_id}"
-        therapist: "{therapist.user.id}"
-        address: "{kwargs.patient_address_id}"
-        start_time: "2019-11-02T09:30:00.000Z"
-        end_time: "2019-11-02T10:00:00.000Z"
-        price : "60"
-    response:
-      status_code: 400
-
-  - name: set away day
-    request:
-      url: "{tavern.env_vars.service:s}/api/user/therapist/away/"
-      headers:
-        Authorization: "Token {therapist.token}"
-        Content-Type: "application/json"
-      method: POST
-      json:
-        therapist: "{therapist.user.id}"
-        start_date: "2020-11-02"
-        end_date: "2020-11-03"
+        $ext:
+          function: utils:fake_media_message
     response:
       status_code: 201
       body:
-          id: !anyint
+        id: !anyint
       save:
-        body:
-          awayid: id
         $ext:
           function: utils:test_scope
           extra_kwargs:
-            response_type: 'awayday'
-            therapist_token: "{therapist.token}"
+            save_as: 'created_media_message'
 
-  - name: delete away day
+  - name: send appointment request message
     request:
-      url: "{tavern.env_vars.service:s}/api/user/therapist/away/{awayday.id}"
+      url: "{tavern.env_vars.service:s}/api/chat/{conversation_id}/messages"
       headers:
-        Authorization: "Token {kwargs.therapist_token}"
+        Authorization: "Token {created_therapist.token}"
         Content-Type: "application/json"
-      method: DELETE
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_request_message
+          extra_kwargs:
+            therapist_id: "{created_therapist.user.id}"
+            patient_id: "{created_patient.user.id}"
+            patient_address_id: "{patient_address_id}"
     response:
-      status_code: 200
+      status_code: 201
+      body:
+        id: !anyint
+      save:
+        body:
+          request_id: id
+
+  - name: accept appointment request
+    request:
+      url: "{tavern.env_vars.service:s}/api/chat/{conversation_id}/messages"
+      headers:
+        Authorization: "Token {created_patient.token}"
+        Content-Type: "application/json"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_response_message
+          extra_kwargs:
+            request_id: "{request_id}"
+            response: "ACCEPTED"
+    response:
+      status_code: 201
+      body:
+        id: !anyint
+

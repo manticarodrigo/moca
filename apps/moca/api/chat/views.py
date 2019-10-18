@@ -47,7 +47,7 @@ class ChatAPI(GenericAPIView):
         raise UserNotFound(participant_id)
 
     conversation.save()
-    return Response(ConversationSerializer(conversation).data)
+    return Response(ConversationSerializer(conversation).data, status.HTTP_201_CREATED)
 
   def get(self, request):
     """
@@ -72,7 +72,6 @@ class MessagesAPI(GenericAPIView):
     new_message = AppointmentMessage.objects.create(user=sender,
                                                     conversation=conversation,
                                                     appointment=appointment)
-    print(f'test 8')
     new_message.save()
     return AppointmentMessageSerializer(new_message).data
 

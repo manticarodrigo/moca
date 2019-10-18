@@ -15,12 +15,13 @@ stages:
           id: !anyint
       save:
         body:
-          user_id: user.id
+          patient_id: user.id
+          patient_email : user.email
         $ext:
           function: utils:test_scope
           extra_kwargs:
+            save_as: 'patient'
             password: 'test1234'
-            response_type: 'patient'
 
   - name: successful login
     request:
@@ -29,7 +30,7 @@ stages:
       json:
         username: "{patient.user.email}"
         email: "{patient.user.email}"
-        password: "{kwargs.password}"
+        password: "{patient.password}"
     response:
       status_code: 200
       body:
@@ -42,7 +43,7 @@ stages:
       json:
         username: "{patient.user.email}"
         email: "{patient.user.email}"
-        password: "{patient.user.email}"
+        password: "wrong password"
     response:
       status_code: 400
       body:

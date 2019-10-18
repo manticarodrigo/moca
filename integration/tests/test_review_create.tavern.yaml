@@ -16,11 +16,12 @@ stages:
       save:
         body:
           user_id: user.id
+          token: token
         $ext:
           function: utils:test_scope
           extra_kwargs:
+            save_as: 'patient'
             password: 'test1234'
-            response_type: 'patient'
 
   - name: add patient address
     request:
@@ -36,6 +37,9 @@ stages:
       status_code: 201
       body:
         id: !anyint
+      save:
+        body:
+          patient_address_id: id
 
   - name: get patient
     request:
@@ -53,7 +57,7 @@ stages:
         $ext:
           function: utils:test_scope
           extra_kwargs:
-            response_type: 'patient'
+            save_as: 'patient'
 
   - name: register therapist
     request:
@@ -73,10 +77,8 @@ stages:
         $ext:
           function: utils:test_scope
           extra_kwargs:
+            save_as: 'therapist'
             password: 'test1234'
-            response_type: 'therapist'
-            patient_id: "{patient.user.id}"
-            patient_address_id: "{patient.user.addresses[0].id}"
 
   - name: set appointment 
     request:
@@ -86,9 +88,9 @@ stages:
         Content-Type: "application/json"
       method: POST
       json:
-        patient: "{kwargs.patient_id}"
+        patient: "{patient.user.id}"
         therapist: "{therapist.user.id}"
-        address: "{kwargs.patient_address_id}"
+        address: "{patient_address_id}"
         start_time: "2019-11-02T08:00:00.000Z"
         end_time: "2019-11-02T8:30:00.000Z"
         price : "60"  
@@ -97,3 +99,30 @@ stages:
       body:
         appointment:
           id: !anyint
+      save:
+        $ext:
+          function: utils:test_scope
+          extra_kwargs:
+            save_as: 'created'
+
+  - name: review_session
+    request:
+      url: "{tavern.env_vars.service:s}/api/appointment/{created.appointment.id}/review"
+      headers:
+        Authorization: "Token {therapist.token}"
+        Content-Type: "application/json"
+      method: POST
+      json:
+        $ext:
+          function: utils:fake_review
+    response:
+      status_code: 201
+      body:
+        review:
+          comment: !anystr
+      save:
+        $ext:
+          function: utils:test_scope
+          extra_kwargs:
+            save_as: 'sent_review'
+

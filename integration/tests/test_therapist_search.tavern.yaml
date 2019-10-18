@@ -19,7 +19,7 @@ stages:
         $ext:
           function: utils:test_scope
           extra_kwargs:
-            response_type: created_therapist
+            save_as: created_therapist
 
   - name: successful login
     request:
@@ -87,7 +87,7 @@ stages:
         $ext:
           function: utils:test_scope
           extra_kwargs:
-            response_type: 'created_therapist'
+            save_as: 'created_therapist'
 
   - name: search therapist by gender
     request:

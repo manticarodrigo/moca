@@ -19,8 +19,8 @@ stages:
         $ext:
           function: utils:test_scope
           extra_kwargs:
+            save_as: 'first_therapist'
             password: 'test1234'
-            response_type: 'first_therapist'
 
   - name: register another therapist
     request:
@@ -40,8 +40,8 @@ stages:
         $ext:
           function: utils:test_scope
           extra_kwargs:
+            save_as: 'second_therapist'
             password: 'test1234'
-            response_type: 'second_therapist'
 
   - name: successful login for first therapist
     request:

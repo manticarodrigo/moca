@@ -9,8 +9,6 @@ class MessageTypes:
   MEDIA = "media"
   REQUEST = "request"
   RESPONSE = "response"
-  ATTACHMENT = "attachment"
-  TEXT = "text"
 
 
 class Conversation(models.Model):
@@ -36,7 +34,7 @@ class MediaMessage(Message):
   text = models.TextField(null=True)
   file = models.FileField(null=True)
   MEDIA_TYPES = [("PDF", "pdf"), ("JPEG", "jpeg")]
-  mediaType = models.CharField(max_length=6, choices=MEDIA_TYPES)
+  mediaType = models.CharField(max_length=10, choices=MEDIA_TYPES)
 
 
 class AppointmentMessage(Message):

@@ -19,8 +19,8 @@ stages:
         $ext:
           function: utils:test_scope
           extra_kwargs:
+            save_as: 'therapist'
             password: 'test1234'
-            response_type: 'therapist'
 
   - name: successful login
     request:
@@ -29,7 +29,7 @@ stages:
       json:
         username: "{therapist.user.email}"
         email: "{therapist.user.email}"
-        password: "{kwargs.password}"
+        password: "{therapist.password}"
     response:
       status_code: 200
       body:
