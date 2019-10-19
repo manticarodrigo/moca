@@ -33,12 +33,12 @@ class MediaMessage(Message):
   type = MessageTypes.MEDIA
   text = models.TextField(null=True)
   file = models.FileField(null=True)
-  MEDIA_TYPES = [("PDF", "pdf"), ("JPEG", "jpeg")]
+  MEDIA_TYPES = [('application/pdf', 'pdf'), ('image/jpg', 'jpg'), ('image/png', 'png')]
   mediaType = models.CharField(max_length=10, choices=MEDIA_TYPES)
 
 
 class AppointmentMessage(Message):
   type = MessageTypes.REQUEST
   RESPONSE_TYPES = [('Accepted', 'Accepted'), ('Rejected', 'Rejected')]
-  appointment = models.ForeignKey(Appointment, on_delete=models.PROTECT)
+  appointment = models.ForeignKey(Appointment, on_delete=models.PROTECT, related_name='messages')
   response = models.CharField(max_length=10, choices=RESPONSE_TYPES, null=True)
