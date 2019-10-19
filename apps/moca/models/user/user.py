@@ -93,7 +93,6 @@ class User(AbstractBaseUser, PermissionsMixin):
   def __str__(self):
     return f"{self.get_full_name()} - {self.email}"
 
-  
   def get_full_name(self):
     return f"{self.first_name} {self.last_name}"
 
@@ -155,6 +154,7 @@ class AwayDays(models.Model):
                                 related_name='awaydays')
   start_date = models.DateField()
   end_date = models.DateField()
+
 
 class Device(models.Model):
   user = models.ForeignKey(User, on_delete=models.CASCADE)

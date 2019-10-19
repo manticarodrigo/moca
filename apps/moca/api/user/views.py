@@ -1,6 +1,5 @@
 import json
 
-
 from django.db.models import F
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
@@ -10,9 +9,9 @@ from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 from moca.models.prices import Price
 
-from .serializers import (PatientSerializer, PatientCreateSerializer,
-                          TherapistSerializer, TherapistCreateSerializer, PriceSerializer,
-                          LeaveSerializer, LeaveResponseSerializer)
+from .serializers import (PatientSerializer, PatientCreateSerializer, TherapistSerializer,
+                          TherapistCreateSerializer, PriceSerializer, LeaveSerializer,
+                          LeaveResponseSerializer)
 
 from .permissions import IsSelf
 
@@ -22,6 +21,7 @@ class PatientCreateView(generics.CreateAPIView):
   POST {{ENV}}/api/user/patient
   """
   serializer_class = PatientCreateSerializer
+
 
 class PatientDetailView(generics.RetrieveUpdateAPIView):
   """
@@ -37,6 +37,7 @@ class TherapistCreateView(generics.CreateAPIView):
   POST {{ENV}}/api/user/therapist/
   """
   serializer_class = TherapistCreateSerializer
+
 
 class TherapistDetailView(generics.RetrieveUpdateAPIView):
   """
@@ -77,7 +78,6 @@ class TherapistSearchView(generics.ListAPIView):
       therapists_in_price_range = Price.objects.filter(price__lte=max_price).values('therapist')
       therapists = therapists.filter(user_id__in=therapists_in_price_range)
 
-
     if user_location:
       METERS_PER_MILE = 1609.34
 
@@ -87,6 +87,7 @@ class TherapistSearchView(generics.ListAPIView):
 
     return therapists
 
+
 class TherapistLeaveView(APIView):
   def post(self, request, format=None):
     awaydays = LeaveSerializer(data=request.data)
@@ -95,10 +96,12 @@ class TherapistLeaveView(APIView):
     awaydays = AwayDays.objects.get(pk=awaydays.id)
     return Response(LeaveResponseSerializer(awaydays).data, status.HTTP_201_CREATED)
 
+
 class TherapistLeaveDetailView(APIView):
   def delete(self, request, leave_id, format=None):
     AwayDays.objects.get(id=leave_id).delete()
     return Response('Leave succesfully deleted', status.HTTP_200_OK)
+
 
 class TherapistPricing(generics.CreateAPIView):
   serializer_class = PriceSerializer

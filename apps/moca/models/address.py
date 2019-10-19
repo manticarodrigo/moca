@@ -21,7 +21,6 @@ class Address(models.Model):
                            blank=True,
                            null=True)
 
-
   def __str__(self):
     return f"name: {self.name},text: {self.street}, " \
            f"primary:{self.primary},location:{self.location} " \

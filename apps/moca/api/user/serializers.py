@@ -14,7 +14,7 @@ from rest_framework_gis.fields import GeoJsonDict
 
 from moca.api.util.Validator import RequestValidator
 from moca.api.address.serializers import AddressSerializer
-from moca.api.payment.serializers import PaymentSerializer 
+from moca.api.payment.serializers import PaymentSerializer
 from moca.models.user import Patient, Therapist
 from moca.models import Price
 from moca.models.address import Address
@@ -34,8 +34,8 @@ class UserSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = User
-    fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type',
-              'email', 'password', 'is_active', 'addresses', 'payments')
+    fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type', 'email', 'password',
+              'is_active', 'addresses', 'payments')
     extra_kwargs = {
       'password': {
         'write_only': True,
@@ -64,13 +64,14 @@ class UserSerializer(serializers.ModelSerializer):
 
     return user
 
+
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
 
   class Meta:
     model = Patient
     fields = '__all__'
-  
+
   def update(self, instance, validated_data):
     user = validated_data.get('user', instance.user.__dict__)
 
@@ -90,6 +91,7 @@ class PatientSerializer(serializers.ModelSerializer):
 
     return instance
 
+
 class PatientCreateSerializer(PatientSerializer):
   token = serializers.SerializerMethodField()
 
@@ -100,6 +102,7 @@ class PatientCreateSerializer(PatientSerializer):
     validated_data['user']['type'] = User.PATIENT
     user = UserSerializer().create(validated_data['user'])
     return Patient.objects.create(user=user)
+
 
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer()
@@ -123,7 +126,8 @@ class TherapistSerializer(serializers.ModelSerializer):
     instance.license_number = validated_data.get('license_number', instance.license_number)
     instance.operation_radius = validated_data.get('operation_radius', instance.operation_radius)
     instance.qualifications = validated_data.get('qualifications', instance.qualifications)
-    instance.preferred_ailments = validated_data.get('preferred_ailments', instance.preferred_ailments)
+    instance.preferred_ailments = validated_data.get('preferred_ailments',
+                                                     instance.preferred_ailments)
 
     password = validated_data.get('user', {}).get('password')
 
@@ -134,7 +138,8 @@ class TherapistSerializer(serializers.ModelSerializer):
     instance.save()
 
     return instance
-  
+
+
 class TherapistCreateSerializer(TherapistSerializer):
   token = serializers.SerializerMethodField()
 
@@ -145,6 +150,7 @@ class TherapistCreateSerializer(TherapistSerializer):
     validated_data['user']['type'] = User.THERAPIST
     user = UserSerializer().create(validated_data['user'])
     return Therapist.objects.create(user=user)
+
 
 class PriceSerializer(serializers.ModelSerializer):
   therapist = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -163,6 +169,7 @@ class PriceSerializer(serializers.ModelSerializer):
     if session_type not in SESSION_TYPES:
       raise serializers.ValidationError(f"Invalid session type should be one of {SESSION_TYPES}")
     return session_type
+
 
 class LeaveSerializer(serializers.Serializer):
   therapist = serializers.IntegerField(required=True)
@@ -189,6 +196,7 @@ class LeaveSerializer(serializers.Serializer):
   def validate(self, data):
     RequestValidator.end_after_start(data, 'end_date', 'start_date')
     return data
+
 
 class LeaveResponseSerializer(serializers.Serializer):
   id = serializers.IntegerField(required=False)

@@ -2,9 +2,9 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import (PatientCreateView, PatientDetailView, TherapistCreateView,
-                    TherapistDetailView, TherapistSearchView, TherapistLeaveView,
-                    TherapistLeaveDetailView, TherapistPricing)
+from .views import (PatientCreateView, PatientDetailView, TherapistCreateView, TherapistDetailView,
+                    TherapistSearchView, TherapistLeaveView, TherapistLeaveDetailView,
+                    TherapistPricing)
 
 urlpatterns = [
   # patient

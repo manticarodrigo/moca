@@ -5,10 +5,10 @@ from moca.models.user import Therapist
 
 
 class AddressSerializer(serializers.ModelSerializer):
-
   class Meta:
     model = Address
     exclude = ['user']
+
 
 class AddressCreateSerializer(serializers.ModelSerializer):
   user = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -23,7 +23,7 @@ class AddressCreateSerializer(serializers.ModelSerializer):
 
     if validated_data['primary'] and user.type == 'PT':
       therapist = Therapist.objects.get(user_id=user.id)
-      therapist.primary_location = validated_data['location'] 
+      therapist.primary_location = validated_data['location']
       therapist.save()
 
     return Address.objects.create(**validated_data)

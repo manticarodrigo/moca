@@ -27,6 +27,7 @@ class Review(models.Model):
   rating = models.FloatField()
   comment = models.CharField(blank=True, null=True, max_length=200)
 
+
 class Note(models.Model):
   appointment = models.ForeignKey(Appointment,
                                   on_delete=models.CASCADE,
