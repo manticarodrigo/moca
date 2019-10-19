@@ -14,6 +14,7 @@ from rest_framework_gis.fields import GeoJsonDict
 
 from moca.api.util.Validator import RequestValidator
 from moca.api.address.serializers import AddressSerializer
+from moca.api.payment.serializers import PaymentSerializer 
 from moca.models.user import Patient, Therapist
 from moca.models import Price
 from moca.models.address import Address
@@ -28,12 +29,13 @@ User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
   addresses = AddressSerializer(read_only=True, many=True)
+  payments = PaymentSerializer(read_only=True, many=True)
   email = serializers.EmailField(allow_blank=True)
 
   class Meta:
     model = User
     fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type',
-              'email', 'password', 'is_active', 'addresses')
+              'email', 'password', 'is_active', 'addresses', 'payments')
     extra_kwargs = {
       'password': {
         'write_only': True,

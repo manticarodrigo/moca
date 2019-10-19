@@ -9,4 +9,5 @@ urlpatterns = [
   path('appointment/', include('moca.api.appointment.urls')),
   path('device/', include('moca.api.device.urls')),
   path('address/', include('moca.api.address.urls')),
+  path('payment/', include('moca.api.payment.urls')),
 ]

@@ -24,5 +24,5 @@ class Address(models.Model):
 
   def __str__(self):
     return f"name: {self.name},text: {self.street}, " \
-           f"primary:{self.primary},location:{self.location}" \
-           f" user:{self.user}"
+           f"primary:{self.primary},location:{self.location} " \
+           f"user:{self.user}"

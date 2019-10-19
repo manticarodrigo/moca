@@ -3,3 +3,4 @@ from .chat import (AttachmentMessage, Conversation, Message, MessageTypes, Reque
                    ResponseMessage, TextMessage)
 from .user import Patient, Therapist, User, Device
 from .prices import Price
+from .payment import Payment, PaymentProfile, Card, Bank
