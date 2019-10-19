@@ -1,4 +1,1 @@
-from .user import User
-from .user import Patient
-from .user import Therapist
-from .user import Device
+from .user import User, Patient, Therapist, Device, PATIENT_TYPE, THERAPIST_TYPE

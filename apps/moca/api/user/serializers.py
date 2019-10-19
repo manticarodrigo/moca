@@ -26,6 +26,11 @@ SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 User = get_user_model()
 
+class UserSnippetSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = User
+    fields = ('id', 'first_name', 'last_name')
+
 
 class UserSerializer(serializers.ModelSerializer):
   addresses = AddressSerializer(read_only=True, many=True)
@@ -61,7 +66,6 @@ class UserSerializer(serializers.ModelSerializer):
 
   def create(self, validated_data):
     user = User.objects.create_user(**validated_data)
-
     return user
 
 
@@ -194,7 +198,9 @@ class LeaveSerializer(serializers.Serializer):
     return value
 
   def validate(self, data):
-    RequestValidator.end_after_start(data, 'end_date', 'start_date')
+    start_time = data['start_time']
+    end_time = data['end_time']
+    RequestValidator.end_after_start(end_date, start_date)
     return data
 
 

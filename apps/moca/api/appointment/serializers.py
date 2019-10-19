@@ -1,112 +1,93 @@
 from datetime import datetime
 from django.db import models, transaction
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
 from decimal import *
 from moca.api.appointment.errors import AppointmentAlreadyReviewed
 from moca.api.appointment.errors import AppointmentNotFound
-from moca.api.user.serializers import PatientSerializer, TherapistSerializer
+from moca.api.user.serializers import PatientSerializer, TherapistSerializer, UserSnippetSerializer
 from moca.api.address.serializers import AddressSerializer
 from moca.models import Address, User
 from moca.models.appointment import Appointment, Review
-from moca.models.user import Patient, Therapist
+from moca.models.user import Patient, Therapist, PATIENT_TYPE, THERAPIST_TYPE
 from enum import *
 
 from moca.api.util.Validator import RequestValidator
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
+  address = AddressSerializer()
+  other_party = serializers.SerializerMethodField()
+
   class Meta:
     model = Appointment
-    depth = 1
-    fields = '__all__'
+    fields = ['start_time', 'end_time', 'price', 'other_party', 'address']
+
+  def get_other_party(self, obj):
+    user_type = self.context['request'].user.type 
+    if user_type not in (PATIENT_TYPE, THERAPIST_TYPE):
+      raise APIException('Unsupported user type')
+
+    if user_type == PATIENT_TYPE:
+      party_user = obj.patient.user
+    else: 
+      party_user = obj.therapist.user
+
+    return UserSnippetSerializer(party_user).data
+    
 
 
-class AppointmentDeserializer(serializers.Serializer):
-
-  patient = serializers.CharField(required=True)
-  therapist = serializers.CharField(required=True)
-  address = serializers.CharField(required=True)
-  start_time = serializers.DateTimeField(required=True)
-  end_time = serializers.DateTimeField(required=True)
-  start_time_expected = serializers.DateTimeField(required=False)
-  end_time_expected = serializers.DateTimeField(required=False)
-  price = serializers.IntegerField(required=True)
-  is_cancelled = serializers.BooleanField(required=False, default=False)
+class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
+  address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
+  patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
 
   class Meta:
-    fields = '__all__'
+    model = Appointment
+    exclude = ['therapist']
+    
+  def create(self, validated_data):
+    request = self.context['request']
+    user = request.user
+    therapist = Therapist.objects.get(user=user)
 
-  def validate_price(self, value):
-    if value <= 0:
-      raise serializers.ValidationError('Price should be higher than 0')
-    return value
+    validated_data['therapist'] = therapist
+    appointment = Appointment.objects.create(**validated_data)
+    return appointment
 
-  def validate_patient(self, value):
-    RequestValidator.patient(value)
-    return value
 
-  def validate_therapist(self, value):
-    RequestValidator.therapist(value)
-    return value
+  def validate(self, data, **args):
+    request = self.context['request']
+    user = request.user
+    instance = self.instance
 
-  def validate_address(self, value):
-    RequestValidator.address(value)
-    return value
+    try:
+      Therapist.objects.get(user=user)
+    except:
+      raise serializers.ValidationError(f'Appointment creator must be a therapist')
 
-  def validate_start_time(self, value):
-    RequestValidator.future_time(value)
-    return value
+    start_time = data.get('start_time', instance.start_time)
+    end_time = data.get('end_time', instance.end_time)
 
-  def validate(self, data):
-    start_time = data['start_time']
-    end_time = data['end_time']
-    if end_time < start_time:
-      raise serializers.ValidationError(f'End Time can not be before than Start Time')
+    if 'address' in data:
+      address_id = data['address'].id
+    else:
+      address_id = instance.address_id
 
-    # Check if session address belongs to user or not
-    patient_id = data['patient']
-    address_id = data['address']
-    patient_address = Address.objects.filter(user_id__exact=patient_id).filter(id=address_id)
-    if not patient_address:
-      raise serializers.ValidationError(
-        f'Address Id: {address_id} doesnt belong to patient Id: {patient_id}  ')
-    # Check if appointment overlaps with another one
-    overlapped_appointment = Appointment.objects.filter(
-      start_time__range=[start_time, end_time]).first()
-    if not overlapped_appointment is None:
-      raise serializers.ValidationError(
-        f'Requested appointment is overlapping with following appointment time {overlapped_appointment.id}'
-      )
-    overlapped_appointment = Appointment.objects.filter(
-      end_time__range=[start_time, end_time]).first()
-    if not overlapped_appointment is None:
-      raise serializers.ValidationError(
-        f'Requested appointment is overlapping with following appointment time {overlapped_appointment.id}'
-      )
-    # todo Check if requested appointment in away day
+    if 'patient' in data:
+      patient_id = data['patient'].user.id
+    else:
+      patient_id = instance.patient_id
+
+    RequestValidator.future_time(start_time)
+    RequestValidator.end_after_start(end_time, start_time)
+    RequestValidator.address_belongs_to_user(address_id, patient_id)
+
     return data
 
-  @transaction.atomic
-  def create(self, validated_data):
-    patient = Patient.objects.get(user_id=validated_data.pop("patient"))
-    therapist = Therapist.objects.get(user_id=validated_data.pop("therapist"))
-    address = Address.objects.get(id=validated_data.pop("address"))
-    appointment = Appointment.objects.create(patient=patient,
-                                             therapist=therapist,
-                                             address=address,
-                                             **validated_data)
-    return appointment
-    # return Appointment(address=address, **validated_data).save()
 
-  @transaction.atomic
-  def update(self, instance, validated_data):
-    instance.start_time = validated_data.get('start_time', instance.start_time)
-    instance.end_time = validated_data.get('end_time', instance.start_time)
-    instance.start_time_expected = validated_data.get('start_time_expected', instance.start_time)
-    instance.end_time_expected = validated_data.get('end_time_expected', instance.start_time)
-    instance.modified_at = datetime.now()
-    instance = instance.save()
-    return instance
+
+
+
 
 
 class ReviewSerializer(serializers.Serializer):
@@ -127,7 +108,7 @@ class ReviewSerializer(serializers.Serializer):
   @transaction.atomic
   def create(self, validated_data):
     try:
-      appointment_id = validated_data.pop("appointment_id")
+      appointment_id = validated_data.pop('appointment_id')
       appointment = Appointment.objects.get(pk=appointment_id)
     except Appointment.DoesNotExist:
       raise AppointmentNotFound(appointment_id)
@@ -143,7 +124,7 @@ class ReviewSerializer(serializers.Serializer):
   @transaction.atomic
   def update(self, instance, validated_data):
     try:
-      appointment_id = validated_data.pop("appointment_id")
+      appointment_id = validated_data.pop('appointment_id')
       appointment = Appointment.objects.get(pk=appointment_id)
     except Appointment.DoesNotExist:
       raise AppointmentNotFound(appointment_id)

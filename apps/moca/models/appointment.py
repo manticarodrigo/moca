@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import MinValueValidator
 
 from moca.models import Address
 from moca.models.user import Patient, Therapist
@@ -14,7 +15,7 @@ class Appointment(models.Model):
   start_time_expected = models.DateTimeField(blank=True, null=True)
   end_time_expected = models.DateTimeField(blank=True, null=True)
   is_cancelled = models.BooleanField(default=False)
-  price = models.IntegerField()
+  price = models.IntegerField(validators=[MinValueValidator(0)])
   created_at = models.DateTimeField(auto_now_add=True)
   modified_at = models.DateTimeField(auto_now_add=True)
 

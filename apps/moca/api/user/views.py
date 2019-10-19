@@ -4,10 +4,12 @@ from django.db.models import F
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import APIException
 
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 from moca.models.prices import Price
+from moca.models import Address
 
 from .serializers import (PatientSerializer, PatientCreateSerializer, TherapistSerializer,
                           TherapistCreateSerializer, PriceSerializer, LeaveSerializer,
@@ -62,8 +64,11 @@ class TherapistSearchView(generics.ListAPIView):
     user = self.request.user
     user_location = None
 
-    if user.addresses.all().exists():
-      user_location = user.addresses.get(primary=True).location
+    try: 
+      user_location = Address.objects.get(user=user, primary=True).location
+    except Address.DoesNotExist:
+      raise APIException('No primary address found.')
+
 
     if 'gender' in criteria:
       gender = criteria['gender']
@@ -78,12 +83,10 @@ class TherapistSearchView(generics.ListAPIView):
       therapists_in_price_range = Price.objects.filter(price__lte=max_price).values('therapist')
       therapists = therapists.filter(user_id__in=therapists_in_price_range)
 
-    if user_location:
-      METERS_PER_MILE = 1609.34
-
-      therapists = therapists.filter(primary_location__distance_lt=(user_location,
-                                                                    F('operation_radius') *
-                                                                    METERS_PER_MILE))
+    METERS_PER_MILE = 1609.34
+    therapists = therapists.filter(primary_location__distance_lt=(user_location,
+                                                                  F('operation_radius') *
+                                                                  METERS_PER_MILE))
 
     return therapists
 

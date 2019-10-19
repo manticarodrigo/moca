@@ -9,6 +9,8 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
 
+PATIENT_TYPE, THERAPIST_TYPE, AGENT_TYPE, ADMIN_TYPE = "PA", "PT", "AG", "AD"
+
 class MyUserManager(BaseUserManager):
   """
   A custom user manager to deal with emails as unique identifiers for auth
@@ -57,12 +59,11 @@ class User(AbstractBaseUser, PermissionsMixin):
   FEMALE, MALE = "F", "M"
   GENDERS = [(FEMALE, "Female"), (MALE, "Male")]
 
-  PATIENT, THERAPIST, AGENT, ADMIN = "PA", "PT", "AG", "AD"
   USER_TYPES = [
-    (PATIENT, "Patient"),
-    (THERAPIST, "Physical Therapist"),
-    (AGENT, "Agent"),
-    (ADMIN, "Admin"),
+    (PATIENT_TYPE, "Patient"),
+    (THERAPIST_TYPE, "Physical Therapist"),
+    (AGENT_TYPE, "Agent"),
+    (ADMIN_TYPE, "Admin"),
   ]
 
   first_name = models.CharField(null=True, blank=True, max_length=50)
@@ -71,7 +72,7 @@ class User(AbstractBaseUser, PermissionsMixin):
   date_of_birth = models.DateField(null=True, blank=True)
   # todo needs to be non-null field
   created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-  type = models.CharField(max_length=2, choices=USER_TYPES, default=AGENT)
+  type = models.CharField(max_length=2, choices=USER_TYPES, default=AGENT_TYPE)
   image = models.ImageField(upload_to='users', blank=True, null=True)
 
   email = models.EmailField(unique=True, null=True)
@@ -99,6 +100,17 @@ class User(AbstractBaseUser, PermissionsMixin):
   def get_short_name(self):
     return f"{self.first_name}"
 
+  def get_profile_model(self):
+    if self.type == PATIENT_TYPE:
+      return Patient
+    if self.type == THERAPIST_TYPE:
+      return Therapist 
+
+  def get_profile_type(self):
+    if self.type == PATIENT_TYPE:
+      return 'patient' 
+    if self.type == THERAPIST_TYPE:
+      return 'therapist'
 
 class PatientManager(MyUserManager):
   pass
