@@ -82,66 +82,65 @@ def fake_patient_create_body():
 
 
 def fake_therapist_create_body(ailments=None, gender=None, tariffs=None):
-  therapist = {
-    **fake_user(gender),
-    **fake_therapist(ailments, tariffs),
-    **fake_addresses()
-  }
+  therapist = {**fake_user(gender), **fake_therapist(ailments, tariffs), **fake_addresses()}
   therapists.append(therapist)
   return Box(therapist)
 
+
 def fake_review():
-  review =  {
-              "comment": fake.text(),
-              "rating": round(random.uniform(0,5),2)
-            }
+  review = {"comment": fake.text(), "rating": round(random.uniform(0, 5), 2)}
   return Box(review)
+
 
 def fake_end_time():
   return datetime.now() + timedelta(days=2, hours=1)
 
+
 def fake_media_message():
   # todo use media_types
-  media_types=['png','pdf','abc']
-  message = {"type":"media",
-                "data": {
-                  "mediatype": "png",
-                  "file": "011000111010110101",
-                  "text": fake.text()
-                }
-             }
+  media_types = ['png', 'pdf', 'abc']
+  message = {
+    "type": "media",
+    "data": {
+      "mediatype": "png",
+      "file": "011000111010110101",
+      "text": fake.text()
+    }
+  }
   return Box(message)
+
 
 # todo
-def fake_request_message(therapist_id,patient_id,patient_address_id):
-  message = {"type":"request",
-             "data": {
-               "patient": patient_id,
-               "therapist": therapist_id,
-               "address": patient_address_id,
-               "start_time": "2019-12-05T13:00:00",
-               "end_time": "2019-12-05T13:00:00",
-               "price": random.randint(50,100)
-                }
-             }
+def fake_request_message(therapist_id, patient_id, patient_address_id):
+  message = {
+    "type": "request",
+    "data": {
+      "patient": patient_id,
+      "therapist": therapist_id,
+      "address": patient_address_id,
+      "start_time": "2019-12-05T13:00:00",
+      "end_time": "2019-12-05T13:00:00",
+      "price": random.randint(50, 100)
+    }
+  }
   return Box(message)
 
-def fake_response_message(request_id,response):
-  message = {"type":"response",
-             "data": {
-               "request_id": request_id ,
-               "response": response
-               }
-             }
+
+def fake_response_message(request_id, response):
+  message = {"type": "response", "data": {"request_id": request_id, "response": response}}
   return Box(message)
+
+
 last_box = {}
+
 
 def test_scope(response, **kwargs):
   global last_box
   save_as = kwargs.pop('save_as')
 
   saved_box = Box({
-    **last_box, "globals": globals(),
+    **last_box,
+    "globals": globals(),
     save_as: {
       **response.json(),
       **kwargs
