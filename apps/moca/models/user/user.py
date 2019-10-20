@@ -6,10 +6,11 @@ from django.contrib.gis.db import models as gisModels
 from django.contrib.gis.geos import Point
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models
+from django.db.models import Avg
 from django.utils.translation import ugettext_lazy as _
+from moca.models.appointment import Review
 
 
-PATIENT_TYPE, THERAPIST_TYPE, AGENT_TYPE, ADMIN_TYPE = "PA", "PT", "AG", "AD"
 
 class MyUserManager(BaseUserManager):
   """
@@ -56,6 +57,7 @@ class MyUserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+  PATIENT_TYPE, THERAPIST_TYPE, AGENT_TYPE, ADMIN_TYPE = "PA", "PT", "AG", "AD"
   FEMALE, MALE = "F", "M"
   GENDERS = [(FEMALE, "Female"), (MALE, "Male")]
 
@@ -101,15 +103,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     return f"{self.first_name}"
 
   def get_profile_model(self):
-    if self.type == PATIENT_TYPE:
+    if self.type == self.PATIENT_TYPE:
       return Patient
-    if self.type == THERAPIST_TYPE:
+    if self.type == self.THERAPIST_TYPE:
       return Therapist 
 
   def get_profile_type(self):
-    if self.type == PATIENT_TYPE:
+    if self.type == self.PATIENT_TYPE:
       return 'patient' 
-    if self.type == THERAPIST_TYPE:
+    if self.type == self.THERAPIST_TYPE:
       return 'therapist'
 
 class PatientManager(MyUserManager):
@@ -151,6 +153,13 @@ class Therapist(models.Model):
   preferred_ailments = ArrayField(models.CharField(max_length=20), size=20, default=list)
 
   objects = TherapistManager()
+
+  def update_rating(self):
+    new_rating = Review.objects.filter(therapist=self).aggregate(Avg('rating'))['rating__avg']
+    self.review_count = Review.objects.filter(therapist=self).count()
+    self.rating = new_rating
+    self.save()
+
 
   def __str__(self):
     return f'Therapist Object user: {self.user} bio : {self.bio} cert_date : {self.cert_date} \

@@ -103,7 +103,7 @@ class PatientCreateSerializer(PatientSerializer):
     return AuthToken.objects.create(patient.user)[1]
 
   def create(self, validated_data):
-    validated_data['user']['type'] = User.PATIENT
+    validated_data['user']['type'] = User.PATIENT_TYPE
     user = UserSerializer().create(validated_data['user'])
     return Patient.objects.create(user=user)
 
@@ -151,7 +151,7 @@ class TherapistCreateSerializer(TherapistSerializer):
     return AuthToken.objects.create(therapist.user)[1]
 
   def create(self, validated_data):
-    validated_data['user']['type'] = User.THERAPIST
+    validated_data['user']['type'] = User.THERAPIST_TYPE
     user = UserSerializer().create(validated_data['user'])
     return Therapist.objects.create(user=user)
 
