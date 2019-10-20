@@ -56,30 +56,6 @@ class MessageSerializer(serializers.ModelSerializer):
     return message
 
 
-# class MessageCreateSerializer
-
-# class AppointmentMessageSerializer(serializers.ModelSerializer):
-#   type = serializers.CharField(read_only=True)
-
-#   class Meta:
-#     model = AppointmentMessage
-#     fields = '__all__'
-
-
-# class MediaMessageSerializer(serializers.ModelSerializer):
-#   type = serializers.CharField(read_only=True)
-
-#   class Meta:
-#     model = MediaMessage
-#     fields = '__all__'
-
-
-# class UserSerializer(serializers.ModelSerializer):
-#   class Meta:
-#     model = User
-#     fields = ("username", "id")
-
-
 class ConversationSerializer(serializers.ModelSerializer):
   participants = UserSnippetSerializer(many=True)
 
@@ -101,20 +77,4 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     response = {"user": other_user, "last_message": last_message}
     return response
-
-
-# class TherapistSearchSerializer(serializers.ModelSerializer):
-#   user = UserSnippetSerializer()
-#   prices = PriceSerializer(source='tariffs', many=True)
-
-#   class Meta:
-#     model = Therapist
-#     fields = ['license_number', 'rating', 'user', 'prices'] 
-
-#   def to_representation(self, obj):
-#     representation = super().to_representation(obj)
-#     user_representation = representation.pop('user')
-#     for key in user_representation:
-#         representation[key] = user_representation[key]
-
-#     return representation
+    
