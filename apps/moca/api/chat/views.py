@@ -4,7 +4,7 @@ from rest_framework import permissions, status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
-from moca.api.appointment.serializers import AppointmentSerializer, AppointmentDeserializer
+from moca.api.appointment.serializers import AppointmentSerializer
 from moca.models import (
   Conversation,
   Message,
@@ -66,7 +66,7 @@ class MessagesAPI(GenericAPIView):
   @staticmethod
   @transaction.atomic
   def handle_request_message(sender, conversation, message):
-    appointment = AppointmentDeserializer(data=message)
+    appointment = AppointmentSerializer(data=message)
     appointment.is_valid(raise_exception=True)
     appointment = appointment.save()
     new_message = AppointmentMessage.objects.create(user=sender,
