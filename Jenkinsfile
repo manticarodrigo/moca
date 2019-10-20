@@ -49,7 +49,7 @@ pipeline {
           sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh ${MOCA_SERVICE}"""
 
           withEnv(["""service=http://${MOCA_SERVICE}""", """service_container=${env.BRANCH_NAME}_${env.BUILD_ID}_moca_service_1""".toLowerCase()]) {
-            sh label: 'Run all tests', script: "./integration/run_tests.sh"
+            sh label: 'Run all tests', script: "bash -c './integration/run_tests.sh || true'"
           }
         }
       }
