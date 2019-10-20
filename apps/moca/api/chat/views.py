@@ -1,21 +1,9 @@
-# from django.contrib.auth import get_user_model
 from rest_framework import permissions
 from rest_framework import generics 
 from rest_framework.exceptions import APIException
-# from rest_framework.response import Response
 
-# from moca.api.appointment.serializers import AppointmentSerializer, AppointmentDeserializer
 from moca.models import Conversation, Message
-# from moca.models.appointment import Appointment
-# from moca.models.chat import MediaMessage, AppointmentMessage
-
-# from .errors import (ConversationNotFound, InvalidMessageType, RequestNotFound, ResponseConflict,
-#                      SelfChatNotAllowed, UserNotFound)
-# from .serializers import (ConversationSerializer, MessageSerializer, MediaMessageSerializer,
-#                           AppointmentMessageSerializer)
-
 from .serializers import ConversationSerializer, MessageSerializer
-# User = get_user_model()
 
 
 class ConversationListView(generics.ListAPIView):
