@@ -1,10 +1,11 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
 
-from .views import AddressCreateView
+from .views import AddressCreateView, AddressDetailView
 
 urlpatterns = [
-  path('add/', AddressCreateView.as_view()),
+  path('', AddressCreateView.as_view()),
+  path('<int:address_id>', AddressDetailView.as_view())
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

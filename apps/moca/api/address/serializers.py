@@ -1,29 +1,36 @@
 from rest_framework import serializers, status
 
 from moca.models.address import Address
-from moca.models.user import Therapist
-
+from moca.models.user import Therapist, User
 
 class AddressSerializer(serializers.ModelSerializer):
   class Meta:
     model = Address
     exclude = ['user']
 
+  def update(self, instance, validated_data):
+    if validated_data['primary']:
+      addresses = Address.objects.filter(user_id=instance.user_id)
+      for address in addresses:
+        address.primary = False
+        address.save()
 
-class AddressCreateSerializer(serializers.ModelSerializer):
-  user = serializers.PrimaryKeyRelatedField(read_only=True)
+    return super(AddressSerializer, self).update(instance, validated_data)
 
-  class Meta:
-    model = Address
-    fields = '__all__'
 
   def create(self, validated_data):
     user = self.context['request'].user
     validated_data['user'] = user
+    
+    if validated_data['primary']:
+      addresses = Address.objects.filter(user=user)
+      for address in addresses:
+        address.primary = False
+        address.save()
 
-    if validated_data['primary'] and user.type == 'PT':
-      therapist = Therapist.objects.get(user_id=user.id)
-      therapist.primary_location = validated_data['location']
-      therapist.save()
+      if user.type == User.THERAPIST_TYPE:
+        therapist = Therapist.objects.get(user=user)
+        therapist.primary_location = validated_data['location']
+        therapist.save()
 
     return Address.objects.create(**validated_data)

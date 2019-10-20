@@ -1,15 +1,16 @@
 from rest_framework import permissions, generics
 
-from .serializers import AddressSerializer, AddressCreateSerializer
+from moca.models.address import Address
+from .serializers import AddressSerializer
 
 
-# POST {{ENV}}/api/user/address
 class AddressCreateView(generics.CreateAPIView):
-  serializer_class = AddressCreateSerializer
+  serializer_class = AddressSerializer
   permission_classes = [permissions.IsAuthenticated]
 
 
-# GET {{ENV}}/api/user/address/{id}
 class AddressDetailView(generics.RetrieveUpdateAPIView):
+  lookup_url_kwarg = 'address_id'
+  queryset = Address.objects.all()
   serializer_class = AddressSerializer
   permission_classes = [permissions.IsAuthenticated]

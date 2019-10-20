@@ -11,7 +11,7 @@ from moca.models.user.user import AwayDays
 from moca.models.prices import Price
 from moca.models import Address
 
-from .serializers import (PatientSerializer, PatientCreateSerializer, TherapistSerializer,
+from .serializers import (PatientSerializer, PatientCreateSerializer, TherapistSerializer, TherapistSearchSerializer, 
                           TherapistCreateSerializer, PriceSerializer, LeaveSerializer,
                           LeaveResponseSerializer)
 
@@ -54,7 +54,7 @@ class TherapistSearchView(generics.ListAPIView):
   """
   GET {{ENV}}/api/user/therapist/search/
   """
-  serializer_class = TherapistSerializer
+  serializer_class = TherapistSearchSerializer
   queryset = Therapist.objects.all()
   permission_classes = [permissions.IsAuthenticated]
 

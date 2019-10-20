@@ -26,10 +26,30 @@ SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 User = get_user_model()
 
+
+class PriceSerializer(serializers.ModelSerializer):
+  therapist = serializers.PrimaryKeyRelatedField(read_only=True)
+
+  class Meta:
+    model = Price
+    fields = ('therapist', 'session_type', 'price')
+
+  def create(self, validated_data):
+    validated_data['therapist'] = Therapist.objects.get(user=self.context['request'].user)
+    price = validated_data.pop('price')
+    Price.objects.filter(**validated_data).delete()
+    return Price.objects.create(**validated_data, price=price)
+
+  def validate_session_type(self, session_type):
+    if session_type not in SESSION_TYPES:
+      raise serializers.ValidationError(f"Invalid session type should be one of {SESSION_TYPES}")
+    return session_type
+
+
 class UserSnippetSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ('id', 'first_name', 'last_name')
+    fields = ('id', 'first_name', 'last_name', 'image')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -108,12 +128,38 @@ class PatientCreateSerializer(PatientSerializer):
     return Patient.objects.create(user=user)
 
 
+class TherapistSearchSerializer(serializers.ModelSerializer):
+  user = UserSnippetSerializer()
+  prices = PriceSerializer(source='tariffs', many=True)
+
+  class Meta:
+    model = Therapist
+    fields = ['license_number', 'rating', 'user', 'prices'] 
+
+  def to_representation(self, obj):
+    representation = super().to_representation(obj)
+    user_representation = representation.pop('user')
+    for key in user_representation:
+        representation[key] = user_representation[key]
+
+    return representation
+
+
+
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer()
 
   class Meta:
     model = Therapist
     fields = '__all__'
+
+  def to_representation(self, obj):
+    representation = super().to_representation(obj)
+    user_representation = representation.pop('user')
+    for key in user_representation:
+        representation[key] = user_representation[key]
+
+    return representation
 
   def update(self, instance, validated_data):
     user = validated_data.get('user', instance.user.__dict__)
@@ -155,24 +201,6 @@ class TherapistCreateSerializer(TherapistSerializer):
     user = UserSerializer().create(validated_data['user'])
     return Therapist.objects.create(user=user)
 
-
-class PriceSerializer(serializers.ModelSerializer):
-  therapist = serializers.PrimaryKeyRelatedField(read_only=True)
-
-  class Meta:
-    model = Price
-    fields = ('therapist', 'session_type', 'price')
-
-  def create(self, validated_data):
-    validated_data['therapist'] = Therapist.objects.get(user=self.context['request'].user)
-    price = validated_data.pop('price')
-    Price.objects.filter(**validated_data).delete()
-    return Price.objects.create(**validated_data, price=price)
-
-  def validate_session_type(self, session_type):
-    if session_type not in SESSION_TYPES:
-      raise serializers.ValidationError(f"Invalid session type should be one of {SESSION_TYPES}")
-    return session_type
 
 
 class LeaveSerializer(serializers.Serializer):
