@@ -12,6 +12,14 @@ from moca.models.appointment import Review
 
 
 
+class EmailField(models.EmailField):
+  def get_prep_value(self, value):
+    value = super(EmailField, self).get_prep_value(value)
+    if value is not None:
+      value = value.lower()
+    return value
+
+
 class MyUserManager(BaseUserManager):
   """
   A custom user manager to deal with emails as unique identifiers for auth
@@ -77,7 +85,7 @@ class User(AbstractBaseUser, PermissionsMixin):
   type = models.CharField(max_length=2, choices=USER_TYPES, default=AGENT_TYPE)
   image = models.ImageField(upload_to='users', blank=True, null=True)
 
-  email = models.EmailField(unique=True, null=True)
+  email = EmailField(unique=True, null=True)
   is_staff = models.BooleanField(
     _("staff status"),
     default=False,
