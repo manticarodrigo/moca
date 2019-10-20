@@ -1,14 +1,14 @@
 from django.contrib import admin
 
-from .models import (Address, MediaMessage, Conversation, Patient, AppointmentMessage, Therapist,
-                     User, Device, PaymentProfile,  Payment, Card, Bank,
+from .models import (Address, Conversation, Message, TextMessage, Patient, Therapist,
+                     User, Device, PaymentProfile, Payment, Card, Bank,
                      PaymentProfile, Review, Appointment)
 
 admin.site.register(User)
 admin.site.register(Address)
 admin.site.register(Conversation)
-admin.site.register(MediaMessage)
-admin.site.register(AppointmentMessage)
+admin.site.register(Message)
+admin.site.register(TextMessage)
 admin.site.register(Therapist)
 admin.site.register(Patient)
 admin.site.register(Device)
