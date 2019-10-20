@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework.exceptions import APIException
+from django.db import transaction
 
 from moca.models import Conversation, Message, TextMessage, ImageMessage
-# from moca.models.chat import MediaMessage
 from moca.api.user.serializers import UserSnippetSerializer
 
 
@@ -19,12 +20,43 @@ class ImageMessageSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
-  text = TextMessageSerializer()
-  image = ImageMessageSerializer()
+  text = TextMessageSerializer(required=False)
+  image = ImageMessageSerializer(required=False)
+  user = serializers.PrimaryKeyRelatedField(read_only=True)
+
   class Meta:
     model = Message
-    fields = ['type', 'created_at', 'text', 'image']
+    fields = ['type', 'created_at', 'text', 'image', 'user']
 
+  @transaction.atomic
+  def create(self, validated_data):
+    request = self.context['request']
+    user_id = request.user.id
+    target_user_id = self.context.get('view').kwargs.get('user_id')
+    type = validated_data.get('type')
+    
+    if (type not in validated_data):
+      raise APIException('No message')
+
+    conversation = Conversation.objects \
+                  .filter(participants__id=user_id) \
+                  .filter(participants__id=target_user_id).first()
+
+    if not conversation:
+      conversation = Conversation()
+      conversation.save()
+      conversation.participants.add(user_id, target_user_id)
+
+    message = Message.objects.create(conversation=conversation, type=type, user_id=user_id)
+
+    if (type == 'text'):
+      TextMessage.objects.create(message=message, **validated_data[type])
+    
+    
+    return message
+
+
+# class MessageCreateSerializer
 
 # class AppointmentMessageSerializer(serializers.ModelSerializer):
 #   type = serializers.CharField(read_only=True)
