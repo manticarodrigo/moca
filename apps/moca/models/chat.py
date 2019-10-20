@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.db.models.signals import m2m_changed
+from django.core.exceptions import ValidationError
 
 from moca.models.appointment import Appointment
 
@@ -11,6 +13,13 @@ class Conversation(models.Model):
 
   def __str__(self):
     return f"conversation {self.id}"
+
+def participants_changed(sender, **kwargs):
+  if kwargs['instance'].participants.count() > 3:
+    raise ValidationError("You can't assign more than three participants")
+
+
+m2m_changed.connect(participants_changed, sender=Conversation.participants.through)
 
 
 class Message(models.Model):
@@ -24,10 +33,10 @@ class Message(models.Model):
   type = models.CharField(max_length=15, choices=MESSAGE_TYPES)
 
 
-
 class TextMessage(models.Model):
   message = models.OneToOneField(Message, related_name="text", on_delete=models.CASCADE)
   content = models.TextField()
+  
   
 class ImageMessage(models.Model):
   message = models.OneToOneField(Message, related_name="image", on_delete=models.CASCADE)

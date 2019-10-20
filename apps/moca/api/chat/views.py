@@ -1,11 +1,11 @@
 # from django.contrib.auth import get_user_model
-# from django.db import transaction
 from rest_framework import permissions
 from rest_framework import generics 
+from rest_framework.exceptions import APIException
 # from rest_framework.response import Response
 
 # from moca.api.appointment.serializers import AppointmentSerializer, AppointmentDeserializer
-from moca.models import Conversation
+from moca.models import Conversation, Message
 # from moca.models.appointment import Appointment
 # from moca.models.chat import MediaMessage, AppointmentMessage
 
@@ -14,7 +14,7 @@ from moca.models import Conversation
 # from .serializers import (ConversationSerializer, MessageSerializer, MediaMessageSerializer,
 #                           AppointmentMessageSerializer)
 
-from .serializers import ConversationSerializer
+from .serializers import ConversationSerializer, MessageSerializer
 # User = get_user_model()
 
 
@@ -26,6 +26,23 @@ class ConversationListView(generics.ListAPIView):
     user_id = self.request.user.id
     return Conversation.objects.filter(participants__id=user_id)
 
+
+class MessageListCreateView(generics.ListCreateAPIView):
+  permission_classes = [permissions.IsAuthenticated]
+  serializer_class = MessageSerializer 
+
+  def get_queryset(self):
+    user_id = self.request.user.id
+    target_user_id = self.kwargs['user_id']
+
+    if (target_user_id == user_id):
+      raise APIException('Sender and Recepient are the same.')
+    
+    conversation = Conversation.objects \
+                    .filter(participants__id=user_id) \
+                    .filter(participants__id=target_user_id)
+    messages = Message.objects.filter(conversation__in=conversation).order_by('created_at')
+    return messages
 
 
 
