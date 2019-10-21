@@ -3,15 +3,12 @@ from django.db import models, transaction
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from django.db.models import ForeignKey
-from decimal import *
-from moca.api.appointment.errors import AppointmentAlreadyReviewed
-from moca.api.appointment.errors import AppointmentNotFound
+
 from moca.api.user.serializers import PatientSerializer, TherapistSerializer, UserSnippetSerializer
 from moca.api.address.serializers import AddressSerializer
 from moca.models import Address, User
-from moca.models.appointment import Appointment, Review
+from moca.models.appointment import Appointment, AppointmentRequest, Review
 from moca.models.user import Patient, Therapist
-
 from moca.api.util.Validator import RequestValidator
 
 
@@ -24,7 +21,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 class AppointmentSerializer(serializers.ModelSerializer):
   address = AddressSerializer()
   other_party = serializers.SerializerMethodField()
-  review = ReviewSerializer()
+  review = ReviewSerializer(required=False)
 
   class Meta:
     model = Appointment
@@ -36,31 +33,60 @@ class AppointmentSerializer(serializers.ModelSerializer):
       raise APIException('Unsupported user type')
 
     if user_type == User.PATIENT_TYPE:
-      party_user = obj.patient.user
-    else: 
       party_user = obj.therapist.user
+    else: 
+      party_user = obj.patient.user
 
     return UserSnippetSerializer(party_user).data
 
 
+class AppointmentRequestSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = AppointmentRequest
+    fields = ['id', 'start_time', 'end_time', 'price', 'status']
+
+
+class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
+  address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
+  patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
+  therapist = serializers.PrimaryKeyRelatedField(queryset=Therapist.objects.all())
+  
+  class Meta:
+    model = AppointmentRequest
+    fields = '__all__'
+
+  def validate(self, data):
+    instance = self.instance
+    request = self.context['request']
+    user = request.user
+
+    try:
+      Therapist.objects.get(user=user)
+    except:
+      raise serializers.ValidationError(f'Appointment creator must be a therapist')
+
+    start_time = data.get('start_time')
+    end_time = data.get('end_time')
+    address_id = data.get('address')
+    patient_id = data.get('patient').user.id
+
+    RequestValidator.future_time(start_time)
+    RequestValidator.end_after_start(end_time, start_time)
+    RequestValidator.address_belongs_to_user(address_id, patient_id)
+
+    return data
+    
+
 class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
   patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
+  therapist = serializers.PrimaryKeyRelatedField(queryset=Therapist.objects.all())
   review = ReviewSerializer(required=False)
 
   class Meta:
     model = Appointment
-    exclude = ['therapist']
+    fields = '__all__'
     
-  def create(self, validated_data):
-    request = self.context['request']
-    user = request.user
-    therapist = Therapist.objects.get(user=user)
-
-    validated_data['therapist'] = therapist
-    appointment = Appointment.objects.create(**validated_data)
-    return appointment
-
   def update(self, instance, validated_data):
     if 'review' in validated_data:
       review_data = validated_data.pop('review')
@@ -77,48 +103,6 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
     return super(AppointmentCreateUpdateSerializer, self).update(instance, validated_data)
 
 
+  # TODO check which fields can be updates and their validations
   def validate(self, data):
-    request = self.context['request']
-    user = request.user
-    instance = self.instance
-
-    def _get_require_field(name, data, instance):
-      model_field = self.Meta.model._meta.get_field(name)
-      is_foreign_key = isinstance(model_field, ForeignKey)
-      return_value = None
-
-      if is_foreign_key:
-        if name in data:
-            return_value = data[name].id
-        elif name+"_id" in instance.__dict__:
-          return_value = getattr(instance, name+"_id")
-      else:
-        if name in data:
-            return_value = data[name]
-        elif name in instance.__dict__:
-          return_value = getattr(instance, name)
-      
-      if not return_value:
-        raise serializers.ValidationError(f"{name} is required")
-      
-      return return_value
-
-    try:
-      Therapist.objects.get(user=user)
-    except:
-      raise serializers.ValidationError(f'Appointment creator must be a therapist')
-
-    start_time = _get_require_field('start_time', data, instance)
-    end_time = _get_require_field('end_time', data, instance)
-    address_id = _get_require_field('address', data, instance)
-
-    if 'patient' in data:
-      patient_id = data['patient'].user.id
-    else:
-      patient_id = instance.patient_id
-
-    RequestValidator.future_time(start_time)
-    RequestValidator.end_after_start(end_time, start_time)
-    RequestValidator.address_belongs_to_user(address_id, patient_id)
-
     return data
