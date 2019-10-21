@@ -2,6 +2,9 @@ from rest_framework import serializers, status
 
 from moca.models.address import Address
 from moca.models.user import Therapist, User
+from moca.models.app_availability import Area
+from moca.services.emails import send_email
+from moca.services import canned_messages
 
 class AddressSerializer(serializers.ModelSerializer):
   class Meta:
@@ -32,5 +35,11 @@ class AddressSerializer(serializers.ModelSerializer):
         therapist = Therapist.objects.get(user=user)
         therapist.primary_location = validated_data['location']
         therapist.save()
+
+    if not Area.objects.filter(state=address['state'], zip_code=address['zip_code']).exists():
+      if user.type == User.PATIENT_TYPE:
+        send_email(user, **canned_messages.PATIENT_UNAVAILABLE)
+      elif user.type == User.THERAPIST_TYPE:
+        send_email(user, **canned_messages.THERAPIST_UNAVAILABLE)
 
     return Address.objects.create(**validated_data)
