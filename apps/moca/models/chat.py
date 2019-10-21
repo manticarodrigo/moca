@@ -4,7 +4,6 @@ from django.db import models
 from django.db.models.signals import m2m_changed
 from django.core.exceptions import ValidationError
 
-# from moca.models.appointment import Appointment
 
 
 class Conversation(models.Model):
@@ -23,36 +22,30 @@ m2m_changed.connect(participants_changed, sender=Conversation.participants.throu
 
 class Message(models.Model):
   MESSAGE_TYPE_TEXT = 'text'
-  PAYMENT_TYPE_IMAGE = 'image'
-  MESSAGE_TYPES = [(MESSAGE_TYPE_TEXT, 'Text'), (PAYMENT_TYPE_IMAGE, 'Image')]
+  MESSAGE_TYPE_IMAGE = 'image'
+  MESSAGE_TYPE_APPOINTMENT_REQUEST = 'appointment-request'
+  MESSAGE_TYPES = [(MESSAGE_TYPE_TEXT, 'Text'), (MESSAGE_TYPE_IMAGE, 'Image'),
+                   (MESSAGE_TYPE_APPOINTMENT_REQUEST, 'Appointment Request')]
 
   conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
   user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
   created_at = models.DateTimeField(auto_now_add=True)
-  type = models.CharField(max_length=15, choices=MESSAGE_TYPES)
+  type = models.CharField(max_length=20, choices=MESSAGE_TYPES)
 
 
 class TextMessage(models.Model):
   message = models.OneToOneField(Message, related_name="text", on_delete=models.CASCADE)
-  content = models.TextField()
+  text = models.TextField()
 
 
 class ImageMessage(models.Model):
   message = models.OneToOneField(Message, related_name="image", on_delete=models.CASCADE)
-  content = models.FileField()
-
-# class MediaMessage(models.Model):
-#   message = models.OneToOneField(Message, on_delete=models.CASCADE)
-#   type = MessageTypes.MEDIA
-#   text = models.TextField(null=True)
-#   file = models.FileField(null=True)
-#   MEDIA_TYPES = [('application/pdf', 'pdf'), ('image/jpg', 'jpg'), ('image/png', 'png')]
-#   mediaType = models.CharField(max_length=10, choices=MEDIA_TYPES)
+  image = models.FileField()
 
 
-# class AppointmentMessage(models.Model):
-#   message = models.OneToOneField(Message, on_delete=models.CASCADE)
-#   type = MessageTypes.REQUEST
-#   RESPONSE_TYPES = [('Accepted', 'Accepted'), ('Rejected', 'Rejected')]
-#   appointment = models.ForeignKey(Appointment, on_delete=models.PROTECT, related_name='messages')
-#   response = models.CharField(max_length=10, choices=RESPONSE_TYPES, null=True)
+class AppointmentRequestMessage(models.Model):
+  message = models.OneToOneField(Message, on_delete=models.CASCADE)
+  appointment_request = models.OneToOneField(
+    'AppointmentRequest', related_name="appointment_request", on_delete=models.DO_NOTHING
+  )
+  

@@ -1,21 +1,19 @@
-from rest_framework import status, generics
+from rest_framework import status, generics, permissions
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import APIException
+from django.forms.models import model_to_dict
 from django.db.models import Q
 from rest_framework.response import Response
+
 from moca.api.appointment.serializers import AppointmentSerializer, AppointmentCreateUpdateSerializer
 from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
-from moca.models.appointment import Appointment, Review
+from moca.models.appointment import Appointment, AppointmentRequest, Review
 
 
-class AppointmentListCreateView(generics.ListCreateAPIView):
+class AppointmentListView(generics.ListAPIView):
   permission_classes = [IsAuthenticated]
-
-  def get_serializer_class(self):
-    if self.request.method == 'POST':
-      return AppointmentCreateUpdateSerializer
-    else:
-      return AppointmentSerializer
+  serializer_class = AppointmentSerializer
 
   def get_queryset(self):
     user = self.request.user
@@ -35,3 +33,48 @@ class AppointmentAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
       return AppointmentSerializer
     else:
       return AppointmentCreateUpdateSerializer
+
+
+class AppointmentRequestView(APIView):
+  permission_classes = [permissions.IsAuthenticated]
+
+  def post(self, request, appointment_request_id, request_status):
+    try:
+      appointment_request = AppointmentRequest.objects.get(pk=appointment_request_id)
+    except AppointmentRequest.DoesNotExist:
+      raise APIException('Invalid appointment request')
+
+    current_status = appointment_request.status
+
+    if current_status != 'pending':
+      raise APIException('Appointment request already handled')
+
+    if self.request.user.id != appointment_request.patient_id:
+      raise APIException('Appointment request doesn\'t belong to user')
+    
+    if request_status == 'accept':
+      appointment_request.status = 'accepted'
+      appointment_to_create = model_to_dict(appointment_request)
+
+      serializer = AppointmentCreateUpdateSerializer(data=appointment_to_create)
+
+      if serializer.is_valid():
+        created_appointment  = serializer.save()
+        serializerd_created_appointment = AppointmentSerializer(
+          created_appointment, context={'request': request}
+        ).data
+        appointment_request.save()
+        return Response(serializerd_created_appointment, status.HTTP_200_OK)
+
+      else:
+        raise APIException('Appointment request handler issue')
+
+    elif request_status == 'reject':
+      appointment_request.status = 'rejected'
+      appointment_request.save()
+      return Response("Rejected", status=status.HTTP_200_OK)
+    
+    else:
+      raise APIException('Incorrect request status')
+    
+

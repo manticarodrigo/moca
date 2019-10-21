@@ -19,12 +19,28 @@ class Appointment(models.Model):
   modified_at = models.DateTimeField(auto_now_add=True)
 
 
+class AppointmentRequest(models.Model):
+  STATUSES = [('accepted', 'Accepted'), ('rejected', 'Rejected'), ('pending', 'Pending')]
+
+  appointment = models.ForeignKey(
+    Appointment, related_name="appointment", on_delete=models.DO_NOTHING, null=True
+  )
+  status= models.CharField(max_length=10, choices=STATUSES, default='pending')
+  patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
+  therapist = models.ForeignKey('Therapist', on_delete=models.CASCADE)
+  address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)
+  start_time = models.DateTimeField()
+  end_time = models.DateTimeField()
+  price = models.IntegerField(validators=[MinValueValidator(0)])
+  created_at = models.DateTimeField(auto_now_add=True)
+  modified_at = models.DateTimeField(auto_now_add=True)
+
+
 class Review(models.Model):
   therapist = models.ForeignKey('Therapist', on_delete=models.CASCADE)
   appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
   rating = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
   comment = models.TextField(blank=True)
-
 
 
 class Note(models.Model):
