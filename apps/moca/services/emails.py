@@ -5,7 +5,7 @@ from os import environ
 from django.core import mail
 from django.core.mail import send_mail
 
-from config.settings.base import get_service_host
+from config.settings.base import EMAIL_VERIFICATION, get_service_host
 from moca.models import EmailVerification
 
 
@@ -21,6 +21,12 @@ def send_email(user, subject, body):
 
 
 def send_verification_mail(user):
+  if not EMAIL_VERIFICATION:
+    return
+
+  user.is_active = False
+  user.save()
+
   token_chars = string.ascii_letters + string.digits
   token = "".join(list(map(lambda _: random.choice(token_chars), range(0, 100))))
 

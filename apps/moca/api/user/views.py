@@ -28,10 +28,15 @@ def verify_email(request, token):
   if emailVerification.status not in (EmailVerification.EXPIRED, EmailVerification.VERIFIED):
     emailVerification.status = EmailVerification.VERIFIED
     emailVerification.save()
+
+    user.is_active = True
+    user.save()
+
     if emailVerification.user.type == User.PATIENT_TYPE:
       send_email(emailVerification.user, **canned_messages.WELCOME_PATIENT)
     elif emailVerification.user.type == User.THERAPIST_TYPE:
       send_email(emailVerification.user, **canned_messages.WELCOME_PHYSICAL_THERAPIST)
+
     return Response("Verified")
   else:
     return Response("Token expired")
