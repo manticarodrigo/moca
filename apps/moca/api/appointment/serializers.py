@@ -67,7 +67,7 @@ class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
 
     start_time = data.get('start_time')
     end_time = data.get('end_time')
-    address_id = data.get('address')
+    address_id = data.get('address').id
     patient_id = data.get('patient').user.id
 
     RequestValidator.future_time(start_time)

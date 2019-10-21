@@ -47,7 +47,8 @@ class TherapistDetailView(generics.RetrieveUpdateAPIView):
   """
   serializer_class = TherapistSerializer
   queryset = Therapist.objects
-  permission_classes = [IsSelf]
+  # TODO: update only if self
+  permission_classes = [permissions.IsAuthenticated]
 
 
 class TherapistSearchView(generics.ListAPIView):
