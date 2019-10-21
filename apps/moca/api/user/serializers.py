@@ -4,7 +4,6 @@ from box import Box
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
-from django.core.mail import send_mail
 from django.db import transaction
 from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
@@ -21,31 +20,14 @@ from moca.models.address import Address
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 from moca.models.verification import EmailVerification
+from moca.services import canned_messages
+from moca.services.emails import send_verification_mail, send_email
 
 from .errors import DuplicateEmail
 
 SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 User = get_user_model()
-
-
-def send_verification_mail(user):
-  import string
-  import random
-  token_chars = string.ascii_letters + string.digits
-  token = "".join(list(map(lambda _: random.choice(token_chars), range(0, 100))))
-
-  EmailVerification.objects.create(token=token, user=user)
-
-  url = f'http://0.0.0.0:9000/api/user/verify/{token}'
-
-  send_mail(
-    'Verify your email',
-    f'Hey, welcome to 1990s moca. Please confirm your email by clicking here: {url}',
-    'Moca',
-    [user.email],
-    fail_silently=False,
-  )
 
 
 class PriceSerializer(serializers.ModelSerializer):

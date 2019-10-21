@@ -1,18 +1,19 @@
 import json
 
-from django.shortcuts import get_object_or_404
-
 from django.db.models import F
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from moca.models import Address, EmailVerification
+from moca.models import Address, EmailVerification, User
 from moca.models.prices import Price
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
+from moca.services import canned_messages
+from moca.services.emails import send_email
 
 from .permissions import IsSelf
 from .serializers import (LeaveResponseSerializer, LeaveSerializer,
@@ -27,9 +28,14 @@ def verify_email(request, token):
   if emailVerification.status not in (EmailVerification.EXPIRED, EmailVerification.VERIFIED):
     emailVerification.status = EmailVerification.VERIFIED
     emailVerification.save()
+    if emailVerification.user.type == User.PATIENT_TYPE:
+      send_email(emailVerification.user, **canned_messages.WELCOME_PATIENT)
+    elif emailVerification.user.type == User.THERAPIST_TYPE:
+      send_email(emailVerification.user, **canned_messages.WELCOME_PHYSICAL_THERAPIST)
     return Response("Verified")
   else:
     return Response("Token expired")
+
 
 class PatientCreateView(generics.CreateAPIView):
   """
@@ -78,11 +84,10 @@ class TherapistSearchView(generics.ListAPIView):
     user = self.request.user
     user_location = None
 
-    try: 
+    try:
       user_location = Address.objects.get(user=user, primary=True).location
     except Address.DoesNotExist:
       raise APIException('No primary address found.')
-
 
     if 'gender' in criteria:
       gender = criteria['gender']

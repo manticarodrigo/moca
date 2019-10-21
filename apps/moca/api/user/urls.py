@@ -7,7 +7,7 @@ from .views import (PatientCreateView, PatientDetailView, TherapistCreateView, T
                     TherapistPricing, verify_email)
 
 urlpatterns = [
-  path('vertify/<str:token>', verify_email),
+  path('verify/<str:token>', verify_email),
   # patient
   path('patient/', PatientCreateView.as_view()),
   path('patient/<int:pk>/', PatientDetailView.as_view()),
