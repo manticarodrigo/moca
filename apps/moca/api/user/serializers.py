@@ -1,30 +1,51 @@
-from box import Box
 from datetime import datetime
-from knox.models import AuthToken
 
+from box import Box
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
+from django.core.mail import send_mail
 from django.db import transaction
 from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
+from knox.models import AuthToken
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
 
-from moca.api.util.Validator import RequestValidator
 from moca.api.address.serializers import AddressSerializer
 from moca.api.payment.serializers import PaymentSerializer
-from moca.models.user import Patient, Therapist
+from moca.api.util.Validator import RequestValidator
 from moca.models import Price
 from moca.models.address import Address
+from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
+from moca.models.verification import EmailVerification
 
 from .errors import DuplicateEmail
 
 SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
 
 User = get_user_model()
+
+
+def send_verification_mail(user):
+  import string
+  import random
+  token_chars = string.ascii_letters + string.digits
+  token = "".join(list(map(lambda _: random.choice(token_chars), range(0, 100))))
+
+  EmailVerification.objects.create(token=token, user=user)
+
+  url = f'http://0.0.0.0:9000/api/user/verify/{token}'
+
+  send_mail(
+    'Verify your email',
+    f'Hey, welcome to 1990s moca. Please confirm your email by clicking here: {url}',
+    'Moca',
+    [user.email],
+    fail_silently=False,
+  )
 
 
 class PriceSerializer(serializers.ModelSerializer):
@@ -100,10 +121,9 @@ class PatientSerializer(serializers.ModelSerializer):
     representation = super().to_representation(obj)
     user_representation = representation.pop('user')
     for key in user_representation:
-        representation[key] = user_representation[key]
+      representation[key] = user_representation[key]
 
     return representation
-
 
   def update(self, instance, validated_data):
     user = validated_data.get('user', instance.user.__dict__)
@@ -134,6 +154,7 @@ class PatientCreateSerializer(PatientSerializer):
   def create(self, validated_data):
     validated_data['user']['type'] = User.PATIENT_TYPE
     user = UserSerializer().create(validated_data['user'])
+    send_verification_mail(user)
     return Patient.objects.create(user=user)
 
 
@@ -143,16 +164,15 @@ class TherapistSearchSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Therapist
-    fields = ['license_number', 'rating', 'user', 'prices'] 
+    fields = ['license_number', 'rating', 'user', 'prices']
 
   def to_representation(self, obj):
     representation = super().to_representation(obj)
     user_representation = representation.pop('user')
     for key in user_representation:
-        representation[key] = user_representation[key]
+      representation[key] = user_representation[key]
 
     return representation
-
 
 
 class TherapistSerializer(serializers.ModelSerializer):
@@ -166,7 +186,7 @@ class TherapistSerializer(serializers.ModelSerializer):
     representation = super().to_representation(obj)
     user_representation = representation.pop('user')
     for key in user_representation:
-        representation[key] = user_representation[key]
+      representation[key] = user_representation[key]
 
     return representation
 
@@ -208,8 +228,8 @@ class TherapistCreateSerializer(TherapistSerializer):
   def create(self, validated_data):
     validated_data['user']['type'] = User.THERAPIST_TYPE
     user = UserSerializer().create(validated_data['user'])
+    send_verification_mail(user)
     return Therapist.objects.create(user=user)
-
 
 
 class LeaveSerializer(serializers.Serializer):

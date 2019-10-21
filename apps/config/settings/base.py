@@ -153,3 +153,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # APPEND_SLASH=False
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'mocaemail@moca.moc'
+EMAIL_HOST_PASSWORD = ''
+EMAIL_PORT = 587

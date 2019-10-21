@@ -1,22 +1,35 @@
 import json
 
+from django.shortcuts import get_object_or_404
+
 from django.db.models import F
-from rest_framework import permissions, status, generics
+from rest_framework import generics, permissions, status
+from rest_framework.decorators import api_view
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import APIException
 
+from moca.models import Address, EmailVerification
+from moca.models.prices import Price
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
-from moca.models.prices import Price
-from moca.models import Address
-
-from .serializers import (PatientSerializer, PatientCreateSerializer, TherapistSerializer, TherapistSearchSerializer, 
-                          TherapistCreateSerializer, PriceSerializer, LeaveSerializer,
-                          LeaveResponseSerializer)
 
 from .permissions import IsSelf
+from .serializers import (LeaveResponseSerializer, LeaveSerializer,
+                          PatientCreateSerializer, PatientSerializer,
+                          PriceSerializer, TherapistCreateSerializer,
+                          TherapistSearchSerializer, TherapistSerializer)
 
+
+@api_view(['GET'])
+def verify_email(request, token):
+  emailVerification = get_object_or_404(EmailVerification, token=token)
+  if emailVerification.status not in (EmailVerification.EXPIRED, EmailVerification.VERIFIED):
+    emailVerification.status = EmailVerification.VERIFIED
+    emailVerification.save()
+    return Response("Verified")
+  else:
+    return Response("Token expired")
 
 class PatientCreateView(generics.CreateAPIView):
   """
