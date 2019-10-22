@@ -14,7 +14,7 @@ urlpatterns = [
   # therapist
   path('therapist/', TherapistCreateView.as_view()),
   path('therapist/<int:pk>/', TherapistDetailView.as_view()),
-  path('therapist/<int:therapist_id>/tariffs', TherapistPricing.as_view()),
+  path('therapist/<int:therapist_id>/prices', TherapistPricing.as_view()),
   path('therapist/search/', TherapistSearchView.as_view()),
   path('therapist/away/', TherapistLeaveView.as_view()),
   path('therapist/away/<int:leave_id>', TherapistLeaveDetailView.as_view())
