@@ -11,7 +11,6 @@ from django.utils.translation import ugettext_lazy as _
 from moca.models.appointment import Review
 
 
-
 class EmailField(models.EmailField):
   def get_prep_value(self, value):
     value = super(EmailField, self).get_prep_value(value)
@@ -114,13 +113,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     if self.type == self.PATIENT_TYPE:
       return Patient
     if self.type == self.THERAPIST_TYPE:
-      return Therapist 
+      return Therapist
 
   def get_profile_type(self):
     if self.type == self.PATIENT_TYPE:
-      return 'patient' 
+      return 'patient'
     if self.type == self.THERAPIST_TYPE:
       return 'therapist'
+
 
 class PatientManager(MyUserManager):
   pass
@@ -167,7 +167,6 @@ class Therapist(models.Model):
     self.review_count = Review.objects.filter(therapist=self).count()
     self.rating = new_rating
     self.save()
-
 
   def __str__(self):
     return f'Therapist Object user: {self.user} bio : {self.bio} cert_date : {self.cert_date} \

@@ -22,10 +22,11 @@ class Appointment(models.Model):
 class AppointmentRequest(models.Model):
   STATUSES = [('accepted', 'Accepted'), ('rejected', 'Rejected'), ('pending', 'Pending')]
 
-  appointment = models.ForeignKey(
-    Appointment, related_name="appointment", on_delete=models.DO_NOTHING, null=True
-  )
-  status= models.CharField(max_length=10, choices=STATUSES, default='pending')
+  appointment = models.ForeignKey(Appointment,
+                                  related_name="appointment",
+                                  on_delete=models.DO_NOTHING,
+                                  null=True)
+  status = models.CharField(max_length=10, choices=STATUSES, default='pending')
   patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
   therapist = models.ForeignKey('Therapist', on_delete=models.CASCADE)
   address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)

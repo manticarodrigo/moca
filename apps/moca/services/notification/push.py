@@ -1,5 +1,6 @@
 from exponent_server_sdk import PushClient, PushMessage
 
+
 def send_push_message(token, message, extra=None):
   """
   Basic arguments. You should extend this function with the push features you

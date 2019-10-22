@@ -28,13 +28,13 @@ class AppointmentSerializer(serializers.ModelSerializer):
     fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review']
 
   def get_other_party(self, obj):
-    user_type = self.context['request'].user.type 
+    user_type = self.context['request'].user.type
     if user_type not in (User.PATIENT_TYPE, User.THERAPIST_TYPE):
       raise APIException('Unsupported user type')
 
     if user_type == User.PATIENT_TYPE:
       party_user = obj.therapist.user
-    else: 
+    else:
       party_user = obj.patient.user
 
     return UserSnippetSerializer(party_user).data
@@ -50,7 +50,7 @@ class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
   address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
   patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
   therapist = serializers.PrimaryKeyRelatedField(queryset=Therapist.objects.all())
-  
+
   class Meta:
     model = AppointmentRequest
     fields = '__all__'
@@ -75,7 +75,7 @@ class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
     RequestValidator.address_belongs_to_user(address_id, patient_id)
 
     return data
-    
+
 
 class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
@@ -86,7 +86,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   class Meta:
     model = Appointment
     fields = '__all__'
-    
+
   def update(self, instance, validated_data):
     if 'review' in validated_data:
       review_data = validated_data.pop('review')
@@ -101,7 +101,6 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
       Therapist.objects.get(pk=instance.therapist_id).update_rating()
 
     return super(AppointmentCreateUpdateSerializer, self).update(instance, validated_data)
-
 
   # TODO check which fields can be updates and their validations
   def validate(self, data):

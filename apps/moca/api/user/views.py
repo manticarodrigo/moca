@@ -16,9 +16,8 @@ from moca.services import canned_messages
 from moca.services.emails import send_email
 
 from .permissions import IsSelf
-from .serializers import (LeaveResponseSerializer, LeaveSerializer,
-                          PatientCreateSerializer, PatientSerializer,
-                          PriceSerializer, TherapistCreateSerializer,
+from .serializers import (LeaveResponseSerializer, LeaveSerializer, PatientCreateSerializer,
+                          PatientSerializer, PriceSerializer, TherapistCreateSerializer,
                           TherapistSearchSerializer, TherapistSerializer)
 
 

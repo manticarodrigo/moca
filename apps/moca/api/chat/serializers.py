@@ -18,7 +18,7 @@ class TextMessageSerializer(serializers.ModelSerializer):
 
 class ImageMessageSerializer(serializers.ModelSerializer):
   class Meta:
-    model = ImageMessage 
+    model = ImageMessage
     fields = ['content']
 
 
@@ -30,8 +30,8 @@ class AppointmentRequestMessageSerializer(serializers.ModelSerializer):
     fields = ['appointment_request']
 
   def to_representation(self, obj):
-      representation = super().to_representation(obj)
-      return representation["appointment_request"]
+    representation = super().to_representation(obj)
+    return representation["appointment_request"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
@@ -60,7 +60,7 @@ class MessageSerializer(serializers.ModelSerializer):
     target_user_id = self.context.get('view').kwargs.get('user_id')
     type = validated_data.get('type')
     content = request.data.get('content')
-    
+
     if not content:
       raise APIException('No message content')
 
@@ -77,18 +77,20 @@ class MessageSerializer(serializers.ModelSerializer):
 
     if (type == 'text'):
       TextMessage.objects.create(message=message, **content)
-    
+
     elif (type == 'appointment-request'):
-      appointment_request_serializer = AppointmentRequestCreateSerializer(data=content, context={'request': request})
+      appointment_request_serializer = AppointmentRequestCreateSerializer(
+        data=content, context={'request': request})
       if (appointment_request_serializer.is_valid()):
         appointment_request = appointment_request_serializer.save()
       else:
         raise APIException('Invalid request message')
 
-      AppointmentRequestMessage.objects.create(message=message, appointment_request=appointment_request)
+      AppointmentRequestMessage.objects.create(message=message,
+                                               appointment_request=appointment_request)
     else:
       raise APIException('Invalid message type')
-    
+
     return message
 
 
@@ -102,10 +104,10 @@ class ConversationSerializer(serializers.ModelSerializer):
   def to_representation(self, obj):
     user = self.context['request'].user
     representation = super().to_representation(obj)
-    participants = representation.pop('participants');
+    participants = representation.pop('participants')
     other_user = next(d for d in participants if d['id'] != user.id)
     last_message = None
-    try: 
+    try:
       last_message = Message.objects.filter(conversation=obj).latest('created_at')
       last_message = MessageSerializer(last_message).data
     except:

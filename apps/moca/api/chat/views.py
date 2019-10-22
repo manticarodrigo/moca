@@ -1,5 +1,5 @@
 from rest_framework import permissions
-from rest_framework import generics 
+from rest_framework import generics
 from rest_framework.exceptions import APIException
 
 from moca.models import Conversation, Message
@@ -8,7 +8,7 @@ from .serializers import ConversationSerializer, MessageSerializer
 
 class ConversationListView(generics.ListAPIView):
   permission_classes = [permissions.IsAuthenticated]
-  serializer_class = ConversationSerializer 
+  serializer_class = ConversationSerializer
 
   def get_queryset(self):
     user_id = self.request.user.id
@@ -17,7 +17,7 @@ class ConversationListView(generics.ListAPIView):
 
 class MessageListCreateView(generics.ListCreateAPIView):
   permission_classes = [permissions.IsAuthenticated]
-  serializer_class = MessageSerializer 
+  serializer_class = MessageSerializer
 
   def get_queryset(self):
     user_id = self.request.user.id
@@ -25,13 +25,12 @@ class MessageListCreateView(generics.ListCreateAPIView):
 
     if (target_user_id == user_id):
       raise APIException('Sender and Recepient are the same.')
-    
+
     conversation = Conversation.objects \
                     .filter(participants__id=user_id) \
                     .filter(participants__id=target_user_id)
     messages = Message.objects.filter(conversation__in=conversation).order_by('created_at')
     return messages
-
 
 
 #   # TODO use builtin serializer
@@ -67,7 +66,6 @@ class MessageListCreateView(generics.ListCreateAPIView):
 
 #     return Response(ConversationSerializer(conversations, many=True).data,
 #                     status=status.HTTP_201_CREATED)
-
 
 # # TODO check ListCreateAPIView usage
 # class MessagesAPI(GenericAPIView):

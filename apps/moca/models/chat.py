@@ -5,7 +5,6 @@ from django.db.models.signals import m2m_changed
 from django.core.exceptions import ValidationError
 
 
-
 class Conversation(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   participants = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='participants')
@@ -13,9 +12,11 @@ class Conversation(models.Model):
   def __str__(self):
     return f"conversation {self.id}"
 
+
 def participants_changed(sender, **kwargs):
   if kwargs['instance'].participants.count() > 3:
     raise ValidationError("You can't assign more than three participants")
+
 
 m2m_changed.connect(participants_changed, sender=Conversation.participants.through)
 
@@ -45,7 +46,6 @@ class ImageMessage(models.Model):
 
 class AppointmentRequestMessage(models.Model):
   message = models.OneToOneField(Message, on_delete=models.CASCADE)
-  appointment_request = models.OneToOneField(
-    'AppointmentRequest', related_name="appointment_request", on_delete=models.DO_NOTHING
-  )
-  
+  appointment_request = models.OneToOneField('AppointmentRequest',
+                                             related_name="appointment_request",
+                                             on_delete=models.DO_NOTHING)

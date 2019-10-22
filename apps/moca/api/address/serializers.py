@@ -6,6 +6,7 @@ from moca.models.app_availability import Area
 from moca.services.emails import send_email
 from moca.services import canned_messages
 
+
 class AddressSerializer(serializers.ModelSerializer):
   class Meta:
     model = Address
@@ -20,11 +21,10 @@ class AddressSerializer(serializers.ModelSerializer):
 
     return super(AddressSerializer, self).update(instance, validated_data)
 
-
   def create(self, validated_data):
     user = self.context['request'].user
     validated_data['user'] = user
-    
+
     if validated_data['primary']:
       addresses = Address.objects.filter(user=user)
       for address in addresses:
