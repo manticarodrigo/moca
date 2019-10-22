@@ -142,7 +142,7 @@ class PatientCreateSerializer(PatientSerializer):
 
 class TherapistSearchSerializer(serializers.ModelSerializer):
   user = UserSnippetSerializer()
-  prices = PriceSerializer(source='tariffs', many=True)
+  prices = PriceSerializer(many=True)
 
   class Meta:
     model = Therapist
