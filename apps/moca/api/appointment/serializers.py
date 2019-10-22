@@ -102,6 +102,13 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
 
     return super(AppointmentCreateUpdateSerializer, self).update(instance, validated_data)
 
+
+  def create(self, validated_data):
+    patient = Patient.objects.get(id=validated_data['patient'])
+    primary_address = list(filter(lambda address: address.primary, patient.addresses))[0]
+    validated_data['address'] = primary_address.id
+    return super(AppointmentCreateUpdateSerializer, self).create(with_primary_address)
+
   # TODO check which fields can be updates and their validations
   def validate(self, data):
     return data
