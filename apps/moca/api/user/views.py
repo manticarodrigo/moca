@@ -1,6 +1,6 @@
 import json
 
-from django.db.models import F
+from django.db.models import Avg, Count, F
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
@@ -105,6 +105,17 @@ class TherapistSearchView(generics.ListAPIView):
       max_price = int(criteria['max_price'])
       therapists_in_price_range = Price.objects.filter(price__lte=max_price).values('therapist')
       therapists = therapists.filter(user_id__in=therapists_in_price_range)
+
+    # TODO there is a better way for these two, please check
+    if 'review_count' in criteria:
+      therapists = therapists.annotate(Count('reviews')).order_by('review_count')
+    elif '-review_count' in criteria:
+      therapists = therapists.annotate(Count('reviews')).order_by('-review_count')
+
+    if 'avg_rating' in criteria:
+      therapists = therapists.annotate(Avg('reviews__rating')).order_by('reviews__rating__avg')
+    elif '-avg_rating' in criteria:
+      therapists = therapists.annotate(Avg('reviews__rating')).order_by('-reviews__rating__avg')
 
     METERS_PER_MILE = 1609.34
     therapists = therapists.filter(primary_location__distance_lt=(user_location,
