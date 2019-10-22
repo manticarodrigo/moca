@@ -28,8 +28,8 @@ def verify_email(request, token):
     emailVerification.status = EmailVerification.VERIFIED
     emailVerification.save()
 
-    user.is_active = True
-    user.save()
+    emailVerification.user.is_active = True
+    emailVerification.user.save()
 
     if emailVerification.user.type == User.PATIENT_TYPE:
       send_email(emailVerification.user, **canned_messages.WELCOME_PATIENT)

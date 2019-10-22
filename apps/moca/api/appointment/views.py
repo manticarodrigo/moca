@@ -61,12 +61,12 @@ class AppointmentRequestView(APIView):
 
       if serializer.is_valid():
         created_appointment = serializer.save()
-        serializerd_created_appointment = AppointmentSerializer(created_appointment,
+        serialized_created_appointment = AppointmentSerializer(created_appointment,
                                                                 context={
                                                                   'request': request
                                                                 }).data
         appointment_request.save()
-        return Response(serializerd_created_appointment, status.HTTP_200_OK)
+        return Response(serialized_created_appointment, status.HTTP_200_OK)
 
       else:
         raise APIException('Appointment request handler issue')

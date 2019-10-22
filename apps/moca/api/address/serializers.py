@@ -36,7 +36,7 @@ class AddressSerializer(serializers.ModelSerializer):
         therapist.primary_location = validated_data['location']
         therapist.save()
 
-    if not Area.objects.filter(state=address['state'], zip_code=address['zip_code']).exists():
+    if not Area.objects.filter(state=validated_data['state'], zip_code=validated_data['zip_code']).exists():
       if user.type == User.PATIENT_TYPE:
         send_email(user, **canned_messages.PATIENT_UNAVAILABLE)
       elif user.type == User.THERAPIST_TYPE:
