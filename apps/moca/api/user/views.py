@@ -79,7 +79,7 @@ class TherapistSearchView(generics.ListAPIView):
   GET {{ENV}}/api/user/therapist/search/
   """
   serializer_class = TherapistSearchSerializer
-  queryset = Therapist.objects.all()
+  queryset = Therapist.objects.annotate(Count('prices')).filter(prices__count__gt=0)
   permission_classes = [permissions.IsAuthenticated]
 
   def filter_queryset(self, queryset):
