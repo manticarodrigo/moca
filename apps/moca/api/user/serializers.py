@@ -89,6 +89,7 @@ class UserSerializer(serializers.ModelSerializer):
 
   def create(self, validated_data):
     user = User.objects.create_user(**validated_data)
+    send_verification_mail(user)
     return user
 
 
@@ -136,7 +137,6 @@ class PatientCreateSerializer(PatientSerializer):
   def create(self, validated_data):
     validated_data['user']['type'] = User.PATIENT_TYPE
     user = UserSerializer().create(validated_data['user'])
-    send_verification_mail(user)
     return Patient.objects.create(user=user)
 
 
@@ -210,7 +210,6 @@ class TherapistCreateSerializer(TherapistSerializer):
   def create(self, validated_data):
     validated_data['user']['type'] = User.THERAPIST_TYPE
     user = UserSerializer().create(validated_data['user'])
-    send_verification_mail(user)
     return Therapist.objects.create(user=user)
 
 
