@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
-from moca.api.appointment.serializers import (
-    AppointmentCreateUpdateSerializer, AppointmentSerializer)
+from moca.api.appointment.serializers import (AppointmentCreateUpdateSerializer,
+                                              AppointmentSerializer)
 from moca.models.appointment import Appointment, AppointmentRequest, Review
 
 
@@ -62,9 +62,9 @@ class AppointmentRequestView(APIView):
       if serializer.is_valid():
         created_appointment = serializer.save()
         serialized_created_appointment = AppointmentSerializer(created_appointment,
-                                                                context={
-                                                                  'request': request
-                                                                }).data
+                                                               context={
+                                                                 'request': request
+                                                               }).data
         appointment_request.save()
         return Response(serialized_created_appointment, status.HTTP_200_OK)
 

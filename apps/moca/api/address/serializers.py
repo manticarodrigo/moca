@@ -1,10 +1,11 @@
 from rest_framework import serializers, status
+from rest_framework.exceptions import APIException
 
 from moca.models.address import Address
-from moca.models.user import Therapist, User
 from moca.models.app_availability import Area
-from moca.services.emails import send_email
+from moca.models.user import Therapist, User
 from moca.services import canned_messages
+from moca.services.emails import send_email
 
 
 class AddressSerializer(serializers.ModelSerializer):
@@ -41,5 +42,8 @@ class AddressSerializer(serializers.ModelSerializer):
         send_email(user, **canned_messages.PATIENT_UNAVAILABLE)
       elif user.type == User.THERAPIST_TYPE:
         send_email(user, **canned_messages.THERAPIST_UNAVAILABLE)
+
+      UnavailableArea.objects.create(email=user.email, zip_code=validated_data['zip_code'])
+      raise APIException("Zip code is unavailable")
 
     return Address.objects.create(**validated_data)
