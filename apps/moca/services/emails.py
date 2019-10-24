@@ -34,6 +34,7 @@ def send_verification_mail(user):
 
   url = f'{get_service_host()}/api/user/verify/{token}'
 
+  # TODO the content of this should be finalized
   send_email(
     user,
     'Verify your email',
