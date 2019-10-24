@@ -159,6 +159,7 @@ class TherapistSearchSerializer(serializers.ModelSerializer):
 
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer()
+  prices = PriceSerializer(many=True)
 
   class Meta:
     model = Therapist
