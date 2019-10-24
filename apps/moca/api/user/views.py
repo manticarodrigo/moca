@@ -36,8 +36,10 @@ def verify_email(request, token):
     elif emailVerification.user.type == User.THERAPIST_TYPE:
       send_email(emailVerification.user, **canned_messages.WELCOME_PHYSICAL_THERAPIST)
 
+    # TODO this should be a rendered template or a redirect(which should open the app)
     return Response("Verified")
   else:
+    # TODO this should be a rendered template
     return Response("Token expired")
 
 
