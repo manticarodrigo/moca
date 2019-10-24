@@ -25,7 +25,9 @@ from moca.services.emails import send_verification_mail, send_email
 
 from .errors import DuplicateEmail
 
-SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
+# This is unzipping the list and takes the first list
+# i.e. [(0, 1), (2, 3), (4, 5)] becomes (0, 2, 4)
+SESSION_TYPES = list(zip(*Price.SESSION_TYPES))[0]
 
 User = get_user_model()
 
