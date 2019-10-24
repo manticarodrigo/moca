@@ -155,7 +155,7 @@ class Therapist(models.Model):
   operation_radius = models.IntegerField(default=10)
   qualifications = JSONField(default=dict)
   status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
-  primary_location = gisModels.PointField(default=Point(0, 0))
+  primary_location = gisModels.PointField(null=True)
   rating = models.FloatField(default=0)
   review_count = models.IntegerField(default=0)
   preferred_ailments = ArrayField(models.CharField(max_length=20), size=20, default=list)
