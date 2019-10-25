@@ -50,10 +50,10 @@ class AppointmentRequestView(APIView):
     if current_status != 'pending':
       raise APIException('Appointment request already handled')
 
-    if self.request.user.id != appointment_request.patient_id:
-      raise APIException('Appointment request doesn\'t belong to user')
-
     if request_status == 'accept':
+      if self.request.user.id != appointment_request.patient_id:
+        raise APIException('Only patient can accept')
+
       appointment_request.status = 'accepted'
       appointment_to_create = model_to_dict(appointment_request)
 
@@ -70,6 +70,14 @@ class AppointmentRequestView(APIView):
 
       else:
         raise APIException('Appointment request handler issue')
+
+    elif request_status == 'cancel':
+      if self.request.user.id != appointment_request.therapist_id:
+        raise APIException('Only therapist can cancel')
+      appointment_request.status = 'cancelled'
+      appointment_request.save()
+      return Response("Cancelled", status=status.HTTP_200_OK)
+
 
     elif request_status == 'reject':
       appointment_request.status = 'rejected'

@@ -20,7 +20,8 @@ class Appointment(models.Model):
 
 
 class AppointmentRequest(models.Model):
-  STATUSES = [('accepted', 'Accepted'), ('rejected', 'Rejected'), ('pending', 'Pending')]
+  STATUSES = [('accepted', 'Accepted'), ('rejected', 'Rejected'), ('pending', 'Pending'),
+              ('cancelled', 'Cancelled')]
 
   appointment = models.ForeignKey(Appointment,
                                   related_name="appointment",
