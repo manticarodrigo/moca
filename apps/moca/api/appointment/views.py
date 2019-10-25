@@ -1,3 +1,5 @@
+from functools import reduce 
+
 from django.db.models import Q
 from django.forms.models import model_to_dict
 from rest_framework import generics, permissions, status
@@ -17,12 +19,25 @@ class AppointmentListView(generics.ListAPIView):
   serializer_class = AppointmentSerializer
 
   def get_queryset(self):
+    query_params = self.request.query_params
     user = self.request.user
     user_profile_model = user.get_profile_model()
     user_profile_type = user.get_profile_type()
     user_profile = user_profile_model.objects.get(user=user)
+
     filter_dict = {user_profile_type: user_profile}
-    return Appointment.objects.filter(**filter_dict)
+    queries = [Q(**filter_dict)]
+
+    start = query_params.get("start")
+    if start:
+      queries.append(Q(start_time__gte=start))
+    
+    end = query_params.get("end")
+    if end:
+      queries.append(Q(end_time__lte=end))
+
+    query = reduce(lambda x, y: x & y, queries)
+    return Appointment.objects.filter(query)
 
 
 class AppointmentAPIDetailView(generics.RetrieveUpdateDestroyAPIView):

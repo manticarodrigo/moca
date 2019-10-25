@@ -61,6 +61,9 @@ class MessageSerializer(serializers.ModelSerializer):
     type = validated_data.get('type')
     content = request.data.get('content')
 
+    if target_user_id == user_id:
+      raise APIException('Can\'t message yourself')
+
     if not content:
       raise APIException('No message content')
 
