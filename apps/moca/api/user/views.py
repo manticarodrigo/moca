@@ -9,7 +9,7 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from moca.models import Address, EmailVerification, User
+from moca.models import Address, EmailVerification, User, TherapistCertification
 from moca.models.prices import Price
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
@@ -19,7 +19,7 @@ from moca.services.emails import send_email
 from .permissions import IsSelf
 from .serializers import (LeaveResponseSerializer, LeaveSerializer, PatientCreateSerializer,
                           PatientSerializer, PriceSerializer, TherapistCreateSerializer,
-                          TherapistSearchSerializer, TherapistSerializer)
+                          TherapistSearchSerializer, TherapistSerializer, TherapistCertificationSerializer)
 
 
 @api_view(['GET'])
@@ -153,5 +153,35 @@ class TherapistLeaveDetailView(APIView):
     return Response('Leave succesfully deleted', status.HTTP_200_OK)
 
 
-class TherapistPricing(generics.CreateAPIView):
+class TherapistPricingListCreateView(generics.ListCreateAPIView):
   serializer_class = PriceSerializer
+
+  def get_queryset(self):
+    user = self.request.user
+    return Price.objects.filter(therapist_id=user.id)
+
+
+class TherapistPricingDetailView(generics.RetrieveUpdateDestroyAPIView):
+  lookup_url_kwarg = 'price_id'
+  serializer_class = PriceSerializer 
+
+  def get_queryset(self):
+    user = self.request.user
+    return Price.objects.filter(therapist_id=user.id)
+
+
+class TherapistCertificationListCreateView(generics.ListCreateAPIView):
+  serializer_class = TherapistCertificationSerializer
+
+  def get_queryset(self):
+    user = self.request.user
+    return TherapistCertification.objects.filter(therapist_id=user.id)
+
+
+class TherapistCertificationDetailView(generics.RetrieveUpdateDestroyAPIView):
+  lookup_url_kwarg = 'certification_id'
+  serializer_class = TherapistCertificationSerializer
+
+  def get_queryset(self):
+    user = self.request.user
+    return TherapistCertification.objects.filter(therapist_id=user.id)

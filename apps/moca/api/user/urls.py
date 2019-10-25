@@ -4,7 +4,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views import (PatientCreateView, PatientDetailView, TherapistCreateView, TherapistDetailView,
                     TherapistSearchView, TherapistLeaveView, TherapistLeaveDetailView,
-                    TherapistPricing, verify_email)
+                    TherapistPricingListCreateView, verify_email, TherapistCertificationListCreateView,
+                    TherapistCertificationDetailView, TherapistPricingDetailView)
 
 urlpatterns = [
   path('verify/<str:token>', verify_email),
@@ -14,7 +15,10 @@ urlpatterns = [
   # therapist
   path('therapist/', TherapistCreateView.as_view()),
   path('therapist/<int:pk>/', TherapistDetailView.as_view()),
-  path('therapist/prices/', TherapistPricing.as_view()),
+  path('therapist/prices/', TherapistPricingListCreateView.as_view()),
+  path('therapist/prices/<int:price_id>', TherapistPricingDetailView.as_view()),
+  path('therapist/certifications/', TherapistCertificationListCreateView.as_view()),
+  path('therapist/certifications/<int:certification_id>', TherapistCertificationDetailView.as_view()),
   path('therapist/search/', TherapistSearchView.as_view()),
   path('therapist/away/', TherapistLeaveView.as_view()),
   path('therapist/away/<int:leave_id>', TherapistLeaveDetailView.as_view())

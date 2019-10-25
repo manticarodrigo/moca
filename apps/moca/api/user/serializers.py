@@ -16,7 +16,7 @@ from rest_framework_gis.fields import GeoJsonDict
 from moca.api.address.serializers import AddressSerializer
 from moca.api.payment.serializers import PaymentSerializer
 from moca.api.util.Validator import RequestValidator
-from moca.models import Price, Diagnosis
+from moca.models import Price, Diagnosis, TherapistCertification
 from moca.models.address import Address
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
@@ -37,6 +37,19 @@ class DiagnosisSerializer(serializers.ModelSerializer):
   class Meta:
     model = Diagnosis 
     fields = '__all__'
+
+
+class TherapistCertificationSerializer(serializers.ModelSerializer):
+  therapist = serializers.PrimaryKeyRelatedField(read_only=True)
+
+  class Meta:
+    model = TherapistCertification 
+    fields = '__all__'
+
+  def create(self, validated_data):
+    user = self.context['request'].user
+    validated_data['therapist_id'] = user.id
+    return super(TherapistCertificationSerializer, self).create(validated_data)
 
 
 class PriceSerializer(serializers.ModelSerializer):
@@ -104,7 +117,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
-  diagnosis = DiagnosisSerializer()
+  diagnosis = DiagnosisSerializer(required=False)
 
   class Meta:
     model = Patient
@@ -185,6 +198,7 @@ class TherapistSearchSerializer(serializers.ModelSerializer):
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer()
   prices = PriceSerializer(many=True, required=False)
+  certifications = TherapistCertificationSerializer(many=True, required=False)
 
   class Meta:
     model = Therapist
@@ -218,7 +232,8 @@ class TherapistSerializer(serializers.ModelSerializer):
     if password:
       instance.user.set_password(password)
       instance.user.save()
-      instance.save()
+
+    instance.save()
 
     return instance
 
