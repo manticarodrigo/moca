@@ -144,16 +144,11 @@ class Therapist(models.Model):
                               primary_key=True,
                               related_name="therapist")
   AVAILABLE, BUSY = 'A', 'B'
-  QUALIFICATIONS = [
-    'Ankle/Foot', 'Arm', 'Hip', 'Knee', 'Lower Back', 'Neck', 'Pelvis', 'Shoulder', 'Upper Back',
-    'Other'
-  ]
   STATUS = [(AVAILABLE, 'Available'), (BUSY, 'Busy')]
   bio = models.CharField(max_length=200, blank=True, null=True)
   cert_date = models.DateField(blank=True, null=True)
   license_number = models.CharField(max_length=50, blank=True, null=True)
   operation_radius = models.IntegerField(default=10)
-  qualifications = JSONField(default=dict)
   status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
   primary_location = gisModels.PointField(null=True)
   rating = models.FloatField(default=0)
@@ -171,7 +166,7 @@ class Therapist(models.Model):
   def __str__(self):
     return f'Therapist Object user: {self.user} bio : {self.bio} cert_date : {self.cert_date} \
       operation_radius : {self.operation_radius } \
-      qualifications : {self.qualifications } \
+      preferred_ailments : {self.preferred_ailments } \
       status: {self.status} '
 
 

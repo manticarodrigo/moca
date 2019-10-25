@@ -41,9 +41,11 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
 
 class AppointmentRequestSerializer(serializers.ModelSerializer):
+  address = AddressSerializer()
+
   class Meta:
     model = AppointmentRequest
-    fields = ['id', 'start_time', 'end_time', 'price', 'status']
+    fields = ['id', 'start_time', 'end_time', 'price', 'status', 'address']
 
 
 class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
@@ -109,7 +111,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
     try:
       primary_address = Address.objects.get(user_id=patient_id, primary=True)
     except:
-      raise APIException('Patient doesn not have a primary address')
+      raise APIException('Patient does not have a primary address')
 
     validated_data['address'] = primary_address
     return super(AppointmentCreateUpdateSerializer, self).create(validated_data)

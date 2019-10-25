@@ -71,6 +71,22 @@ class PriceSerializer(serializers.ModelSerializer):
     return session_type
 
 
+class PatientProfileSerializer(serializers.ModelSerializer):
+  diagnosis = DiagnosisSerializer(read_only=True)
+
+  class Meta:
+    model = Patient
+    fields = ['diagnosis']
+
+class TherapistProfileSerializer(serializers.ModelSerializer):
+  prices = PriceSerializer(many=True, required=False)
+  certifications = TherapistCertificationSerializer(many=True, required=False)
+
+  class Meta:
+    model = Therapist
+    exclude = ['user']
+
+
 class UserSnippetSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
@@ -81,11 +97,12 @@ class UserSerializer(serializers.ModelSerializer):
   addresses = AddressSerializer(read_only=True, many=True)
   payments = PaymentSerializer(read_only=True, many=True)
   email = serializers.EmailField(allow_blank=True)
+  profile_info = serializers.SerializerMethodField(required=False)
 
   class Meta:
     model = User
     fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type', 'email', 'password',
-              'is_active', 'addresses', 'payments')
+              'is_active', 'addresses', 'payments', 'profile_info')
     extra_kwargs = {
       'password': {
         'write_only': True,
@@ -93,19 +110,28 @@ class UserSerializer(serializers.ModelSerializer):
       },
     }
 
-  def get_request_method(self):
-    context = Box(self.context)
+  def get_profile_info(self, user):
+    if user.type == User.PATIENT_TYPE:
+      patient = Patient.objects.get(user=user)
+      return PatientProfileSerializer(patient).data
+    if user.type == User.THERAPIST_TYPE:
+      therapist = Therapist.objects.get(user=user)
+      return TherapistProfileSerializer(therapist).data
+    return None
+      
+  # def get_request_method(self):
+  #   context = Box(self.context)
 
-    return context.request._request.environ['REQUEST_METHOD']
+  #   return context.request._request.environ['REQUEST_METHOD']
 
-  def validate_email(self, email, **kwargs):
-    is_post_request = self.get_request_method() == 'POST'
+  # def validate_email(self, email, **kwargs):
+  #   is_post_request = self.get_request_method() == 'POST'
 
-    if email and is_post_request:
-      existing = User.objects.filter(email__iexact=email)
+  #   if email and is_post_request:
+  #     existing = User.objects.filter(email__iexact=email)
 
-      if existing.exists():
-        raise DuplicateEmail(email)
+  #     if existing.exists():
+  #       raise DuplicateEmail(email)
 
     return email
 
@@ -113,6 +139,14 @@ class UserSerializer(serializers.ModelSerializer):
     user = User.objects.create_user(**validated_data)
     send_verification_mail(user)
     return user
+
+  def to_representation(self, obj):
+    representation = super().to_representation(obj)
+    profile_representation = representation.pop('profile_info')
+    for key in profile_representation:
+      representation[key] = profile_representation[key]
+
+    return representation
 
 
 class PatientSerializer(serializers.ModelSerializer):
@@ -136,7 +170,14 @@ class PatientSerializer(serializers.ModelSerializer):
     # TODO Check if is patient?
     user_data = validated_data.pop('user', None)
     if user_data:
+
+      if user_data.get('password'):
+        password = user_data.pop('password')
+        instance.user.set_password(password)
+        instance.user.save()
+
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
+
       if user_serializer.is_valid():
         user_serializer.save()
     
@@ -213,25 +254,26 @@ class TherapistSerializer(serializers.ModelSerializer):
     return representation
 
   def update(self, instance, validated_data):
-    user_data = validated_data.pop('user')
-    user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
-    if user_serializer.is_valid():
-        user_serializer.save()
+    if validated_data.get('user'):
+      user_data = validated_data.pop('user')
+
+      if user_data.get('password'):
+        password = user_data.pop('password')
+        instance.user.set_password(password)
+        instance.user.save()
+
+      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
+      if user_serializer.is_valid():
+          user_serializer.save()
     
     # therapist fields
     instance.bio = validated_data.get('bio', instance.bio)
+    instance.status = validated_data.get('status', instance.status)
     instance.cert_date = validated_data.get('cert_date', instance.cert_date)
     instance.license_number = validated_data.get('license_number', instance.license_number)
     instance.operation_radius = validated_data.get('operation_radius', instance.operation_radius)
-    instance.qualifications = validated_data.get('qualifications', instance.qualifications)
     instance.preferred_ailments = validated_data.get('preferred_ailments',
                                                      instance.preferred_ailments)
-
-    password = validated_data.get('user', {}).get('password')
-
-    if password:
-      instance.user.set_password(password)
-      instance.user.save()
 
     instance.save()
 

@@ -57,7 +57,8 @@ class PatientDetailView(generics.RetrieveUpdateAPIView):
   """
   serializer_class = PatientSerializer
   queryset = Patient.objects
-  permission_classes = [IsSelf]
+  # TODO: update only if self
+  permission_classes = [permissions.IsAuthenticated]
 
 
 class TherapistCreateView(generics.CreateAPIView):

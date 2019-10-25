@@ -14,7 +14,13 @@ class AddressSerializer(serializers.ModelSerializer):
     exclude = ['user']
 
   def update(self, instance, validated_data):
+    user = self.context['request'].user
+
     if validated_data['primary']:
+      therapist = Therapist.objects.get(user=user)
+      therapist.primary_location = validated_data['location']
+      therapist.save()
+
       addresses = Address.objects.filter(user_id=instance.user_id)
       for address in addresses:
         address.primary = False
@@ -37,13 +43,13 @@ class AddressSerializer(serializers.ModelSerializer):
         therapist.primary_location = validated_data['location']
         therapist.save()
 
-    if not Area.objects.filter(zip_code=validated_data['zip_code']).exists():
+    if not Area.objects.filter(state__iexact=validated_data['state']).exists():
       if user.type == User.PATIENT_TYPE:
         send_email(user, **canned_messages.PATIENT_UNAVAILABLE)
       elif user.type == User.THERAPIST_TYPE:
         send_email(user, **canned_messages.THERAPIST_UNAVAILABLE)
 
-      UnavailableArea.objects.create(email=user.email, zip_code=validated_data['zip_code'])
-      raise APIException("Zip code is unavailable")
+      UnavailableArea.objects.create(email=user.email, state=validated_data['state'])
+      raise APIException("Area is currently unavailable")
 
     return Address.objects.create(**validated_data)

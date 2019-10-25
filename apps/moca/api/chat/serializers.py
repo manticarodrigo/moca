@@ -4,7 +4,7 @@ from rest_framework.exceptions import APIException
 from django.db import transaction
 
 from moca.models import Conversation, Message, TextMessage, ImageMessage, AppointmentRequest, \
-  AppointmentRequestMessage
+  AppointmentRequestMessage, Address
 from moca.api.user.serializers import UserSnippetSerializer
 from moca.api.appointment.serializers import AppointmentRequestSerializer, \
   AppointmentRequestCreateSerializer
@@ -82,11 +82,22 @@ class MessageSerializer(serializers.ModelSerializer):
       TextMessage.objects.create(message=message, **content)
 
     elif (type == 'appointment-request'):
+      content['therapist'] = user_id
+      content['patient'] = target_user_id
+
+      try:
+        primary_address = Address.objects.get(user_id=content['patient'], primary=True)
+        content['address'] = primary_address.id
+      except Address.DoesNotExist:
+        raise APIException('Patient does not have a primary address')
+
+
       appointment_request_serializer = AppointmentRequestCreateSerializer(
         data=content, context={'request': request})
       if (appointment_request_serializer.is_valid()):
         appointment_request = appointment_request_serializer.save()
       else:
+        print("INVALID APPOINTMENT REQUEST", appointment_request_serializer.errors)
         raise APIException('Invalid request message')
 
       AppointmentRequestMessage.objects.create(message=message,

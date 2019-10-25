@@ -8,7 +8,7 @@ class Address(models.Model):
   name = models.CharField(max_length=50)
   # Address fields
   street = models.CharField(max_length=50)
-  apartment = models.CharField(max_length=50)
+  apartment = models.CharField(max_length=50, blank=True)
   zip_code = models.CharField(max_length=5)
   city = models.CharField(max_length=50)
   state = models.CharField(max_length=2)
