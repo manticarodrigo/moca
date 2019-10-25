@@ -2,6 +2,7 @@ from datetime import datetime
 
 from box import Box
 from django.contrib.auth import authenticate, get_user_model
+from rest_framework.exceptions import APIException
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import transaction
@@ -15,7 +16,7 @@ from rest_framework_gis.fields import GeoJsonDict
 from moca.api.address.serializers import AddressSerializer
 from moca.api.payment.serializers import PaymentSerializer
 from moca.api.util.Validator import RequestValidator
-from moca.models import Price
+from moca.models import Price, Diagnosis
 from moca.models.address import Address
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
@@ -30,6 +31,12 @@ from .errors import DuplicateEmail
 SESSION_TYPES = list(zip(*Price.SESSION_TYPES))[0]
 
 User = get_user_model()
+
+
+class DiagnosisSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Diagnosis 
+    fields = '__all__'
 
 
 class PriceSerializer(serializers.ModelSerializer):
@@ -97,6 +104,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
+  diagnosis = DiagnosisSerializer()
 
   class Meta:
     model = Patient
@@ -110,21 +118,35 @@ class PatientSerializer(serializers.ModelSerializer):
 
     return representation
 
+  @transaction.atomic
   def update(self, instance, validated_data):
-    user = validated_data.get('user', instance.user.__dict__)
+    # TODO Check if is patient?
+    user_data = validated_data.pop('user', None)
+    if user_data:
+      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
+      if user_serializer.is_valid():
+        user_serializer.save()
+    
+    diagnosis_data = validated_data.pop('diagnosis', None)
+    if diagnosis_data:
+      if hasattr(instance, 'diagnosis'):
+        diagnosis_serializer = DiagnosisSerializer(instance=instance.diagnosis, data=diagnosis_data, partial=True)
+      else:
+        diagnosis_data['patient'] = instance
+        diagnosis_serializer = DiagnosisSerializer(data=diagnosis_data)
 
-    # user fields
-    instance.user.email = user.get('email')
-    instance.user.first_name = user.get('first_name')
-    instance.user.last_name = user.get('last_name')
-    instance.user.gender = user.get('gender')
+      if diagnosis_serializer.is_valid():
+        instance.diagnosis = diagnosis_serializer.save()
+      else:
+        print("Diagnosis creation error", diagnosis_serializer.errors)
+        raise APIException('Invalid Diagnosis')
+      
 
     password = validated_data.get('user', {}).get('password')
 
     if password:
       instance.user.set_password(password)
 
-    instance.user.save()
     instance.save()
 
     return instance
@@ -136,10 +158,11 @@ class PatientCreateSerializer(PatientSerializer):
   def get_token(self, patient):
     return AuthToken.objects.create(patient.user)[1]
 
+  @transaction.atomic
   def create(self, validated_data):
     validated_data['user']['type'] = User.PATIENT_TYPE
-    user = UserSerializer().create(validated_data['user'])
-    return Patient.objects.create(user=user)
+    user = UserSerializer().create(validated_data.pop('user'))
+    return Patient.objects.create(user=user, **validated_data)
 
 
 class TherapistSearchSerializer(serializers.ModelSerializer):
