@@ -3,6 +3,7 @@ from rest_framework.exceptions import APIException
 
 stripe.api_key = 'sk_test_ZNk6P5iWYhDBBWIDcK7hZd1O00je2Z70F4'
 
+
 def create_customer(**args):
   try:
     token = args.pop('token')
@@ -45,9 +46,10 @@ def add_payment(id, **args):
 # Amount is in cents!!!
 def charge_customer(id, amount, description, currency='usd'):
   try:
-    charge = stripe.Charge.create(
-      amount=amount, currency=currency, description=description, customer=id
-    )
+    charge = stripe.Charge.create(amount=amount,
+                                  currency=currency,
+                                  description=description,
+                                  customer=id)
   except Exception as e:
     print('STRIPE CHARGE CARD EXCEPTION', e)
     raise APIException('STRIPE ISSUE')

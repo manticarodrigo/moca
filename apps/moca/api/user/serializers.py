@@ -1,28 +1,33 @@
-from box import Box
 from datetime import datetime
-from knox.models import AuthToken
 
+from box import Box
 from django.contrib.auth import authenticate, get_user_model
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
+from knox.models import AuthToken
 from rest_framework import serializers, status
 from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
 
-from moca.api.util.Validator import RequestValidator
 from moca.api.address.serializers import AddressSerializer
 from moca.api.payment.serializers import PaymentSerializer
-from moca.models.user import Patient, Therapist
+from moca.api.util.Validator import RequestValidator
 from moca.models import Price
 from moca.models.address import Address
+from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
+from moca.models.verification import EmailVerification
+from moca.services import canned_messages
+from moca.services.emails import send_verification_mail, send_email
 
 from .errors import DuplicateEmail
 
-SESSION_TYPES = ['thirty', 'fourtyfive', 'sixty', 'evaluation']
+# This is unzipping the list and takes the first list
+# i.e. [(0, 1), (2, 3), (4, 5)] becomes (0, 2, 4)
+SESSION_TYPES = list(zip(*Price.SESSION_TYPES))[0]
 
 User = get_user_model()
 
@@ -86,6 +91,7 @@ class UserSerializer(serializers.ModelSerializer):
 
   def create(self, validated_data):
     user = User.objects.create_user(**validated_data)
+    send_verification_mail(user)
     return user
 
 
@@ -100,10 +106,9 @@ class PatientSerializer(serializers.ModelSerializer):
     representation = super().to_representation(obj)
     user_representation = representation.pop('user')
     for key in user_representation:
-        representation[key] = user_representation[key]
+      representation[key] = user_representation[key]
 
     return representation
-
 
   def update(self, instance, validated_data):
     user = validated_data.get('user', instance.user.__dict__)
@@ -139,24 +144,24 @@ class PatientCreateSerializer(PatientSerializer):
 
 class TherapistSearchSerializer(serializers.ModelSerializer):
   user = UserSnippetSerializer()
-  prices = PriceSerializer(source='tariffs', many=True)
+  prices = PriceSerializer(many=True)
 
   class Meta:
     model = Therapist
-    fields = ['license_number', 'rating', 'user', 'prices'] 
+    fields = ['license_number', 'rating', 'user', 'prices']
 
   def to_representation(self, obj):
     representation = super().to_representation(obj)
     user_representation = representation.pop('user')
     for key in user_representation:
-        representation[key] = user_representation[key]
+      representation[key] = user_representation[key]
 
     return representation
 
 
-
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer()
+  prices = PriceSerializer(many=True)
 
   class Meta:
     model = Therapist
@@ -166,7 +171,7 @@ class TherapistSerializer(serializers.ModelSerializer):
     representation = super().to_representation(obj)
     user_representation = representation.pop('user')
     for key in user_representation:
-        representation[key] = user_representation[key]
+      representation[key] = user_representation[key]
 
     return representation
 
@@ -209,7 +214,6 @@ class TherapistCreateSerializer(TherapistSerializer):
     validated_data['user']['type'] = User.THERAPIST_TYPE
     user = UserSerializer().create(validated_data['user'])
     return Therapist.objects.create(user=user)
-
 
 
 class LeaveSerializer(serializers.Serializer):

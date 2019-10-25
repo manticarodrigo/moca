@@ -1,21 +1,46 @@
 import json
 
-from django.db.models import F
-from rest_framework import permissions, status, generics
+from django.db.models import Avg, Count, F
+from django.shortcuts import get_object_or_404
+from rest_framework import generics, permissions, status
+from rest_framework.decorators import api_view
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.exceptions import APIException
 
+from moca.models import Address, EmailVerification, User
+from moca.models.prices import Price
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
-from moca.models.prices import Price
-from moca.models import Address
-
-from .serializers import (PatientSerializer, PatientCreateSerializer, TherapistSerializer, TherapistSearchSerializer, 
-                          TherapistCreateSerializer, PriceSerializer, LeaveSerializer,
-                          LeaveResponseSerializer)
+from moca.services import canned_messages
+from moca.services.emails import send_email
 
 from .permissions import IsSelf
+from .serializers import (LeaveResponseSerializer, LeaveSerializer, PatientCreateSerializer,
+                          PatientSerializer, PriceSerializer, TherapistCreateSerializer,
+                          TherapistSearchSerializer, TherapistSerializer)
+
+
+@api_view(['GET'])
+def verify_email(request, token):
+  emailVerification = get_object_or_404(EmailVerification, token=token)
+  if emailVerification.status not in (EmailVerification.EXPIRED, EmailVerification.VERIFIED):
+    emailVerification.status = EmailVerification.VERIFIED
+    emailVerification.save()
+
+    emailVerification.user.is_active = True
+    emailVerification.user.save()
+
+    if emailVerification.user.type == User.PATIENT_TYPE:
+      send_email(emailVerification.user, **canned_messages.WELCOME_PATIENT)
+    elif emailVerification.user.type == User.THERAPIST_TYPE:
+      send_email(emailVerification.user, **canned_messages.WELCOME_PHYSICAL_THERAPIST)
+
+    # TODO this should be a rendered template or a redirect(which should open the app)
+    return Response("Verified")
+  else:
+    # TODO this should be a rendered template
+    return Response("Token expired")
 
 
 class PatientCreateView(generics.CreateAPIView):
@@ -47,7 +72,8 @@ class TherapistDetailView(generics.RetrieveUpdateAPIView):
   """
   serializer_class = TherapistSerializer
   queryset = Therapist.objects
-  permission_classes = [IsSelf]
+  # TODO: update only if self
+  permission_classes = [permissions.IsAuthenticated]
 
 
 class TherapistSearchView(generics.ListAPIView):
@@ -55,7 +81,7 @@ class TherapistSearchView(generics.ListAPIView):
   GET {{ENV}}/api/user/therapist/search/
   """
   serializer_class = TherapistSearchSerializer
-  queryset = Therapist.objects.all()
+  queryset = Therapist.objects.annotate(Count('prices')).filter(prices__count__gt=0)
   permission_classes = [permissions.IsAuthenticated]
 
   def filter_queryset(self, queryset):
@@ -64,11 +90,10 @@ class TherapistSearchView(generics.ListAPIView):
     user = self.request.user
     user_location = None
 
-    try: 
+    try:
       user_location = Address.objects.get(user=user, primary=True).location
     except Address.DoesNotExist:
       raise APIException('No primary address found.')
-
 
     if 'gender' in criteria:
       gender = criteria['gender']
@@ -82,6 +107,17 @@ class TherapistSearchView(generics.ListAPIView):
       max_price = int(criteria['max_price'])
       therapists_in_price_range = Price.objects.filter(price__lte=max_price).values('therapist')
       therapists = therapists.filter(user_id__in=therapists_in_price_range)
+
+    # TODO there is a better way for these two, please check
+    if 'review_count' in criteria:
+      therapists = therapists.annotate(Count('reviews')).order_by('review_count')
+    elif '-review_count' in criteria:
+      therapists = therapists.annotate(Count('reviews')).order_by('-review_count')
+
+    if 'avg_rating' in criteria:
+      therapists = therapists.annotate(Avg('reviews__rating')).order_by('reviews__rating__avg')
+    elif '-avg_rating' in criteria:
+      therapists = therapists.annotate(Avg('reviews__rating')).order_by('-reviews__rating__avg')
 
     METERS_PER_MILE = 1609.34
     therapists = therapists.filter(primary_location__distance_lt=(user_location,

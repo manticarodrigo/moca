@@ -28,13 +28,13 @@ class AppointmentSerializer(serializers.ModelSerializer):
     fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review']
 
   def get_other_party(self, obj):
-    user_type = self.context['request'].user.type 
+    user_type = self.context['request'].user.type
     if user_type not in (User.PATIENT_TYPE, User.THERAPIST_TYPE):
       raise APIException('Unsupported user type')
 
     if user_type == User.PATIENT_TYPE:
       party_user = obj.therapist.user
-    else: 
+    else:
       party_user = obj.patient.user
 
     return UserSnippetSerializer(party_user).data
@@ -50,7 +50,7 @@ class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
   address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
   patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
   therapist = serializers.PrimaryKeyRelatedField(queryset=Therapist.objects.all())
-  
+
   class Meta:
     model = AppointmentRequest
     fields = '__all__'
@@ -67,7 +67,7 @@ class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
 
     start_time = data.get('start_time')
     end_time = data.get('end_time')
-    address_id = data.get('address')
+    address_id = data.get('address').id
     patient_id = data.get('patient').user.id
 
     RequestValidator.future_time(start_time)
@@ -75,7 +75,7 @@ class AppointmentRequestCreateSerializer(serializers.ModelSerializer):
     RequestValidator.address_belongs_to_user(address_id, patient_id)
 
     return data
-    
+
 
 class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
@@ -86,7 +86,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   class Meta:
     model = Appointment
     fields = '__all__'
-    
+
   def update(self, instance, validated_data):
     if 'review' in validated_data:
       review_data = validated_data.pop('review')
@@ -102,6 +102,16 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
 
     return super(AppointmentCreateUpdateSerializer, self).update(instance, validated_data)
 
+
+  def create(self, validated_data):
+    patient = Patient.objects.get(id=validated_data['patient'])
+    primary_addresses = list(filter(lambda address: address.primary, patient.addresses))
+
+    if len(primary_address) == 0:
+      raise APIException('Patient doesn not have a primary address')
+
+    validated_data['address'] = primary_address[0].id
+    return super(AppointmentCreateUpdateSerializer, self).create(validated_data)
 
   # TODO check which fields can be updates and their validations
   def validate(self, data):
