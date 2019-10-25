@@ -176,14 +176,11 @@ class TherapistSerializer(serializers.ModelSerializer):
     return representation
 
   def update(self, instance, validated_data):
-    user = validated_data.get('user', instance.user.__dict__)
-
-    # user fields
-    instance.user.email = user.get('email')
-    instance.user.first_name = user.get('first_name')
-    instance.user.last_name = user.get('last_name')
-    instance.user.gender = user.get('gender')
-
+    user_data = validated_data.pop('user')
+    user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
+    if user_serializer.is_valid():
+        user_serializer.save()
+    
     # therapist fields
     instance.bio = validated_data.get('bio', instance.bio)
     instance.cert_date = validated_data.get('cert_date', instance.cert_date)
@@ -197,9 +194,8 @@ class TherapistSerializer(serializers.ModelSerializer):
 
     if password:
       instance.user.set_password(password)
-
-    instance.user.save()
-    instance.save()
+      instance.user.save()
+      instance.save()
 
     return instance
 
