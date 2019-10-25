@@ -2,7 +2,7 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 
 from moca.models.address import Address
-from moca.models.app_availability import Area
+from moca.models.app_availability import Area, UnavailableArea
 from moca.models.user import Therapist, User
 from moca.services import canned_messages
 from moca.services.emails import send_email

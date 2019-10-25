@@ -1,6 +1,7 @@
 import json
+from functools import reduce 
 
-from django.db.models import Avg, Count, F
+from django.db.models import Avg, Count, F, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
@@ -99,6 +100,16 @@ class TherapistSearchView(generics.ListAPIView):
       gender = criteria['gender']
       therapists = therapists.filter(user__gender=gender)
 
+    if 'session_durations' in criteria:
+      try:
+        durations = json.loads(criteria['session_durations'])
+      except:
+        raise APIException("Invalid session type")
+
+      queries = [Q(session_type=duration) for duration in durations]
+      query = reduce(lambda x, y: x | y, queries)
+      therapists = therapists.filter(prices__in=Price.objects.filter(query))
+      
     if 'ailments' in criteria:
       ailments = json.loads(criteria['ailments'])
       therapists = therapists.filter(preferred_ailments__contains=ailments)

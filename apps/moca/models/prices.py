@@ -12,4 +12,4 @@ class Price(models.Model):
   price = models.PositiveIntegerField()
 
   class Meta:
-    unique_together = ['therapist', 'session_type']
+    unique_together = ('therapist', 'session_type',)

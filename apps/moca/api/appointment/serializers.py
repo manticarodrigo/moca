@@ -88,6 +88,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
   def update(self, instance, validated_data):
+    # TODO make sure it's the patient
     if 'review' in validated_data:
       review_data = validated_data.pop('review')
       try:
@@ -104,13 +105,13 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
 
 
   def create(self, validated_data):
-    patient = Patient.objects.get(id=validated_data['patient'])
-    primary_addresses = list(filter(lambda address: address.primary, patient.addresses))
-
-    if len(primary_address) == 0:
+    patient_id = validated_data['patient'].user_id
+    try:
+      primary_address = Address.objects.get(user_id=patient_id, primary=True)
+    except:
       raise APIException('Patient doesn not have a primary address')
 
-    validated_data['address'] = primary_address[0].id
+    validated_data['address'] = primary_address
     return super(AppointmentCreateUpdateSerializer, self).create(validated_data)
 
   # TODO check which fields can be updates and their validations
