@@ -27,7 +27,7 @@ schema_view = get_schema_view(
   ),
   public=True,
   # TODO: Secure access to docs for admins only
-  permission_classes=(permissions.AllowAny,),
+  permission_classes=(permissions.AllowAny, ),
 )
 
 urlpatterns = [

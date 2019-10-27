@@ -78,10 +78,10 @@ class MessageSerializer(serializers.ModelSerializer):
 
     message = Message.objects.create(conversation=conversation, type=type, user_id=user_id)
 
-    if (type == 'text'):
+    if type == 'text':
       TextMessage.objects.create(message=message, **content)
 
-    elif (type == 'appointment-request'):
+    elif type == 'appointment-request':
       content['therapist'] = user_id
       content['patient'] = target_user_id
 
@@ -90,7 +90,6 @@ class MessageSerializer(serializers.ModelSerializer):
         content['address'] = primary_address.id
       except Address.DoesNotExist:
         raise APIException('Patient does not have a primary address')
-
 
       appointment_request_serializer = AppointmentRequestCreateSerializer(
         data=content, context={'request': request})
