@@ -1,0 +1,1825 @@
+swagger: '2.0'
+info:
+  title: MOCA API
+  version: v1
+host: localhost:8000
+schemes:
+  - http
+basePath: /api
+consumes:
+  - application/json
+produces:
+  - application/json
+securityDefinitions:
+  Basic:
+    type: basic
+security:
+  - Basic: []
+paths:
+  /address/:
+    post:
+      operationId: address_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Address'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    parameters: []
+  /address/{address_id}:
+    get:
+      operationId: address_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    put:
+      operationId: address_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Address'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    patch:
+      operationId: address_partial_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Address'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    parameters:
+      - name: address_id
+        in: path
+        required: true
+        type: string
+  /address/{address_id}{format}:
+    get:
+      operationId: address_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    put:
+      operationId: address_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Address'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    patch:
+      operationId: address_partial_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Address'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    parameters:
+      - name: address_id
+        in: path
+        required: true
+        type: string
+      - name: format
+        in: path
+        required: true
+        type: string
+  /address/{format}:
+    post:
+      operationId: address_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Address'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Address'
+      tags:
+        - address
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /appointment/:
+    get:
+      operationId: appointment_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Appointment'
+      tags:
+        - appointment
+    parameters: []
+  /appointment/request/{appointment_request_id}/{request_status}/:
+    post:
+      operationId: appointment_request_create
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - appointment
+    parameters:
+      - name: appointment_request_id
+        in: path
+        required: true
+        type: string
+      - name: request_status
+        in: path
+        required: true
+        type: string
+  /appointment/{appointment_id}/:
+    get:
+      operationId: appointment_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Appointment'
+      tags:
+        - appointment
+    put:
+      operationId: appointment_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AppointmentCreateUpdate'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/AppointmentCreateUpdate'
+      tags:
+        - appointment
+    patch:
+      operationId: appointment_partial_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/AppointmentCreateUpdate'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/AppointmentCreateUpdate'
+      tags:
+        - appointment
+    delete:
+      operationId: appointment_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - appointment
+    parameters:
+      - name: appointment_id
+        in: path
+        required: true
+        type: string
+  /auth/login/:
+    post:
+      operationId: auth_login_create
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - auth
+    parameters: []
+  /auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - auth
+    parameters: []
+  /auth/logoutall/:
+    post:
+      operationId: auth_logoutall_create
+      description: "Log the user out of all sessions\nI.E. deletes all auth tokens\
+        \ for the user"
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - auth
+    parameters: []
+  /authenticate/login:
+    post:
+      operationId: authenticate_login_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Login'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Login'
+      tags:
+        - authenticate
+    parameters: []
+  /authenticate/logout:
+    post:
+      operationId: authenticate_logout_create
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - authenticate
+    parameters: []
+  /chat/:
+    get:
+      operationId: chat_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Conversation'
+      tags:
+        - chat
+    parameters: []
+  /chat/{user_id}/:
+    get:
+      operationId: chat_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Message'
+      tags:
+        - chat
+    post:
+      operationId: chat_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Message'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Message'
+      tags:
+        - chat
+    parameters:
+      - name: user_id
+        in: path
+        required: true
+        type: string
+  /device/add/:
+    post:
+      operationId: device_add_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Device'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Device'
+      tags:
+        - device
+    parameters: []
+  /payment/:
+    get:
+      operationId: payment_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Payment'
+      tags:
+        - payment
+    post:
+      operationId: payment_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Payment'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Payment'
+      tags:
+        - payment
+    parameters: []
+  /payment/{format}:
+    get:
+      operationId: payment_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Payment'
+      tags:
+        - payment
+    post:
+      operationId: payment_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Payment'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Payment'
+      tags:
+        - payment
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/patient/:
+    post:
+      operationId: user_patient_create
+      description: POST {{ENV}}/api/user/patient
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PatientCreate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/PatientCreate'
+      tags:
+        - user
+    parameters: []
+  /user/patient/{user}/:
+    get:
+      operationId: user_patient_read
+      description: GET, PATCH {{ENV}}/api/user/patient/{id}
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Patient'
+      tags:
+        - user
+    put:
+      operationId: user_patient_update
+      description: GET, PATCH {{ENV}}/api/user/patient/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Patient'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Patient'
+      tags:
+        - user
+    patch:
+      operationId: user_patient_partial_update
+      description: GET, PATCH {{ENV}}/api/user/patient/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Patient'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Patient'
+      tags:
+        - user
+    parameters:
+      - name: user
+        in: path
+        description: A unique value identifying this patient.
+        required: true
+        type: string
+  /user/patient/{user}{format}:
+    get:
+      operationId: user_patient_read
+      description: GET, PATCH {{ENV}}/api/user/patient/{id}
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Patient'
+      tags:
+        - user
+    put:
+      operationId: user_patient_update
+      description: GET, PATCH {{ENV}}/api/user/patient/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Patient'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Patient'
+      tags:
+        - user
+    patch:
+      operationId: user_patient_partial_update
+      description: GET, PATCH {{ENV}}/api/user/patient/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Patient'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Patient'
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+      - name: user
+        in: path
+        description: A unique value identifying this patient.
+        required: true
+        type: string
+  /user/patient{format}:
+    post:
+      operationId: user_create
+      description: POST {{ENV}}/api/user/patient
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/PatientCreate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/PatientCreate'
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/therapist/:
+    post:
+      operationId: user_therapist_create
+      description: POST {{ENV}}/api/user/therapist/
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCreate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCreate'
+      tags:
+        - user
+    parameters: []
+  /user/therapist/away/:
+    post:
+      operationId: user_therapist_away_create
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - user
+    parameters: []
+  /user/therapist/away/{leave_id}:
+    delete:
+      operationId: user_therapist_away_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: leave_id
+        in: path
+        required: true
+        type: string
+  /user/therapist/away/{leave_id}{format}:
+    delete:
+      operationId: user_therapist_away_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+      - name: leave_id
+        in: path
+        required: true
+        type: string
+  /user/therapist/away{format}:
+    post:
+      operationId: user_therapist_create
+      description: ''
+      parameters: []
+      responses:
+        '201':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/therapist/certifications/:
+    get:
+      operationId: user_therapist_certifications_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    post:
+      operationId: user_therapist_certifications_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    parameters: []
+  /user/therapist/certifications/{certification_id}:
+    get:
+      operationId: user_therapist_certifications_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    put:
+      operationId: user_therapist_certifications_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    patch:
+      operationId: user_therapist_certifications_partial_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    delete:
+      operationId: user_therapist_certifications_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: certification_id
+        in: path
+        required: true
+        type: string
+  /user/therapist/certifications/{certification_id}{format}:
+    get:
+      operationId: user_therapist_certifications_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    put:
+      operationId: user_therapist_certifications_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    patch:
+      operationId: user_therapist_certifications_partial_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    delete:
+      operationId: user_therapist_certifications_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: certification_id
+        in: path
+        required: true
+        type: string
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/therapist/certifications{format}:
+    get:
+      operationId: user_therapist_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    post:
+      operationId: user_therapist_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCertification'
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/therapist/prices/:
+    get:
+      operationId: user_therapist_prices_list
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Price'
+      tags:
+        - user
+    post:
+      operationId: user_therapist_prices_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Price'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    parameters: []
+  /user/therapist/prices/{price_id}:
+    get:
+      operationId: user_therapist_prices_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    put:
+      operationId: user_therapist_prices_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Price'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    patch:
+      operationId: user_therapist_prices_partial_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Price'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    delete:
+      operationId: user_therapist_prices_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: price_id
+        in: path
+        required: true
+        type: string
+  /user/therapist/prices/{price_id}{format}:
+    get:
+      operationId: user_therapist_prices_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    put:
+      operationId: user_therapist_prices_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Price'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    patch:
+      operationId: user_therapist_prices_partial_update
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Price'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    delete:
+      operationId: user_therapist_prices_delete
+      description: ''
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+      - name: price_id
+        in: path
+        required: true
+        type: string
+  /user/therapist/prices{format}:
+    get:
+      operationId: user_therapist_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Price'
+      tags:
+        - user
+    post:
+      operationId: user_therapist_create
+      description: ''
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Price'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/Price'
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/therapist/search/:
+    get:
+      operationId: user_therapist_search_list
+      description: GET {{ENV}}/api/user/therapist/search/
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TherapistSearch'
+      tags:
+        - user
+    parameters: []
+  /user/therapist/search{format}:
+    get:
+      operationId: user_therapist_read
+      description: GET {{ENV}}/api/user/therapist/search/
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/TherapistSearch'
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/therapist/{user}/:
+    get:
+      operationId: user_therapist_read
+      description: GET, PATCH {{ENV}}/api/user/therapist/{id}
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Therapist'
+      tags:
+        - user
+    put:
+      operationId: user_therapist_update
+      description: GET, PATCH {{ENV}}/api/user/therapist/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Therapist'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Therapist'
+      tags:
+        - user
+    patch:
+      operationId: user_therapist_partial_update
+      description: GET, PATCH {{ENV}}/api/user/therapist/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Therapist'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Therapist'
+      tags:
+        - user
+    parameters:
+      - name: user
+        in: path
+        description: A unique value identifying this therapist.
+        required: true
+        type: string
+  /user/therapist/{user}{format}:
+    get:
+      operationId: user_therapist_read
+      description: GET, PATCH {{ENV}}/api/user/therapist/{id}
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Therapist'
+      tags:
+        - user
+    put:
+      operationId: user_therapist_update
+      description: GET, PATCH {{ENV}}/api/user/therapist/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Therapist'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Therapist'
+      tags:
+        - user
+    patch:
+      operationId: user_therapist_partial_update
+      description: GET, PATCH {{ENV}}/api/user/therapist/{id}
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/Therapist'
+      responses:
+        '200':
+          description: ''
+          schema:
+            $ref: '#/definitions/Therapist'
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+      - name: user
+        in: path
+        description: A unique value identifying this therapist.
+        required: true
+        type: string
+  /user/therapist{format}:
+    post:
+      operationId: user_create
+      description: POST {{ENV}}/api/user/therapist/
+      parameters:
+        - name: data
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/TherapistCreate'
+      responses:
+        '201':
+          description: ''
+          schema:
+            $ref: '#/definitions/TherapistCreate'
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+  /user/verify/{token}:
+    get:
+      operationId: user_verify_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: token
+        in: path
+        required: true
+        type: string
+  /user/verify/{token}{format}:
+    get:
+      operationId: user_verify_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+      tags:
+        - user
+    parameters:
+      - name: format
+        in: path
+        required: true
+        type: string
+      - name: token
+        in: path
+        required: true
+        type: string
+definitions:
+  Address:
+    required:
+      - name
+      - street
+      - zipCode
+      - city
+      - state
+      - primary
+      - location
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        maxLength: 50
+        minLength: 1
+      street:
+        title: Street
+        type: string
+        maxLength: 50
+        minLength: 1
+      apartment:
+        title: Apartment
+        type: string
+        maxLength: 50
+      zipCode:
+        title: Zip code
+        type: string
+        maxLength: 5
+        minLength: 1
+      city:
+        title: City
+        type: string
+        maxLength: 50
+        minLength: 1
+      state:
+        title: State
+        type: string
+        maxLength: 2
+        minLength: 1
+      primary:
+        title: Primary
+        type: boolean
+      location:
+        title: Location
+        type: string
+  Review:
+    title: Review
+    required:
+      - rating
+    type: object
+    properties:
+      comment:
+        title: Comment
+        type: string
+      rating:
+        title: Rating
+        type: integer
+        maximum: 5
+        minimum: 0
+  Appointment:
+    required:
+      - startTime
+      - endTime
+      - price
+      - address
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      startTime:
+        title: Start time
+        type: string
+        format: date-time
+      endTime:
+        title: End time
+        type: string
+        format: date-time
+      price:
+        title: Price
+        type: integer
+        maximum: 2147483647
+        minimum: 0
+      otherParty:
+        title: Other party
+        type: string
+        readOnly: true
+      address:
+        $ref: '#/definitions/Address'
+      review:
+        $ref: '#/definitions/Review'
+  AppointmentCreateUpdate:
+    required:
+      - address
+      - patient
+      - therapist
+      - startTime
+      - endTime
+      - price
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      address:
+        title: Address
+        type: integer
+      patient:
+        title: Patient
+        type: string
+      therapist:
+        title: Therapist
+        type: string
+      review:
+        $ref: '#/definitions/Review'
+      startTime:
+        title: Start time
+        type: string
+        format: date-time
+      endTime:
+        title: End time
+        type: string
+        format: date-time
+      startTimeExpected:
+        title: Start time expected
+        type: string
+        format: date-time
+        x-nullable: true
+      endTimeExpected:
+        title: End time expected
+        type: string
+        format: date-time
+        x-nullable: true
+      isCancelled:
+        title: Is cancelled
+        type: boolean
+      price:
+        title: Price
+        type: integer
+        maximum: 2147483647
+        minimum: 0
+      createdAt:
+        title: Created at
+        type: string
+        format: date-time
+        readOnly: true
+      modifiedAt:
+        title: Modified at
+        type: string
+        format: date-time
+        readOnly: true
+  Login:
+    required:
+      - email
+      - password
+    type: object
+    properties:
+      email:
+        title: Email
+        type: string
+        minLength: 1
+      password:
+        title: Password
+        type: string
+        minLength: 1
+  UserSnippet:
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      firstName:
+        title: First name
+        type: string
+        maxLength: 50
+        x-nullable: true
+      lastName:
+        title: Last name
+        type: string
+        maxLength: 50
+        x-nullable: true
+      image:
+        title: Image
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  Conversation:
+    required:
+      - participants
+    type: object
+    properties:
+      participants:
+        type: array
+        items:
+          $ref: '#/definitions/UserSnippet'
+  Message:
+    required:
+      - type
+    type: object
+    properties:
+      type:
+        title: Type
+        type: string
+        enum:
+          - text
+          - image
+          - appointment-request
+      createdAt:
+        title: Created at
+        type: string
+        format: date-time
+        readOnly: true
+      user:
+        title: User
+        type: integer
+        readOnly: true
+      content:
+        title: Content
+        type: string
+        readOnly: true
+  Device:
+    required:
+      - token
+      - type
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      user:
+        title: User
+        type: integer
+        readOnly: true
+      token:
+        title: Token
+        type: string
+        maxLength: 50
+        minLength: 1
+      type:
+        title: Type
+        type: string
+        maxLength: 20
+        minLength: 1
+  Payment:
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      type:
+        title: Type
+        type: string
+        readOnly: true
+      name:
+        title: Name
+        type: string
+        readOnly: true
+      paymentInfo:
+        title: Payment info
+        type: string
+        readOnly: true
+  User:
+    title: User
+    required:
+      - email
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      firstName:
+        title: First name
+        type: string
+        maxLength: 50
+        x-nullable: true
+      lastName:
+        title: Last name
+        type: string
+        maxLength: 50
+        x-nullable: true
+      gender:
+        title: Gender
+        type: string
+        enum:
+          - F
+          - M
+        x-nullable: true
+      createdAt:
+        title: Created at
+        type: string
+        format: date-time
+        readOnly: true
+      type:
+        title: Type
+        type: string
+        enum:
+          - PA
+          - PT
+          - AG
+          - AD
+      email:
+        title: Email
+        type: string
+        format: email
+      password:
+        title: Password
+        type: string
+        maxLength: 128
+        minLength: 1
+      isActive:
+        title: Active
+        description: Designates whether this user should be treated as active. Unselect
+          this instead of deleting accounts.
+        type: boolean
+      addresses:
+        type: array
+        items:
+          $ref: '#/definitions/Address'
+        readOnly: true
+      payments:
+        type: array
+        items:
+          $ref: '#/definitions/Payment'
+        readOnly: true
+      profileInfo:
+        title: Profile info
+        type: string
+        readOnly: true
+  Diagnosis:
+    title: Diagnosis
+    required:
+      - title
+      - description
+      - patient
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 50
+        minLength: 1
+      description:
+        title: Description
+        type: string
+        minLength: 1
+      images:
+        type: array
+        items:
+          title: Images
+          type: string
+          readOnly: true
+          format: uri
+        x-nullable: true
+      patient:
+        title: Patient
+        type: string
+  PatientCreate:
+    required:
+      - user
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/User'
+      diagnosis:
+        $ref: '#/definitions/Diagnosis'
+      token:
+        title: Token
+        type: string
+        readOnly: true
+  Patient:
+    required:
+      - user
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/User'
+      diagnosis:
+        $ref: '#/definitions/Diagnosis'
+  Price:
+    required:
+      - sessionType
+      - price
+    type: object
+    properties:
+      therapist:
+        title: Therapist
+        type: string
+        readOnly: true
+      sessionType:
+        title: Session type
+        type: string
+        enum:
+          - thirty
+          - fourtyfive
+          - sixty
+          - evaluation
+      price:
+        title: Price
+        type: integer
+        maximum: 2147483647
+        minimum: 0
+  TherapistCertification:
+    required:
+      - title
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      therapist:
+        title: Therapist
+        type: string
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 50
+        minLength: 1
+      image:
+        title: Image
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  TherapistCreate:
+    required:
+      - user
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/User'
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
+      certifications:
+        type: array
+        items:
+          $ref: '#/definitions/TherapistCertification'
+      token:
+        title: Token
+        type: string
+        readOnly: true
+      bio:
+        title: Bio
+        type: string
+        maxLength: 200
+        x-nullable: true
+      certDate:
+        title: Cert date
+        type: string
+        format: date
+        x-nullable: true
+      licenseNumber:
+        title: License number
+        type: string
+        maxLength: 50
+        x-nullable: true
+      operationRadius:
+        title: Operation radius
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      status:
+        title: Status
+        type: string
+        enum:
+          - A
+          - B
+      primaryLocation:
+        title: Primary location
+        type: string
+        x-nullable: true
+      rating:
+        title: Rating
+        type: number
+      reviewCount:
+        title: Review count
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      preferredAilments:
+        type: array
+        items:
+          title: Preferred ailments
+          type: string
+          maxLength: 20
+          minLength: 1
+        maxItems: 20
+  TherapistSearch:
+    required:
+      - user
+      - prices
+    type: object
+    properties:
+      licenseNumber:
+        title: License number
+        type: string
+        maxLength: 50
+        x-nullable: true
+      rating:
+        title: Rating
+        type: number
+      user:
+        $ref: '#/definitions/UserSnippet'
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
+  Therapist:
+    required:
+      - user
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/User'
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
+      certifications:
+        type: array
+        items:
+          $ref: '#/definitions/TherapistCertification'
+      bio:
+        title: Bio
+        type: string
+        maxLength: 200
+        x-nullable: true
+      certDate:
+        title: Cert date
+        type: string
+        format: date
+        x-nullable: true
+      licenseNumber:
+        title: License number
+        type: string
+        maxLength: 50
+        x-nullable: true
+      operationRadius:
+        title: Operation radius
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      status:
+        title: Status
+        type: string
+        enum:
+          - A
+          - B
+      primaryLocation:
+        title: Primary location
+        type: string
+        x-nullable: true
+      rating:
+        title: Rating
+        type: number
+      reviewCount:
+        title: Review count
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      preferredAilments:
+        type: array
+        items:
+          title: Preferred ailments
+          type: string
+          maxLength: 20
+          minLength: 1
+        maxItems: 20
