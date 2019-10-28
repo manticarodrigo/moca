@@ -1,5 +1,5 @@
 from rest_framework import serializers, status
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ValidationError
 
 from moca.models.address import Address
 from moca.models.app_availability import Area, UnavailableArea
@@ -50,6 +50,6 @@ class AddressSerializer(serializers.ModelSerializer):
         send_email(user, **canned_messages.THERAPIST_UNAVAILABLE)
 
       UnavailableArea.objects.create(email=user.email, state=validated_data['state'])
-      raise APIException("Area is currently unavailable")
+      raise ValidationError("Area is currently unavailable")
 
     return Address.objects.create(**validated_data)

@@ -16,7 +16,8 @@ function dbexec () {
   echo $@ | dexec python apps/manage.py dbshell
 }
 
-dbexec truncate moca_user cascade
-dexec rm -rfv htmlcov
+# dbexec truncate moca_user cascade
+dexec rm -rf htmlcov
 dexec coverage run apps/manage.py test moca.tests -v 2
 dexec coverage html
+dexec coverage report
