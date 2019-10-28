@@ -8,6 +8,15 @@ if [ -z ${service_container+x} ]; then
   export service_container="moca_service"
 fi
 
-echo "truncate moca_user cascade" | docker exec -i ${service_container} python apps/manage.py dbshell
+function dexec () {
+  docker exec -i ${service_container} $@
+}
 
-(cd integration/tests; PYTHONPATH=$(pwd) py.test $@)
+function dbexec () {
+  echo $@ | dexec python apps/manage.py dbshell
+}
+
+dbexec truncate moca_user cascade
+dexec rm -rfv htmlcov
+dexec coverage run apps/manage.py test moca.tests
+dexec coverage html
