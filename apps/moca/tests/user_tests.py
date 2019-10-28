@@ -7,7 +7,7 @@ from moca.models.app_availability import Area
 from moca.tests.fakers import fake_address, fake_user
 
 
-class MocaBase(APITestCase):
+class UserTests(APITestCase):
   def create_user(self):
     pass
 
@@ -15,7 +15,7 @@ class MocaBase(APITestCase):
     pass
 
   def test_login(self):
-    if type(self) == MocaBase:
+    if type(self) == UserTests:
       return
     user = self.create_user()
     url = reverse('knox_login')
@@ -35,7 +35,7 @@ class MocaBase(APITestCase):
     return Box({"token": response.data['token'], self.user_type(): user})
 
   def test_address_creation(self):
-    if type(self) == MocaBase:
+    if type(self) == UserTests:
       return
     user = self.test_login()
     url = reverse('create-address')
@@ -51,29 +51,4 @@ class MocaBase(APITestCase):
     response = self.client.post(url, address, format='json')
     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    return Box({
-      "token": user.token,
-      "user": user.get(self.user_type()),
-      "address": response.data
-    })
-
-
-class PatientTests(MocaBase):
-  def user_type(self):
-    return "patient"
-
-  def create_user(self):
-    return self.test_create_patient().patient
-
-  def test_create_patient(self):
-    url = reverse('create-patient')
-    data = fake_user()
-    response = self.client.post(url, data, format='json')
-    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-    self.assertIn('id', response.data)
-    self.assertEqual(type(response.data['id']), int)
-
-    patient = Box(response.data)
-    patient.password = data['user']['password']
-
-    return Box({"patient": patient})
+    return Box({"token": user.token, "user": user.get(self.user_type()), "address": response.data})
