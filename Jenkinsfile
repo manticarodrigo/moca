@@ -51,6 +51,7 @@ pipeline {
             sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh ${DB_SERVICE}"""
             sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh ${MOCA_SERVICE}"""
             sh label: 'Run all tests', script: "bash -c './integration/run_tests.sh'"
+            sh label: 'Generate typescript client library', script "bash -c 'openapi-generator generate -g typescript-axios -i swagger.yaml -o moca-typescript'"
           }
         }
       }

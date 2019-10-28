@@ -1,4 +1,6 @@
 FROM archlinux/base
 
-RUN pacman -Syu --noconfirm python-pip docker
+RUN pacman -Syu --noconfirm python-pip docker npm
 RUN pip install tavern pytest-faker
+
+RUN npm install @openapitools/openapi-generator-cli -g
