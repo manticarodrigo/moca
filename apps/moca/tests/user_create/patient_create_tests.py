@@ -7,7 +7,64 @@ from moca.models.app_availability import Area
 from moca.tests.fakers import fake_address, fake_user
 
 
-class PatientTests(APITestCase):
+class MocaBase(APITestCase):
+  def create_user(self):
+    pass
+
+  def user_type(self):
+    pass
+
+  def test_login(self):
+    if type(self) == MocaBase:
+      return
+    user = self.create_user()
+    url = reverse('knox_login')
+
+    # Test failed login
+    credentials = {"email": user.email, "password": user.password}
+    credentials['password'] = credentials['password'] + 'x'
+    response = self.client.post(url, credentials, format='json')
+    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # Test successful login
+    credentials = {"email": user.email, "password": user.password}
+    response = self.client.post(url, credentials, format='json')
+    self.assertEqual(response.status_code, status.HTTP_200_OK)
+    self.assertIn("token", response.data)
+
+    return Box({"token": response.data['token'], self.user_type(): user})
+
+  def test_address_creation(self):
+    if type(self) == MocaBase:
+      return
+    user = self.test_login()
+    url = reverse('create-address')
+    address = fake_address()
+
+    self.client.credentials(HTTP_AUTHORIZATION=f'Token {user.token}')
+
+    response = self.client.post(url, address, format='json')
+    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    Area.objects.create(state=address['state'])
+
+    response = self.client.post(url, address, format='json')
+    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    return Box({
+      "token": user.token,
+      "user": user.get(self.user_type()),
+      "address": response.data
+    })
+
+
+class PatientTests(MocaBase):
+  def user_type(self):
+    return "patient"
+
+  def create_user(self):
+    return self.test_create_patient().patient
+
   def test_create_patient(self):
     url = reverse('create-patient')
     data = fake_user()
@@ -20,39 +77,3 @@ class PatientTests(APITestCase):
     patient.password = data['user']['password']
 
     return Box({"patient": patient})
-
-  def test_patient_login(self):
-    patient = self.test_create_patient().patient
-    url = reverse('knox_login')
-
-    # Test failed login
-    credentials = {"email": patient.email, "password": patient.password}
-    credentials['password'] = credentials['password'] + 'x'
-    response = self.client.post(url, credentials, format='json')
-    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    # Test successful login
-    credentials = {"email": patient.email, "password": patient.password}
-    response = self.client.post(url, credentials, format='json')
-    self.assertEqual(response.status_code, status.HTTP_200_OK)
-    self.assertIn("token", response.data)
-
-    return Box({"token": response.data['token'], "patient": patient})
-
-  def test_address_creation(self):
-    patient = self.test_patient_login()
-
-    url = reverse('create-address')
-    address = fake_address()
-
-    self.client.credentials(HTTP_AUTHORIZATION=f'Token {patient.token}')
-
-    response = self.client.post(url, address, format='json')
-    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    Area.objects.create(state=address['state'])
-
-    response = self.client.post(url, address, format='json')
-    self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    return Box({"token": patient.token, "patient": patient.patient, "address": response.data})
