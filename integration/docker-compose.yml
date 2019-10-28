@@ -20,7 +20,7 @@ services:
     image: moca_service:latest
     command: |
       bash -c "
-      ./integration/wait-for-it.sh moca_db:5432 &&
+      ./integration/wait-for-it/wait-for-it.sh moca_db:5432 &&
       python apps/manage.py migrate &&
       python apps/manage.py runserver 0.0.0.0:8000"
     expose:
