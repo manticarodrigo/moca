@@ -1,9 +1,10 @@
+from box import Box
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from moca.models.user.user import Patient
-from box import Box
-from moca.tests.fakers import *
+
+from moca.models.app_availability import Area
+from moca.tests.fakers import fake_address, fake_user
 
 
 class PatientTests(APITestCase):
@@ -45,8 +46,13 @@ class PatientTests(APITestCase):
     address = fake_address()
 
     self.client.credentials(HTTP_AUTHORIZATION=f'Token {patient.token}')
-    response = self.client.post(url, address, format='json')
 
+    response = self.client.post(url, address, format='json')
+    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    Area.objects.create(state=address['state'])
+
+    response = self.client.post(url, address, format='json')
     self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     return Box({"token": patient.token, "patient": patient.patient, "address": response.data})
