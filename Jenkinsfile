@@ -8,27 +8,27 @@ pipeline {
         script {
           checkout scm
 
-            composeCommand = """docker-compose -f ./integration/docker-compose.yml -p ${env.BRANCH_NAME}_${env.BUILD_ID}"""
+          composeCommand = """docker-compose -f ./integration/docker-compose.yml -p ${env.BRANCH_NAME}_${env.BUILD_ID}"""
 
-            gitlabBuilds(builds: ["build"]) {
-              stage("build") {
-                gitlabCommitStatus("build") {
-                  sh label: 'build db and service', script: """${composeCommand} build --pull"""
-                  sh label: 'Start db and service', script: """${composeCommand} up -d"""
-                }
+          gitlabBuilds(builds: ["build"]) {
+            stage("build") {
+              gitlabCommitStatus("build") {
+                sh label: 'build db and service', script: """${composeCommand} build --pull"""
+                sh label: 'Start db and service', script: """${composeCommand} up -d"""
               }
-
-              DB_SERVICE = sh(
-                  returnStdout: true,
-                  script: """${composeCommand} port moca_db 5432"""
-                  )
-
-                MOCA_SERVICE = sh(
-                    returnStdout: true,
-                    script: """${composeCommand} port moca_service 8000"""
-                    )
-
             }
+
+            DB_SERVICE = sh(
+                returnStdout: true,
+                script: """${composeCommand} port moca_db 5432"""
+                )
+
+            MOCA_SERVICE = sh(
+                returnStdout: true,
+                script: """${composeCommand} port moca_service 8000"""
+                )
+
+          }
         }
       }
     }
