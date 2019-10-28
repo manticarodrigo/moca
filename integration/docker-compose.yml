@@ -18,6 +18,8 @@ services:
       context: ..
       dockerfile: integration/Dockerfile
     image: moca_service:latest
+    environment:
+      - PYTHONBUFFERED=true
     command: |
       bash -c "
       ./integration/wait-for-it/wait-for-it.sh moca_db:5432 &&
