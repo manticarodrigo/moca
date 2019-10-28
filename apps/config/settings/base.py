@@ -160,7 +160,11 @@ EMAIL_HOST_USER = 'mocaemail@moca.moc'
 EMAIL_HOST_PASSWORD = ''
 EMAIL_PORT = 587
 
+
 def get_service_host():
   return os.environ.get('MOCA_SERVICE', 'http://0.0.0.0:8000')
 
+
 EMAIL_VERIFICATION = False
+
+SWAGGER_SETTINGS = {'DISPLAY_OPERATION_ID': False}
