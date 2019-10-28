@@ -199,3 +199,5 @@ data
 .vim
 apps/.idea
 .idea
+
+htmlcov/

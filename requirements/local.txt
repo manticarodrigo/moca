@@ -4,3 +4,4 @@ pylint-django
 yapf
 tavern
 pytest-faker
+coverage

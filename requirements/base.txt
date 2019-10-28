@@ -12,3 +12,4 @@ django-request-logging==0.7.0
 Pillow==6.2.0
 drf-yasg==1.17.0
 stripe==2.37.2
+httpie

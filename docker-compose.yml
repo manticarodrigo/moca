@@ -24,8 +24,11 @@ services:
     container_name: 'moca_service'
     build: .
     image: moca_service:latest
-    command:
-      python apps/manage.py runserver 0.0.0.0:8000
+    command: |
+      bash -c "
+      ./integration/wait-for-it/wait-for-it.sh moca_db:5432 &&
+      python apps/manage.py migrate &&
+      python apps/manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./:/app
     ports:
@@ -33,17 +36,3 @@ services:
       - "6899:6899"
     depends_on:
       - db
-
-  pgadmin:
-    restart: always
-    image: dpage/pgadmin4
-    depends_on:
-      - db
-    ports:
-      - "5555:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
-      PGADMIN_DEFAULT_PASSWORD: admin
-    restart: unless-stopped
-
-
