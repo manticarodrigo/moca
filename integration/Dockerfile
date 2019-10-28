@@ -1,13 +1,12 @@
 FROM archlinux/base
 
-ENV PYTHONUNBUFFERED 1
 RUN mkdir /app
-RUN mkdir -p /pacman/cache
+COPY . app
 WORKDIR /app
-COPY requirements.txt /app/
-COPY os_requirements.txt /app/
-COPY requirements /app/requirements
-COPY integration/wait-for-it/wait-for-it.sh wait-for-it.sh
-RUN xargs -a /app/os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --force --noconfirm
-RUN pip install -r /app/requirements.txt --exists-action i
-COPY apps apps
+
+RUN mkdir -p /pacman/cache
+RUN xargs -a os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --force --noconfirm
+
+RUN pip install -r requirements.txt --exists-action i
+
+ENV PYTHONUNBUFFERED 1
