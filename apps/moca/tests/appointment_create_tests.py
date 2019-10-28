@@ -10,4 +10,5 @@ from .patient_tests import PatientTests
 
 class AppointmentCreateTests(PatientTests, TherapistTests):
   def test_appointment_create(self):
-    patient = super(TherapistTests, self).test_address_creation()
+    therapist = super(TherapistTests, self).test_address_creation()
+    patient = super(PatientTests, self).test_address_creation()
