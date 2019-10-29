@@ -1,10 +1,11 @@
+import functools
+
 from django.contrib.auth.models import User
 from django.db import transaction
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.utils.serializer_helpers import BindingDict
-import functools
 
 serializer_id = 0
 
