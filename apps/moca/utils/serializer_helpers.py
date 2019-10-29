@@ -34,7 +34,7 @@ def combineSerializers(SerAClass, SerBClass, serializerName=get_default_name):
   class NewSerializer(serializers.Serializer):
     @property
     def fields(self):
-      fields = functools.reduce(valueFor, fieldsA.union(fieldsB), [])
+      fields = functools.reduce(valueFor, sorted(fieldsA.union(fieldsB)), [])
       self._fields = dict(fields)
       return self._fields
 
