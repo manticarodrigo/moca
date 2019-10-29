@@ -51,7 +51,8 @@ pipeline {
             sh label: 'Wait for db', script: """./integration/wait-for-it/wait-for-it.sh ${DB_SERVICE}"""
             sh label: 'Wait for moca service', script: """./integration/wait-for-it/wait-for-it.sh ${MOCA_SERVICE}"""
             sh label: 'Run all tests', script: "bash -x './integration/run_tests.sh'"
-            sh label: 'Check that swagger file is not changed', script: "git diff --exit-code"
+            sh label: 'Check that swagger file is not changed', script: "git diff --exit-code",
+            sh label: 'Compile the client with the generated bindings', script: "bash -c '(cd moca-client; yarn && yarn start)'"
           }
         }
       }

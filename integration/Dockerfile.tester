@@ -2,6 +2,6 @@ FROM archlinux/base
 
 RUN pacman -Syu --noconfirm python-pip docker npm jdk8-openjdk git diffutils
 RUN pip install httpie
-RUN npm install @openapitools/openapi-generator-cli -g
+RUN npm install @openapitools/openapi-generator-cli expo-cli -g
 
 ENV PATH "/root/.cache/pip:$PATH"
