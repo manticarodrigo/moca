@@ -3,4 +3,4 @@
 	url = https://github.com/vishnubob/wait-for-it
 [submodule "moca-client"]
 	path = moca-client
-	url = ssh://git@gitlab.approdite.io:2200/moca/moca-client.git
+	url = http://gitlab.approdite.io/moca/moca-client.git
