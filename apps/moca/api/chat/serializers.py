@@ -42,6 +42,10 @@ class MessageSerializer(serializers.ModelSerializer):
     model = Message
     fields = ['type', 'created_at', 'user', 'content']
 
+  @swagger_serializer_method(serializer_or_field=combineSerializers(
+    TextMessageSerializer,
+    AppointmentRequestMessageSerializer,
+    serializerName=lambda a, b: 'ChatMessage'))
   def get_content(self, obj):
     message_type = obj.type
     if message_type == 'appointment-request':

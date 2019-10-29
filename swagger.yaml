@@ -1440,6 +1440,53 @@ definitions:
         type: array
         items:
           $ref: '#/definitions/UserSnippet'
+  AppointmentRequest:
+    required:
+      - startTime
+      - endTime
+      - price
+      - address
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      startTime:
+        title: Start time
+        type: string
+        format: date-time
+      endTime:
+        title: End time
+        type: string
+        format: date-time
+      price:
+        title: Price
+        type: integer
+        maximum: 2147483647
+        minimum: 0
+      status:
+        title: Status
+        type: string
+        enum:
+          - accepted
+          - rejected
+          - pending
+          - cancelled
+      address:
+        $ref: '#/definitions/Address'
+  ChatMessage:
+    title: Content
+    required:
+      - appointmentRequest
+      - text
+    type: object
+    properties:
+      appointmentRequest:
+        $ref: '#/definitions/AppointmentRequest'
+      text:
+        type: string
+        minLength: 1
   Message:
     required:
       - type
@@ -1462,9 +1509,7 @@ definitions:
         type: integer
         readOnly: true
       content:
-        title: Content
-        type: string
-        readOnly: true
+        $ref: '#/definitions/ChatMessage'
   Device:
     required:
       - token
