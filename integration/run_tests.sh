@@ -21,5 +21,5 @@ dexec rm -rf htmlcov
 dexec coverage run apps/manage.py test moca.tests -v 2 &&
 dexec coverage html &&
 dexec coverage report &&
-./integration/update_swagger.sh &&
-./integration/generate_ts.sh
+bash -x ./integration/update_swagger.sh &&
+bash -x ./integration/generate_ts.sh
