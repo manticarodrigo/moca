@@ -63,6 +63,7 @@ pipeline {
     always {
       sh label: 'Tear down everything', script: """${composeCommand} rm -s"""
       sh label: 'Prune networks', script: "docker network prune -f"
+      sh label: 'Prune containers', script: "docker container prune -f"
     }
 
     unsuccessful {
