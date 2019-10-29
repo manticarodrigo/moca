@@ -1468,15 +1468,15 @@ definitions:
   ChatMessage:
     title: Last message
     required:
-      - text
       - appointmentRequest
+      - text
     type: object
     properties:
+      appointmentRequest:
+        $ref: '#/definitions/AppointmentRequest'
       text:
         type: string
         minLength: 1
-      appointmentRequest:
-        $ref: '#/definitions/AppointmentRequest'
   Conversation:
     type: object
     properties:
@@ -1550,30 +1550,6 @@ definitions:
         title: Payment info
         type: string
         readOnly: true
-  TherapistCertification:
-    required:
-      - title
-    type: object
-    properties:
-      id:
-        title: ID
-        type: integer
-        readOnly: true
-      therapist:
-        title: Therapist
-        type: string
-        readOnly: true
-      title:
-        title: Title
-        type: string
-        maxLength: 50
-        minLength: 1
-      image:
-        title: Image
-        type: string
-        readOnly: true
-        x-nullable: true
-        format: uri
   Diagnosis:
     required:
       - title
@@ -1605,6 +1581,30 @@ definitions:
       patient:
         title: Patient
         type: string
+  TherapistCertification:
+    required:
+      - title
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      therapist:
+        title: Therapist
+        type: string
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 50
+        minLength: 1
+      image:
+        title: Image
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
   Price:
     required:
       - sessionType
@@ -1632,9 +1632,6 @@ definitions:
     title: Profile info
     type: object
     properties:
-      primaryLocation:
-        type: string
-        x-nullable: true
       preferredAilments:
         type: array
         items:
@@ -1643,43 +1640,46 @@ definitions:
           maxLength: 20
           minLength: 1
         maxItems: 20
-      licenseNumber:
-        type: string
-        maxLength: 50
-        x-nullable: true
-      certifications:
-        type: array
-        items:
-          $ref: '#/definitions/TherapistCertification'
-      status:
-        type: string
-        enum:
-          - A
-          - B
-      operationRadius:
-        type: integer
-        maximum: 2147483647
-        minimum: -2147483648
-      diagnosis:
-        $ref: '#/definitions/Diagnosis'
-      prices:
-        type: array
-        items:
-          $ref: '#/definitions/Price'
       certDate:
         type: string
         format: date
         x-nullable: true
-      reviewCount:
-        type: integer
-        maximum: 2147483647
-        minimum: -2147483648
       rating:
         type: number
       bio:
         type: string
         maxLength: 200
         x-nullable: true
+      status:
+        type: string
+        enum:
+          - A
+          - B
+      diagnosis:
+        $ref: '#/definitions/Diagnosis'
+      primaryLocation:
+        type: string
+        x-nullable: true
+      reviewCount:
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      operationRadius:
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      certifications:
+        type: array
+        items:
+          $ref: '#/definitions/TherapistCertification'
+      licenseNumber:
+        type: string
+        maxLength: 50
+        x-nullable: true
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
   User:
     title: User
     required:

@@ -4,6 +4,7 @@ from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.utils.serializer_helpers import BindingDict
+import functools
 
 serializer_id = 0
 
@@ -13,27 +14,27 @@ def get_default_name(serA, serB):
   serializer_id = serializer_id + 1
   return f'Serializer{serializer_id}'
 
+def combineSerializers(SerAClass, SerBClass, serializerName=get_default_name):
+  serA = SerAClass()
+  serB = SerBClass()
 
-def combineSerializers(serA, serB, serializerName=get_default_name):
+  fieldsA = set(serA.fields)
+  fieldsB = set(serB.fields)
+
+  def valueFor(soFar, field):
+    (fieldA, fieldB) = (field, None) if field in fieldsA else (None, field)
+
+    if fieldA:
+      soFar.append((fieldA, serA.get_fields()[fieldA]))
+    elif fieldB:
+      soFar.append((fieldB, serB.get_fields()[fieldB]))
+
+    return soFar
+
   class NewSerializer(serializers.Serializer):
     @property
     def fields(self):
-      fieldsA = set(serA().fields)
-      fieldsB = set(serB().fields)
-
-      fields = []
-      for field in fieldsA.union(fieldsB):
-        real_field = None
-
-        if field in fieldsA.intersection(fieldsB):
-          real_field = serA().get_fields()[field]
-        elif field in fieldsA:
-          real_field = serA().get_fields()[field]
-        elif field in fieldsB:
-          real_field = serB().get_fields()[field]
-
-        fields.append((field, real_field))
-
+      fields = functools.reduce(valueFor, fieldsA.union(fieldsB), [])
       self._fields = dict(fields)
       return self._fields
 
