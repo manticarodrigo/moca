@@ -1,6 +1,6 @@
 FROM archlinux/base
 
-RUN pacman -Syu --noconfirm python-pip docker npm jdk8-openjdk git
+RUN pacman -Syu --noconfirm python-pip docker npm jdk8-openjdk git diffutils
 RUN pip install httpie
 RUN npm install @openapitools/openapi-generator-cli -g
 
