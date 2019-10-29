@@ -61,7 +61,7 @@ pipeline {
   post {
     always {
       sh label: 'Tear down everything', script: """${composeCommand} rm -s"""
-      sh label: 'Prune networks', script: "docker network prune"
+      sh label: 'Prune networks', script: "docker network prune -f"
     }
 
     unsuccessful {
