@@ -5,11 +5,6 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.utils.serializer_helpers import BindingDict
 
-from moca.api.appointment.serializers import (AppointmentRequestCreateSerializer,
-                                              AppointmentRequestSerializer)
-from moca.api.user.serializers import UserSnippetSerializer
-from moca.models import (Address, AppointmentRequest, AppointmentRequestMessage, Conversation,
-                         ImageMessage, Message, TextMessage)
 serializer_id = 0
 
 
@@ -23,8 +18,8 @@ def combineSerializers(serA, serB, serializerName=get_default_name):
   class NewSerializer(serializers.Serializer):
     @property
     def fields(self):
-      fieldsA = set(serA.Meta.fields)
-      fieldsB = set(serB.Meta.fields)
+      fieldsA = set(serA().fields)
+      fieldsB = set(serB().fields)
 
       fields = []
       for field in fieldsA.union(fieldsB):

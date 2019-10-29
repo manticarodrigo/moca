@@ -1286,6 +1286,30 @@ definitions:
       location:
         title: Location
         type: string
+  UserSnippet:
+    title: Other party
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      firstName:
+        title: First name
+        type: string
+        maxLength: 50
+        x-nullable: true
+      lastName:
+        title: Last name
+        type: string
+        maxLength: 50
+        x-nullable: true
+      image:
+        title: Image
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
   Review:
     title: Review
     required:
@@ -1326,9 +1350,7 @@ definitions:
         maximum: 2147483647
         minimum: 0
       otherParty:
-        title: Other party
-        type: string
-        readOnly: true
+        $ref: '#/definitions/UserSnippet'
       address:
         $ref: '#/definitions/Address'
       review:
@@ -1408,29 +1430,6 @@ definitions:
         title: Password
         type: string
         minLength: 1
-  UserSnippet:
-    type: object
-    properties:
-      id:
-        title: ID
-        type: integer
-        readOnly: true
-      firstName:
-        title: First name
-        type: string
-        maxLength: 50
-        x-nullable: true
-      lastName:
-        title: Last name
-        type: string
-        maxLength: 50
-        x-nullable: true
-      image:
-        title: Image
-        type: string
-        readOnly: true
-        x-nullable: true
-        format: uri
   Conversation:
     required:
       - participants
@@ -1553,6 +1552,136 @@ definitions:
         title: Payment info
         type: string
         readOnly: true
+  TherapistCertification:
+    required:
+      - title
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      therapist:
+        title: Therapist
+        type: string
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 50
+        minLength: 1
+      image:
+        title: Image
+        type: string
+        readOnly: true
+        x-nullable: true
+        format: uri
+  Diagnosis:
+    required:
+      - title
+      - description
+      - patient
+    type: object
+    properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
+      title:
+        title: Title
+        type: string
+        maxLength: 50
+        minLength: 1
+      description:
+        title: Description
+        type: string
+        minLength: 1
+      images:
+        type: array
+        items:
+          title: Images
+          type: string
+          readOnly: true
+          format: uri
+        x-nullable: true
+      patient:
+        title: Patient
+        type: string
+  Price:
+    required:
+      - sessionType
+      - price
+    type: object
+    properties:
+      therapist:
+        title: Therapist
+        type: string
+        readOnly: true
+      sessionType:
+        title: Session type
+        type: string
+        enum:
+          - thirty
+          - fourtyfive
+          - sixty
+          - evaluation
+      price:
+        title: Price
+        type: integer
+        maximum: 2147483647
+        minimum: 0
+  ProfileInfo:
+    title: Profile info
+    type: object
+    properties:
+      certifications:
+        type: array
+        items:
+          $ref: '#/definitions/TherapistCertification'
+      licenseNumber:
+        type: string
+        maxLength: 50
+        x-nullable: true
+      primaryLocation:
+        type: string
+        x-nullable: true
+      operationRadius:
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      certDate:
+        type: string
+        format: date
+        x-nullable: true
+      rating:
+        type: number
+      diagnosis:
+        $ref: '#/definitions/Diagnosis'
+      preferredAilments:
+        type: array
+        items:
+          title: Preferred ailments
+          type: string
+          maxLength: 20
+          minLength: 1
+        maxItems: 20
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
+      status:
+        type: string
+        enum:
+          - A
+          - B
+      reviewCount:
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      bio:
+        type: string
+        maxLength: 200
+        x-nullable: true
   User:
     title: User
     required:
@@ -1618,41 +1747,7 @@ definitions:
           $ref: '#/definitions/Payment'
         readOnly: true
       profileInfo:
-        title: Profile info
-        type: string
-        readOnly: true
-  Diagnosis:
-    title: Diagnosis
-    required:
-      - title
-      - description
-      - patient
-    type: object
-    properties:
-      id:
-        title: ID
-        type: integer
-        readOnly: true
-      title:
-        title: Title
-        type: string
-        maxLength: 50
-        minLength: 1
-      description:
-        title: Description
-        type: string
-        minLength: 1
-      images:
-        type: array
-        items:
-          title: Images
-          type: string
-          readOnly: true
-          format: uri
-        x-nullable: true
-      patient:
-        title: Patient
-        type: string
+        $ref: '#/definitions/ProfileInfo'
   PatientCreate:
     required:
       - user
@@ -1675,53 +1770,6 @@ definitions:
         $ref: '#/definitions/User'
       diagnosis:
         $ref: '#/definitions/Diagnosis'
-  Price:
-    required:
-      - sessionType
-      - price
-    type: object
-    properties:
-      therapist:
-        title: Therapist
-        type: string
-        readOnly: true
-      sessionType:
-        title: Session type
-        type: string
-        enum:
-          - thirty
-          - fourtyfive
-          - sixty
-          - evaluation
-      price:
-        title: Price
-        type: integer
-        maximum: 2147483647
-        minimum: 0
-  TherapistCertification:
-    required:
-      - title
-    type: object
-    properties:
-      id:
-        title: ID
-        type: integer
-        readOnly: true
-      therapist:
-        title: Therapist
-        type: string
-        readOnly: true
-      title:
-        title: Title
-        type: string
-        maxLength: 50
-        minLength: 1
-      image:
-        title: Image
-        type: string
-        readOnly: true
-        x-nullable: true
-        format: uri
   TherapistCreate:
     required:
       - user

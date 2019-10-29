@@ -2,27 +2,29 @@ from datetime import datetime
 
 from box import Box
 from django.contrib.auth import authenticate, get_user_model
-from rest_framework.exceptions import APIException
 from django.contrib.gis.db.models import PointField
 from django.contrib.gis.geos import Point
 from django.db import transaction
 from django.forms import model_to_dict
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_serializer_method
 from knox.models import AuthToken
 from rest_framework import serializers, status
+from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework_gis.fields import GeoJsonDict
 
 from moca.api.address.serializers import AddressSerializer
 from moca.api.payment.serializers import PaymentSerializer
 from moca.api.util.Validator import RequestValidator
-from moca.models import Price, Diagnosis, TherapistCertification
+from moca.models import Diagnosis, Price, TherapistCertification
 from moca.models.address import Address
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
 from moca.models.verification import EmailVerification
 from moca.services import canned_messages
-from moca.services.emails import send_verification_mail, send_email
+from moca.services.emails import send_email, send_verification_mail
+from moca.utils.serializer_helpers import combineSerializers
 
 from .errors import DuplicateEmail
 
@@ -35,7 +37,7 @@ User = get_user_model()
 
 class DiagnosisSerializer(serializers.ModelSerializer):
   class Meta:
-    model = Diagnosis 
+    model = Diagnosis
     fields = '__all__'
 
 
@@ -43,7 +45,7 @@ class TherapistCertificationSerializer(serializers.ModelSerializer):
   therapist = serializers.PrimaryKeyRelatedField(read_only=True)
 
   class Meta:
-    model = TherapistCertification 
+    model = TherapistCertification
     fields = '__all__'
 
   def create(self, validated_data):
@@ -78,6 +80,7 @@ class PatientProfileSerializer(serializers.ModelSerializer):
     model = Patient
     fields = ['diagnosis']
 
+
 class TherapistProfileSerializer(serializers.ModelSerializer):
   prices = PriceSerializer(many=True, required=False)
   certifications = TherapistCertificationSerializer(many=True, required=False)
@@ -110,6 +113,10 @@ class UserSerializer(serializers.ModelSerializer):
       },
     }
 
+  @swagger_serializer_method(serializer_or_field=combineSerializers(
+    PatientProfileSerializer,
+    TherapistProfileSerializer,
+    serializerName=lambda a, b: 'ProfileInfo'))
   def get_profile_info(self, user):
     if user.type == User.PATIENT_TYPE:
       patient = Patient.objects.get(user=user)
@@ -118,20 +125,20 @@ class UserSerializer(serializers.ModelSerializer):
       therapist = Therapist.objects.get(user=user)
       return TherapistProfileSerializer(therapist).data
     return None
-      
-  # def get_request_method(self):
-  #   context = Box(self.context)
 
-  #   return context.request._request.environ['REQUEST_METHOD']
+    # def get_request_method(self):
+    #   context = Box(self.context)
 
-  # def validate_email(self, email, **kwargs):
-  #   is_post_request = self.get_request_method() == 'POST'
+    #   return context.request._request.environ['REQUEST_METHOD']
 
-  #   if email and is_post_request:
-  #     existing = User.objects.filter(email__iexact=email)
+    # def validate_email(self, email, **kwargs):
+    #   is_post_request = self.get_request_method() == 'POST'
 
-  #     if existing.exists():
-  #       raise DuplicateEmail(email)
+    #   if email and is_post_request:
+    #     existing = User.objects.filter(email__iexact=email)
+
+    #     if existing.exists():
+    #       raise DuplicateEmail(email)
 
     return email
 
@@ -180,11 +187,13 @@ class PatientSerializer(serializers.ModelSerializer):
 
       if user_serializer.is_valid():
         user_serializer.save()
-    
+
     diagnosis_data = validated_data.pop('diagnosis', None)
     if diagnosis_data:
       if hasattr(instance, 'diagnosis'):
-        diagnosis_serializer = DiagnosisSerializer(instance=instance.diagnosis, data=diagnosis_data, partial=True)
+        diagnosis_serializer = DiagnosisSerializer(instance=instance.diagnosis,
+                                                   data=diagnosis_data,
+                                                   partial=True)
       else:
         diagnosis_data['patient'] = instance
         diagnosis_serializer = DiagnosisSerializer(data=diagnosis_data)
@@ -194,7 +203,6 @@ class PatientSerializer(serializers.ModelSerializer):
       else:
         print("Diagnosis creation error", diagnosis_serializer.errors)
         raise APIException('Invalid Diagnosis')
-      
 
     password = validated_data.get('user', {}).get('password')
 
@@ -264,8 +272,8 @@ class TherapistSerializer(serializers.ModelSerializer):
 
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
       if user_serializer.is_valid():
-          user_serializer.save()
-    
+        user_serializer.save()
+
     # therapist fields
     instance.bio = validated_data.get('bio', instance.bio)
     instance.status = validated_data.get('status', instance.status)

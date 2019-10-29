@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db import models, transaction
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from django.db.models import ForeignKey
@@ -27,6 +28,8 @@ class AppointmentSerializer(serializers.ModelSerializer):
     model = Appointment
     fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review']
 
+
+  @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
   def get_other_party(self, obj):
     user_type = self.context['request'].user.type
     if user_type not in (User.PATIENT_TYPE, User.THERAPIST_TYPE):
