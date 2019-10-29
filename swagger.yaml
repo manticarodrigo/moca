@@ -1430,15 +1430,6 @@ definitions:
         title: Password
         type: string
         minLength: 1
-  Conversation:
-    required:
-      - participants
-    type: object
-    properties:
-      participants:
-        type: array
-        items:
-          $ref: '#/definitions/UserSnippet'
   AppointmentRequest:
     required:
       - startTime
@@ -1475,17 +1466,24 @@ definitions:
       address:
         $ref: '#/definitions/Address'
   ChatMessage:
-    title: Content
+    title: Last message
     required:
-      - appointmentRequest
       - text
+      - appointmentRequest
     type: object
     properties:
-      appointmentRequest:
-        $ref: '#/definitions/AppointmentRequest'
       text:
         type: string
         minLength: 1
+      appointmentRequest:
+        $ref: '#/definitions/AppointmentRequest'
+  Conversation:
+    type: object
+    properties:
+      user:
+        $ref: '#/definitions/UserSnippet'
+      lastMessage:
+        $ref: '#/definitions/ChatMessage'
   Message:
     required:
       - type
@@ -1634,29 +1632,9 @@ definitions:
     title: Profile info
     type: object
     properties:
-      certifications:
-        type: array
-        items:
-          $ref: '#/definitions/TherapistCertification'
-      licenseNumber:
-        type: string
-        maxLength: 50
-        x-nullable: true
       primaryLocation:
         type: string
         x-nullable: true
-      operationRadius:
-        type: integer
-        maximum: 2147483647
-        minimum: -2147483648
-      certDate:
-        type: string
-        format: date
-        x-nullable: true
-      rating:
-        type: number
-      diagnosis:
-        $ref: '#/definitions/Diagnosis'
       preferredAilments:
         type: array
         items:
@@ -1665,19 +1643,39 @@ definitions:
           maxLength: 20
           minLength: 1
         maxItems: 20
-      prices:
+      licenseNumber:
+        type: string
+        maxLength: 50
+        x-nullable: true
+      certifications:
         type: array
         items:
-          $ref: '#/definitions/Price'
+          $ref: '#/definitions/TherapistCertification'
       status:
         type: string
         enum:
           - A
           - B
+      operationRadius:
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
+      diagnosis:
+        $ref: '#/definitions/Diagnosis'
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
+      certDate:
+        type: string
+        format: date
+        x-nullable: true
       reviewCount:
         type: integer
         maximum: 2147483647
         minimum: -2147483648
+      rating:
+        type: number
       bio:
         type: string
         maxLength: 200

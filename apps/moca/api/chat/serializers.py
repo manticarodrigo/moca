@@ -5,12 +5,11 @@ from rest_framework import serializers
 from rest_framework.exceptions import APIException
 from rest_framework.utils.serializer_helpers import BindingDict
 
-from moca.api.appointment.serializers import (
-    AppointmentRequestCreateSerializer, AppointmentRequestSerializer)
+from moca.api.appointment.serializers import (AppointmentRequestCreateSerializer,
+                                              AppointmentRequestSerializer)
 from moca.api.user.serializers import UserSnippetSerializer
-from moca.models import (Address, AppointmentRequest,
-                         AppointmentRequestMessage, Conversation, ImageMessage,
-                         Message, TextMessage)
+from moca.models import (Address, AppointmentRequest, AppointmentRequestMessage, Conversation,
+                         ImageMessage, Message, TextMessage)
 from moca.utils.serializer_helpers import combineSerializers
 
 
@@ -38,6 +37,11 @@ class AppointmentRequestMessageSerializer(serializers.ModelSerializer):
     return representation["appointment_request"]
 
 
+ChatMessageSerializer = combineSerializers(TextMessageSerializer,
+                                           AppointmentRequestMessageSerializer,
+                                           serializerName=lambda a, b: 'ChatMessage')
+
+
 class MessageSerializer(serializers.ModelSerializer):
   user = serializers.PrimaryKeyRelatedField(read_only=True)
   content = serializers.SerializerMethodField(required=False)
@@ -46,10 +50,7 @@ class MessageSerializer(serializers.ModelSerializer):
     model = Message
     fields = ['type', 'created_at', 'user', 'content']
 
-  @swagger_serializer_method(serializer_or_field=combineSerializers(
-    TextMessageSerializer,
-    AppointmentRequestMessageSerializer,
-    serializerName=lambda a, b: 'ChatMessage'))
+  @swagger_serializer_method(serializer_or_field=ChatMessageSerializer)
   def get_content(self, obj):
     message_type = obj.type
     if message_type == 'appointment-request':
@@ -116,12 +117,22 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-  participants = UserSnippetSerializer(many=True)
+  user = serializers.SerializerMethodField()
+  last_message = serializers.SerializerMethodField()
 
   class Meta:
     model = Conversation
-    fields = ['participants']
+    fields = ('user', 'last_message')
 
+  @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
+  def get_user(self, obj):
+    pass
+
+  @swagger_serializer_method(serializer_or_field=ChatMessageSerializer)
+  def get_last_message(self, obj):
+    pass
+
+  """
   def to_representation(self, obj):
     user = self.context['request'].user
     representation = super().to_representation(obj)
@@ -136,3 +147,4 @@ class ConversationSerializer(serializers.ModelSerializer):
 
     response = {"user": other_user, "last_message": last_message}
     return response
+  """
