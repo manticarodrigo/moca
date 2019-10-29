@@ -1,6 +1,6 @@
-from faker import Faker
-
 import random
+
+from faker import Faker
 
 fake = Faker()
 fake.seed(9001)
@@ -33,5 +33,3 @@ def fake_address():
       "coordinates": [float(fake.longitude()), float(fake.latitude())]
     }
   }
-
-

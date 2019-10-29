@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import m2m_changed
-from django.core.exceptions import ValidationError
 
 
 class Conversation(models.Model):
@@ -28,7 +28,7 @@ class Message(models.Model):
   MESSAGE_TYPES = [(MESSAGE_TYPE_TEXT, 'Text'), (MESSAGE_TYPE_IMAGE, 'Image'),
                    (MESSAGE_TYPE_APPOINTMENT_REQUEST, 'Appointment Request')]
 
-  conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+  conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
   user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
   created_at = models.DateTimeField(auto_now_add=True)
   type = models.CharField(max_length=20, choices=MESSAGE_TYPES)

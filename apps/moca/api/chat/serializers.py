@@ -1,13 +1,17 @@
 from django.contrib.auth.models import User
+from django.db import transaction
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
-from django.db import transaction
+from rest_framework.utils.serializer_helpers import BindingDict
 
-from moca.models import Conversation, Message, TextMessage, ImageMessage, AppointmentRequest, \
-  AppointmentRequestMessage, Address
+from moca.api.appointment.serializers import (
+    AppointmentRequestCreateSerializer, AppointmentRequestSerializer)
 from moca.api.user.serializers import UserSnippetSerializer
-from moca.api.appointment.serializers import AppointmentRequestSerializer, \
-  AppointmentRequestCreateSerializer
+from moca.models import (Address, AppointmentRequest,
+                         AppointmentRequestMessage, Conversation, ImageMessage,
+                         Message, TextMessage)
+from moca.utils.serializer_helpers import combineSerializers
 
 
 class TextMessageSerializer(serializers.ModelSerializer):
