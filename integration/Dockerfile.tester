@@ -1,8 +1,7 @@
 FROM archlinux/base
 
-RUN pacman -Syu --noconfirm python-pip docker npm
-RUN pip install tavern pytest-faker
-
+RUN pacman -Syu --noconfirm python-pip docker npm jdk8-openjdk
+RUN pip install httpie
 RUN npm install @openapitools/openapi-generator-cli -g
-ENV PATH '/usr/bin:$PATH'
-RUN pacman -S --noconfirm jdk8-openjdk
+
+ENV PATH "/root/.cache/pip:$PATH"
