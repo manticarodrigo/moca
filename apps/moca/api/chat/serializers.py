@@ -102,11 +102,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
       appointment_request_serializer = AppointmentRequestCreateSerializer(
         data=content, context={'request': request})
-      if (appointment_request_serializer.is_valid()):
-        appointment_request = appointment_request_serializer.save()
-      else:
-        print("INVALID APPOINTMENT REQUEST", appointment_request_serializer.errors)
-        raise APIException('Invalid request message')
+      appointment_request_serializer.is_valid(raise_exception=True)
+      appointment_request = appointment_request_serializer.save()
 
       AppointmentRequestMessage.objects.create(message=message,
                                                appointment_request=appointment_request)

@@ -8,6 +8,7 @@ from moca.tests.fakers import fake_address, fake_user
 
 from .user_tests import UserTests
 
+
 class PatientTests(UserTests):
   def user_type(self):
     return "patient"
