@@ -1593,7 +1593,6 @@ definitions:
   Review:
     required:
       - rating
-      - patient
     type: object
     properties:
       comment:
@@ -1605,8 +1604,7 @@ definitions:
         maximum: 5
         minimum: 0
       patient:
-        title: Patient
-        type: string
+        $ref: '#/definitions/UserSnippet'
   TherapistCertification:
     required:
       - title
