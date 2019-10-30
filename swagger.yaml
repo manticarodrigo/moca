@@ -447,6 +447,25 @@ paths:
         in: path
         required: true
         type: string
+  /review/{therapist_id}/:
+    get:
+      operationId: review_read
+      description: ''
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Review'
+      tags:
+        - review
+    parameters:
+      - name: therapist_id
+        in: path
+        required: true
+        type: string
   /user/patient/:
     post:
       operationId: user_patient_create
@@ -1310,7 +1329,7 @@ definitions:
         readOnly: true
         x-nullable: true
         format: uri
-  Review:
+  AppointmentReview:
     title: Review
     required:
       - rating
@@ -1324,6 +1343,25 @@ definitions:
         type: integer
         maximum: 5
         minimum: 0
+  Note:
+    title: Note
+    type: object
+    properties:
+      subjective:
+        title: Subjective
+        type: string
+      objective:
+        title: Objective
+        type: string
+      treatment:
+        title: Treatment
+        type: string
+      assessment:
+        title: Assessment
+        type: string
+      diagnosis:
+        title: Diagnosis
+        type: string
   Appointment:
     required:
       - startTime
@@ -1354,7 +1392,9 @@ definitions:
       address:
         $ref: '#/definitions/Address'
       review:
-        $ref: '#/definitions/Review'
+        $ref: '#/definitions/AppointmentReview'
+      note:
+        $ref: '#/definitions/Note'
   AppointmentCreateUpdate:
     required:
       - address
@@ -1379,7 +1419,7 @@ definitions:
         title: Therapist
         type: string
       review:
-        $ref: '#/definitions/Review'
+        $ref: '#/definitions/AppointmentReview'
       startTime:
         title: Start time
         type: string
@@ -1550,6 +1590,23 @@ definitions:
         title: Payment info
         type: string
         readOnly: true
+  Review:
+    required:
+      - rating
+      - patient
+    type: object
+    properties:
+      comment:
+        title: Comment
+        type: string
+      rating:
+        title: Rating
+        type: integer
+        maximum: 5
+        minimum: 0
+      patient:
+        title: Patient
+        type: string
   TherapistCertification:
     required:
       - title
@@ -1574,30 +1631,7 @@ definitions:
         readOnly: true
         x-nullable: true
         format: uri
-  Price:
-    required:
-      - sessionType
-      - price
-    type: object
-    properties:
-      therapist:
-        title: Therapist
-        type: string
-        readOnly: true
-      sessionType:
-        title: Session type
-        type: string
-        enum:
-          - thirty
-          - fourtyfive
-          - sixty
-          - evaluation
-      price:
-        title: Price
-        type: integer
-        maximum: 2147483647
-        minimum: 0
-  Diagnosis:
+  Injury:
     required:
       - title
       - description
@@ -1628,24 +1662,55 @@ definitions:
       patient:
         title: Patient
         type: string
+  Price:
+    required:
+      - sessionType
+      - price
+    type: object
+    properties:
+      therapist:
+        title: Therapist
+        type: string
+        readOnly: true
+      sessionType:
+        title: Session type
+        type: string
+        enum:
+          - thirty
+          - fourtyfive
+          - sixty
+          - evaluation
+      price:
+        title: Price
+        type: integer
+        maximum: 2147483647
+        minimum: 0
   ProfileInfo:
     title: Profile info
     type: object
     properties:
-      operationRadius:
-        type: integer
-        maximum: 2147483647
-        minimum: -2147483648
-      rating:
-        type: number
+      bio:
+        type: string
+        maxLength: 200
+        x-nullable: true
+      certDate:
+        type: string
+        format: date
+        x-nullable: true
       certifications:
         type: array
         items:
           $ref: '#/definitions/TherapistCertification'
-      prices:
-        type: array
-        items:
-          $ref: '#/definitions/Price'
+      injury:
+        $ref: '#/definitions/Injury'
+      licenseNumber:
+        type: string
+        maxLength: 50
+        x-nullable: true
+      operationRadius:
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
       preferredAilments:
         type: array
         items:
@@ -1654,32 +1719,24 @@ definitions:
           maxLength: 20
           minLength: 1
         maxItems: 20
+      prices:
+        type: array
+        items:
+          $ref: '#/definitions/Price'
       primaryLocation:
         type: string
         x-nullable: true
-      licenseNumber:
-        type: string
-        maxLength: 50
-        x-nullable: true
+      rating:
+        type: number
+      reviewCount:
+        type: integer
+        maximum: 2147483647
+        minimum: -2147483648
       status:
         type: string
         enum:
           - A
           - B
-      bio:
-        type: string
-        maxLength: 200
-        x-nullable: true
-      reviewCount:
-        type: integer
-        maximum: 2147483647
-        minimum: -2147483648
-      diagnosis:
-        $ref: '#/definitions/Diagnosis'
-      certDate:
-        type: string
-        format: date
-        x-nullable: true
   User:
     title: User
     required:
@@ -1753,8 +1810,8 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/User'
-      diagnosis:
-        $ref: '#/definitions/Diagnosis'
+      injury:
+        $ref: '#/definitions/Injury'
       token:
         title: Token
         type: string
@@ -1766,8 +1823,8 @@ definitions:
     properties:
       user:
         $ref: '#/definitions/User'
-      diagnosis:
-        $ref: '#/definitions/Diagnosis'
+      injury:
+        $ref: '#/definitions/Injury'
   TherapistCreate:
     required:
       - user

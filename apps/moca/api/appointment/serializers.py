@@ -13,7 +13,7 @@ from moca.models.user import Patient, Therapist
 from moca.api.util.Validator import RequestValidator
 
 
-class ReviewSerializer(serializers.ModelSerializer):
+class AppointmentReviewSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Review
@@ -29,7 +29,7 @@ class NoteSerializer(serializers.ModelSerializer):
 class AppointmentSerializer(serializers.ModelSerializer):
   address = AddressSerializer()
   other_party = serializers.SerializerMethodField()
-  review = ReviewSerializer(required=False)
+  review = AppointmentReviewSerializer(required=False)
   note = NoteSerializer(required=False)
 
   class Meta:
@@ -94,7 +94,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   address = serializers.PrimaryKeyRelatedField(queryset=Address.objects.all())
   patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
   therapist = serializers.PrimaryKeyRelatedField(queryset=Therapist.objects.all())
-  review = ReviewSerializer(required=False)
+  review = AppointmentReviewSerializer(required=False)
 
   class Meta:
     model = Appointment
