@@ -40,6 +40,7 @@ class AppointmentRequest(models.Model):
 
 class Review(models.Model):
   therapist = models.ForeignKey('Therapist', on_delete=models.CASCADE, related_name='reviews')
+  patient = models.ForeignKey('Patient', on_delete=models.CASCADE, related_name='reviews')
   appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
   rating = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(5)])
   comment = models.TextField(blank=True)

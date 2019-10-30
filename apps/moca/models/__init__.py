@@ -2,7 +2,7 @@ from .address import Address
 from .chat import Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage
 from .user import Patient, Therapist, User, Device
 from .prices import Price
-from .diagnosis import Diagnosis
+from .injury import Injury
 from .therapist_certification import TherapistCertification
 from .payment import Payment, PaymentProfile, Card, Bank
 from .appointment import Appointment, AppointmentRequest, Review

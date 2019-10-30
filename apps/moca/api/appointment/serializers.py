@@ -8,25 +8,33 @@ from django.db.models import ForeignKey
 from moca.api.user.serializers import PatientSerializer, TherapistSerializer, UserSnippetSerializer
 from moca.api.address.serializers import AddressSerializer
 from moca.models import Address, User
-from moca.models.appointment import Appointment, AppointmentRequest, Review
+from moca.models.appointment import Appointment, AppointmentRequest, Review, Note
 from moca.models.user import Patient, Therapist
 from moca.api.util.Validator import RequestValidator
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+
   class Meta:
     model = Review
     fields = ['comment', 'rating']
+
+class NoteSerializer(serializers.ModelSerializer):
+
+  class Meta:
+    model = Note
+    fields = ['subjective', 'objective', 'treatment', 'assessment', 'diagnosis']
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
   address = AddressSerializer()
   other_party = serializers.SerializerMethodField()
   review = ReviewSerializer(required=False)
+  note = NoteSerializer(required=False)
 
   class Meta:
     model = Appointment
-    fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review']
+    fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review', 'note']
 
 
   @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
@@ -93,18 +101,26 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
   def update(self, instance, validated_data):
-    # TODO make sure it's the patient
+    request = self.context['request']
+    user = request.user
+
     if 'review' in validated_data:
       review_data = validated_data.pop('review')
-      try:
-        review = instance.review
-      except:
-        review = Review(appointment=instance, therapist_id=instance.therapist_id)
 
-      review.rating = review_data.get('rating', review.rating)
-      review.comment = review_data.get('comment', review.comment)
-      review.save()
-      Therapist.objects.get(pk=instance.therapist_id).update_rating()
+      def update_review(review):
+        review.rating = review_data.get('rating', review.rating)
+        review.comment = review_data.get('comment', review.comment)
+        review.save()
+        Therapist.objects.get(pk=instance.therapist_id).update_rating()
+
+      if user.type == User.PATIENT_TYPE:
+        try:
+          review = instance.review
+          update_review(review)
+        except:
+          review = Review(appointment=instance, therapist_id=instance.therapist_id,
+                          patient_id=user.id)
+          update_review(review)
 
     return super(AppointmentCreateUpdateSerializer, self).update(instance, validated_data)
 

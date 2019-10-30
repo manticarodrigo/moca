@@ -17,7 +17,7 @@ from rest_framework_gis.fields import GeoJsonDict
 from moca.api.address.serializers import AddressSerializer
 from moca.api.payment.serializers import PaymentSerializer
 from moca.api.util.Validator import RequestValidator
-from moca.models import Diagnosis, Price, TherapistCertification
+from moca.models import Price, Injury, TherapistCertification
 from moca.models.address import Address
 from moca.models.user import Patient, Therapist
 from moca.models.user.user import AwayDays
@@ -35,9 +35,9 @@ SESSION_TYPES = list(zip(*Price.SESSION_TYPES))[0]
 User = get_user_model()
 
 
-class DiagnosisSerializer(serializers.ModelSerializer):
+class InjurySerializer(serializers.ModelSerializer):
   class Meta:
-    model = Diagnosis
+    model = Injury 
     fields = '__all__'
 
 
@@ -74,11 +74,11 @@ class PriceSerializer(serializers.ModelSerializer):
 
 
 class PatientProfileSerializer(serializers.ModelSerializer):
-  diagnosis = DiagnosisSerializer(read_only=True)
+  injury = InjurySerializer(read_only=True)
 
   class Meta:
     model = Patient
-    fields = ['diagnosis']
+    fields = ['injury']
 
 
 class TherapistProfileSerializer(serializers.ModelSerializer):
@@ -158,7 +158,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
-  diagnosis = DiagnosisSerializer(required=False)
+  injury = InjurySerializer(required=False)
 
   class Meta:
     model = Patient
@@ -187,22 +187,20 @@ class PatientSerializer(serializers.ModelSerializer):
 
       if user_serializer.is_valid():
         user_serializer.save()
-
-    diagnosis_data = validated_data.pop('diagnosis', None)
-    if diagnosis_data:
-      if hasattr(instance, 'diagnosis'):
-        diagnosis_serializer = DiagnosisSerializer(instance=instance.diagnosis,
-                                                   data=diagnosis_data,
-                                                   partial=True)
+    
+    injury_data = validated_data.pop('injury', None)
+    if injury_data:
+      if hasattr(instance, 'injury'):
+        injury_serializer = InjurySerializer(instance=instance.injury, data=injury_data, partial=True)
       else:
-        diagnosis_data['patient'] = instance
-        diagnosis_serializer = DiagnosisSerializer(data=diagnosis_data)
+        injury_data['patient'] = instance
+        injury_serializer = InjurySerializer(data=injury_data)
 
-      if diagnosis_serializer.is_valid():
-        instance.diagnosis = diagnosis_serializer.save()
+      if injury_serializer.is_valid():
+        instance.injury = injury_serializer.save()
       else:
-        print("Diagnosis creation error", diagnosis_serializer.errors)
-        raise APIException('Invalid Diagnosis')
+        raise APIException('Invalid Injury')
+      
 
     password = validated_data.get('user', {}).get('password')
 

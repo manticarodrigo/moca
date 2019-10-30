@@ -16,7 +16,7 @@ from moca.models.user.user import AwayDays
 from moca.services import canned_messages
 from moca.services.emails import send_email
 
-from .permissions import IsSelf
+from .permissions import IsSelfOrReadonly
 from .serializers import (LeaveResponseSerializer, LeaveSerializer, PatientCreateSerializer,
                           PatientSerializer, PriceSerializer, TherapistCreateSerializer,
                           TherapistSearchSerializer, TherapistSerializer, TherapistCertificationSerializer)
@@ -57,8 +57,7 @@ class PatientDetailView(generics.RetrieveUpdateAPIView):
   """
   serializer_class = PatientSerializer
   queryset = Patient.objects
-  # TODO: update only if self
-  permission_classes = [permissions.IsAuthenticated]
+  permission_classes = [IsSelfOrReadonly]
 
 
 class TherapistCreateView(generics.CreateAPIView):
@@ -74,8 +73,7 @@ class TherapistDetailView(generics.RetrieveUpdateAPIView):
   """
   serializer_class = TherapistSerializer
   queryset = Therapist.objects
-  # TODO: update only if self
-  permission_classes = [permissions.IsAuthenticated]
+  permission_classes = [IsSelfOrReadonly]
 
 
 class TherapistSearchView(generics.ListAPIView):
