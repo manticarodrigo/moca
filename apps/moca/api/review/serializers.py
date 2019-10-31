@@ -13,7 +13,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Review
-    fields = ['comment', 'rating', 'patient']
+    fields = ['id', 'comment', 'rating', 'patient']
 
   @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
   def get_patient(self, obj):

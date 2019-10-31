@@ -1596,6 +1596,10 @@ definitions:
       - rating
     type: object
     properties:
+      id:
+        title: ID
+        type: integer
+        readOnly: true
       comment:
         title: Comment
         type: string

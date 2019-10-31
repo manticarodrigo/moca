@@ -37,6 +37,13 @@ class AppointmentListView(generics.ListAPIView):
       queries.append(Q(end_time__lte=end))
 
     query = reduce(lambda x, y: x & y, queries)
+
+    limit = query_params.get("limit")
+    if (limit):
+      parsed_limit = int(limit)
+      order_by = "-end_time" if parsed_limit < 0 else "start_time"
+      return Appointment.objects.filter(query).order_by(order_by)[:abs(parsed_limit)]
+
     return Appointment.objects.filter(query)
 
 
