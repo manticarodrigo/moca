@@ -126,11 +126,24 @@ class ConversationSerializer(serializers.ModelSerializer):
 
   @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
   def get_user(self, obj):
-    pass
+    user = self.context['request'].user
+    participants = obj.participants
+    other_user = next(u for u in participants.all() if u.id != user.id)
 
-  @swagger_serializer_method(serializer_or_field=ChatMessageSerializer)
+    return UserSnippetSerializer(other_user).data
+
+  @swagger_serializer_method(serializer_or_field=MessageSerializer)
   def get_last_message(self, obj):
-    pass
+
+    last_message = None
+
+    try:
+      last_message = Message.objects.filter(conversation=obj).latest('created_at')
+      last_message = MessageSerializer(last_message).data
+    except:
+      pass
+    
+    return last_message
 
   """
   def to_representation(self, obj):
