@@ -7,7 +7,14 @@ from moca.models.app_availability import Area
 from moca.tests.fakers import fake_address, fake_user
 
 
-class UserTests(APITestCase):
+class TestBase(APITestCase):
+  def get_test_instance(self, test):
+    tests = test()
+    tests.client = self.client
+    return tests
+
+
+class UserTests(TestBase):
   def create_user(self):
     pass
 

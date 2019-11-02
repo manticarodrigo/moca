@@ -13,19 +13,17 @@ from .therapist_tests import TherapistTests
 class AppointmentCreateTests(PatientTests, TherapistTests):
   # def create_chat(therapist, patient):
   def test_appointment_create(self):
-    therapist = super(TherapistTests, self).test_address_creation()
-    patient = super(PatientTests, self).test_address_creation()
+    patient = self.get_test_instance(PatientTests).test_address_creation()
+    therapist = self.get_test_instance(TherapistTests).test_address_creation()
     url = reverse('send-message', kwargs={"user_id": patient.user.id})
     appointmentRequest = {
       'type': 'appointment-request',
       'content': {
-        'appointment_request': {
-          "startTime": "2019-11-11 10:00",
-          "endTime": "2019-11-11 11:00",
-          "price": 100,
-          "patient": int(patient.user.id),
-          "therapist": int(therapist.user.id)
-        }
+        "startTime": "2019-11-11T10:00",
+        "endTime": "2019-11-11T11:00",
+        "price": 100,
+        "patient": int(patient.user.id),
+        "therapist": int(therapist.user.id)
       }
     }
 
