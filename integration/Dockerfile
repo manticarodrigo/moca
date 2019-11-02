@@ -6,7 +6,7 @@ WORKDIR /app
 # Install pacman packages
 COPY os_requirements.txt .
 RUN mkdir -p /pacman/cache
-RUN xargs -a os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --force --noconfirm
+RUN xargs -a os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --noconfirm
 
 # Install python packages
 COPY requirements requirements

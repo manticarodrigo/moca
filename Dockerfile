@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN mkdir -p /pacman/cache
 COPY os_requirements.txt /app/
-RUN xargs -a os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --force --noconfirm
+RUN xargs -a os_requirements.txt pacman -Syu --needed --cachedir /pacman/cache --noconfirm
 
 COPY requirements.txt /app/
 COPY requirements /app/requirements
