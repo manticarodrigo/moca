@@ -28,14 +28,18 @@ class NoteSerializer(serializers.ModelSerializer):
 
 class AppointmentSerializer(serializers.ModelSerializer):
   address = AddressSerializer()
+  therapist_rating = serializers.SerializerMethodField()
   other_party = serializers.SerializerMethodField()
   review = AppointmentReviewSerializer(required=False)
   note = NoteSerializer(required=False)
 
   class Meta:
     model = Appointment
-    fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review', 'note', 'is_cancelled']
+    fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review',
+     'note', 'is_cancelled', 'therapist_rating']
 
+  def get_therapist_rating(self, appointment):
+    return appointment.therapist.rating
 
   @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
   def get_other_party(self, obj):
