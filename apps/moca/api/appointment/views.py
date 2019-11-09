@@ -11,7 +11,10 @@ from rest_framework.views import APIView
 from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
 from moca.api.appointment.serializers import (AppointmentCreateUpdateSerializer,
                                               AppointmentSerializer)
-from moca.models.appointment import Appointment, AppointmentRequest, Review
+from moca.models.appointment import (Appointment, AppointmentRequest, 
+                                     AppointmentCancellation, Review)
+
+from .permissions import HasCancellationRights
 
 
 class AppointmentListView(generics.ListAPIView):
@@ -108,3 +111,23 @@ class AppointmentRequestView(APIView):
 
     else:
       raise APIException('Incorrect request status')
+
+
+class AppointmentCancelView(APIView):
+  permission_classes = [HasCancellationRights]
+
+  def post(self, request, appointment_id):
+    try:
+      appointment = Appointment.objects.get(id=appointment_id)
+    except:
+      raise APIException('Unauthorized!')
+
+    self.check_object_permissions(self.request, appointment)
+
+    type = request.data.get('type')
+    AppointmentCancellation.objects.create(appointment=appointment, type=type, user=request.user)
+
+    appointment.is_cancelled = True
+    appointment.save()
+
+    return Response("Cancelled", status=status.HTTP_200_OK)
