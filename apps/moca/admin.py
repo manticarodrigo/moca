@@ -7,7 +7,7 @@ from .models import (Address, Conversation, Message, TextMessage, Patient, Thera
 
 
 class AppointmentCancellationAdmin(admin.ModelAdmin):
-    readonly_fields = ('cancellation_time',)
+  readonly_fields = ('cancellation_time',)
 
 admin.site.register(User)
 admin.site.register(Address)
