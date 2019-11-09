@@ -34,7 +34,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Appointment
-    fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review', 'note']
+    fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review', 'note', 'is_cancelled']
 
 
   @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
