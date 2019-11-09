@@ -1,6 +1,7 @@
 from rest_framework.permissions import BasePermission, IsAuthenticated
 
 
+# TODO Remove!
 class IsParticipant(IsAuthenticated):
   message = 'You are not a participant in this conversation.'
 

@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -54,3 +55,36 @@ class Note(models.Model):
   assessment = models.TextField(blank=True)
   diagnosis = models.TextField(blank=True)
   files = ArrayField(models.FileField())
+
+
+class AppointmentCancellation(models.Model):
+  STANDARD = "standard"
+  RESCHEDULE = "reschedule"
+  WEATHER = "weather"
+  EMERGENCY = "emergency"
+
+  CANCELLATION_TYPES = [
+    (STANDARD, "Standard Cancellation Policy"),
+    (RESCHEDULE, "Rescheduling"),
+    (WEATHER, "Cancellation Due to Weather"),
+    (EMERGENCY, "Cancellation Due to an Emergency"),
+  ]
+
+  appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
+  user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+  is_processed = models.BooleanField(default=False)
+  type = models.CharField(max_length=10, choices=CANCELLATION_TYPES)
+  cancellation_time = models.DateTimeField(auto_now_add=True)
+
+  def __str__(self):
+    return f"Appointment cancellation: {self.id} type: {self.type}"
+
+
+def validate_appointment_cancellation_type(sender, instance, **kwargs):
+  valid_types = [t[0] for t in sender.CANCELLATION_TYPES]
+  if instance.type not in valid_types:
+    from django.core.exceptions import ValidationError
+    raise ValidationError("Unsupported cancellation type")
+
+models.signals.pre_save.connect(validate_appointment_cancellation_type, 
+                                sender=AppointmentCancellation)
