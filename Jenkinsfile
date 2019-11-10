@@ -8,7 +8,7 @@ pipeline {
         script {
           checkout scm
 
-          composeCommand = """docker-compose -f ./integration/docker-compose.yml -p ${env.BRANCH_NAME}_${env.BUILD_ID}"""
+          composeCommand = """docker-compose -f ./integration/docker-compose.yml -p '${env.BRANCH_NAME}_${env.BUILD_ID}'"""
 
           gitlabBuilds(builds: ["build"]) {
             stage("build") {
