@@ -9,7 +9,7 @@ from moca.api.appointment.serializers import (AppointmentRequestCreateSerializer
                                               AppointmentRequestSerializer)
 from moca.api.user.serializers import UserSnippetSerializer
 from moca.models import (Address, AppointmentRequest, AppointmentRequestMessage, Conversation,
-                         ImageMessage, Message, TextMessage)
+                         ImageMessage, Message, TextMessage, LastViewed)
 from moca.utils.serializer_helpers import combineSerializers
 
 
@@ -114,15 +114,41 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
-  user = serializers.SerializerMethodField()
+  other_user = serializers.SerializerMethodField()
   last_message = serializers.SerializerMethodField()
+  unread_count = serializers.SerializerMethodField()
 
   class Meta:
     model = Conversation
-    fields = ('user', 'last_message')
+    fields = ('other_user', 'last_message', 'unread_count')
+
+  def get_unread_count(self, obj):
+    user = self.context['request'].user
+
+    try:
+      last_viewed_timestamp = LastViewed.objects.get(user=user, conversation=obj).timestamp
+    except LastViewed.DoesNotExist:
+      last_viewed_timestamp = None
+
+    try:
+      last_sent_msg = Message.objects.filter(user=user, conversation=obj).latest('created_at')
+      last_sent_msg_timestamp = last_sent_msg.created_at
+    except Message.DoesNotExist:
+      last_sent_msg_timestamp = None
+
+    if last_sent_msg_timestamp and last_viewed_timestamp:
+      if last_viewed_timestamp > last_sent_msg_timestamp:
+        since_timestamp = last_viewed_timestamp
+      else:
+        since_timestamp = last_sent_msg_timestamp
+    else:
+      since_timestamp = last_sent_msg_timestamp or last_viewed_timestamp
+
+    unread_count = Message.objects.filter(conversation=obj, created_at__gt=since_timestamp).count()
+    return unread_count
 
   @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
-  def get_user(self, obj):
+  def get_other_user(self, obj):
     user = self.context['request'].user
     participants = obj.participants
     other_user = next(u for u in participants.all() if u.id != user.id)
@@ -131,7 +157,6 @@ class ConversationSerializer(serializers.ModelSerializer):
 
   @swagger_serializer_method(serializer_or_field=MessageSerializer)
   def get_last_message(self, obj):
-
     last_message = None
 
     try:
@@ -139,22 +164,5 @@ class ConversationSerializer(serializers.ModelSerializer):
       last_message = MessageSerializer(last_message).data
     except:
       pass
-    
+
     return last_message
-
-  """
-  def to_representation(self, obj):
-    user = self.context['request'].user
-    representation = super().to_representation(obj)
-    participants = representation.pop('participants')
-    other_user = next(d for d in participants if d['id'] != user.id)
-    last_message = None
-    try:
-      last_message = Message.objects.filter(conversation=obj).latest('created_at')
-      last_message = MessageSerializer(last_message).data
-    except:
-      pass
-
-    response = {"user": other_user, "last_message": last_message}
-    return response
-  """

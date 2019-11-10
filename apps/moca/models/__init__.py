@@ -1,5 +1,6 @@
 from .address import Address
-from .chat import Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage
+from .chat import (Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage, 
+                   LastViewed)
 from .user import Patient, Therapist, User, Device
 from .prices import Price
 from .injury import Injury
