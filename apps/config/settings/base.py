@@ -50,25 +50,25 @@ LOGGING = {
       'class': 'logging.StreamHandler',
     }
   },
-  'loggers': {
-    'moca.userapi': {
-      'level': 'DEBUG',
-      'handlers': ['console']
-    },
-    'django': {
-      'level': 'DEBUG',
-      'handlers': ['console'],
-    },
-    'django.server': {
-      'level': 'DEBUG',
-      'handlers': ['console'],
-    },
-    'django.request': {
-      'handlers': ['console'],
-      'level': 'DEBUG',  # change debug level as appropiate
-      'propagate': False,
-    },
-  }
+  # 'loggers': {
+  #   'moca.userapi': {
+  #     'level': 'DEBUG',
+  #     'handlers': ['console']
+  #   },
+  #   'django': {
+  #     'level': 'DEBUG',
+  #     'handlers': ['console'],
+  #   },
+  #   'django.server': {
+  #     'level': 'DEBUG',
+  #     'handlers': ['console'],
+  #   },
+  #   'django.request': {
+  #     'handlers': ['console'],
+  #     'level': 'DEBUG',  # change debug level as appropiate
+  #     'propagate': False,
+  #   },
+  # }
 }
 
 REST_FRAMEWORK = {
@@ -122,16 +122,25 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 AUTH_PASSWORD_VALIDATORS = [
   {
-    'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-  },
-  {
     'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    'OPTIONS': {
+      'min_length': 8,
+    }
   },
   {
     'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
   },
   {
-    'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    'NAME': 'moca.validators.passwords.NumberValidator',
+  },
+  {
+    'NAME': 'moca.validators.passwords.UppercaseValidator',
+  },
+  {
+    'NAME': 'moca.validators.passwords.LowercaseValidator',
+  },
+  {
+    'NAME': 'moca.validators.passwords.SymbolValidator',
   },
 ]
 

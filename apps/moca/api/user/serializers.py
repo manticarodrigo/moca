@@ -26,6 +26,8 @@ from moca.services import canned_messages
 from moca.services.emails import send_email, send_verification_mail
 from moca.utils.serializer_helpers import combineSerializers
 
+from django.core import exceptions
+from django.contrib.auth.password_validation import validate_password
 from .errors import DuplicateEmail
 
 # This is unzipping the list and takes the first list
@@ -37,7 +39,7 @@ User = get_user_model()
 
 class InjurySerializer(serializers.ModelSerializer):
   class Meta:
-    model = Injury 
+    model = Injury
     fields = '__all__'
 
 
@@ -126,19 +128,6 @@ class UserSerializer(serializers.ModelSerializer):
       return TherapistProfileSerializer(therapist).data
     return None
 
-    # def get_request_method(self):
-    #   context = Box(self.context)
-
-    #   return context.request._request.environ['REQUEST_METHOD']
-
-    # def validate_email(self, email, **kwargs):
-    #   is_post_request = self.get_request_method() == 'POST'
-
-    #   if email and is_post_request:
-    #     existing = User.objects.filter(email__iexact=email)
-
-    #     if existing.exists():
-    #       raise DuplicateEmail(email)
 
     return email
 
@@ -146,6 +135,15 @@ class UserSerializer(serializers.ModelSerializer):
     user = User.objects.create_user(**validated_data)
     send_verification_mail(user)
     return user
+
+  def update(self, instance, validated_data):
+    if validated_data.get('password'):
+      password = validated_data.pop('password')
+      instance.set_password(password)
+      instance.save()
+
+    super(self.__class__, self).update(instance, validated_data)
+    return instance
 
   def to_representation(self, obj):
     representation = super().to_representation(obj)
@@ -155,6 +153,21 @@ class UserSerializer(serializers.ModelSerializer):
 
     return representation
 
+  def validate(self, data):
+    user = User(**data)
+    password = data.get('password')
+
+    if password:
+      errors = dict()
+      try:
+        validate_password(password=password, user=User)
+      except exceptions.ValidationError as e:
+        errors['password'] = list(e.messages)
+
+      if errors:
+        raise serializers.ValidationError(errors)
+
+    return data
 
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
@@ -174,24 +187,19 @@ class PatientSerializer(serializers.ModelSerializer):
 
   @transaction.atomic
   def update(self, instance, validated_data):
-    # TODO Check if is patient?
     user_data = validated_data.pop('user', None)
     if user_data:
-
-      if user_data.get('password'):
-        password = user_data.pop('password')
-        instance.user.set_password(password)
-        instance.user.save()
-
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
 
       if user_serializer.is_valid():
         user_serializer.save()
-    
+
     injury_data = validated_data.pop('injury', None)
     if injury_data:
       if hasattr(instance, 'injury'):
-        injury_serializer = InjurySerializer(instance=instance.injury, data=injury_data, partial=True)
+        injury_serializer = InjurySerializer(instance=instance.injury,
+                                             data=injury_data,
+                                             partial=True)
       else:
         injury_data['patient'] = instance
         injury_serializer = InjurySerializer(data=injury_data)
@@ -200,12 +208,6 @@ class PatientSerializer(serializers.ModelSerializer):
         instance.injury = injury_serializer.save()
       else:
         raise APIException('Invalid Injury')
-      
-
-    password = validated_data.get('user', {}).get('password')
-
-    if password:
-      instance.user.set_password(password)
 
     instance.save()
 
@@ -262,12 +264,7 @@ class TherapistSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     if validated_data.get('user'):
       user_data = validated_data.pop('user')
-
-      if user_data.get('password'):
-        password = user_data.pop('password')
-        instance.user.set_password(password)
-        instance.user.save()
-
+    
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
       if user_serializer.is_valid():
         user_serializer.save()
