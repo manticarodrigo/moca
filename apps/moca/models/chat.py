@@ -21,6 +21,12 @@ def participants_changed(sender, **kwargs):
 m2m_changed.connect(participants_changed, sender=Conversation.participants.through)
 
 
+class LastViewed(models.Model):
+  user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+  conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE)
+  timestamp = models.DateTimeField()
+
+
 class Message(models.Model):
   MESSAGE_TYPE_TEXT = 'text'
   MESSAGE_TYPE_IMAGE = 'image'
