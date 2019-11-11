@@ -1,4 +1,4 @@
-from functools import reduce 
+from functools import reduce
 
 from django.db.models import Q
 from django.forms.models import model_to_dict
@@ -10,10 +10,10 @@ from rest_framework.views import APIView
 from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
 from moca.api.appointment.serializers import (AppointmentCreateUpdateSerializer,
                                               AppointmentSerializer)
-from moca.models.appointment import (Appointment, AppointmentRequest, 
-                                     AppointmentCancellation, Review)
+from moca.models.appointment import (Appointment, AppointmentRequest, AppointmentCancellation,
+                                     Review)
 
-from .permissions import HasCancellationRights
+from .permissions import CanCancel, CanStart, CanEnd
 
 
 class AppointmentListView(generics.ListAPIView):
@@ -32,7 +32,7 @@ class AppointmentListView(generics.ListAPIView):
     start = query_params.get("start")
     if start:
       queries.append(Q(start_time__gte=start))
-    
+
     end = query_params.get("end")
     if end:
       queries.append(Q(end_time__lte=end))
@@ -60,7 +60,6 @@ class AppointmentAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AppointmentRequestView(APIView):
-
   def post(self, request, appointment_request_id, request_status):
     try:
       appointment_request = AppointmentRequest.objects.get(pk=appointment_request_id)
@@ -100,7 +99,6 @@ class AppointmentRequestView(APIView):
       appointment_request.save()
       return Response("Cancelled", status=status.HTTP_200_OK)
 
-
     elif request_status == 'reject':
       appointment_request.status = 'rejected'
       appointment_request.save()
@@ -111,7 +109,7 @@ class AppointmentRequestView(APIView):
 
 
 class AppointmentCancelView(APIView):
-  permission_classes = [HasCancellationRights]
+  permission_classes = [CanCancel]
 
   def post(self, request, appointment_id):
     try:
@@ -124,21 +122,41 @@ class AppointmentCancelView(APIView):
     type = request.data.get('type')
     AppointmentCancellation.objects.create(appointment=appointment, type=type, user=request.user)
 
-    appointment.is_cancelled = True
+    appointment.status = 'cancelled'
     appointment.save()
 
     return Response("Cancelled", status=status.HTTP_200_OK)
 
 
 class AppointmentStartView(APIView):
+  permission_classes = [CanStart]
 
   def post(self, request, appointment_id):
+    try:
+      appointment = Appointment.objects.get(id=appointment_id)
+    except:
+      raise APIException('Unauthorized!')
+
+    self.check_object_permissions(self.request, appointment)
+
+    appointment.status = 'in-progress'
+    appointment.save()
+
     return Response("Started", status=status.HTTP_200_OK)
 
 
-
 class AppointmentEndView(APIView):
+  permission_classes = [CanEnd]
 
   def post(self, request, appointment_id):
- 
+    try:
+      appointment = Appointment.objects.get(id=appointment_id)
+    except:
+      raise APIException('Unauthorized!')
+
+    self.check_object_permissions(self.request, appointment)
+
+    appointment.status = 'completed'
+    appointment.save()
+
     return Response("Ended", status=status.HTTP_200_OK)

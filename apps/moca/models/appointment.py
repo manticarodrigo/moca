@@ -7,6 +7,9 @@ from moca.models import Address
 
 
 class Appointment(models.Model):
+  STATUSES = [('in-progress', 'In Progress'), ('not-started', 'Not Started'),
+              ('completed', 'Completed'), ('cancelled', 'Cancelled')]
+
   patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
   therapist = models.ForeignKey('Therapist', on_delete=models.CASCADE)
   address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)
@@ -14,7 +17,7 @@ class Appointment(models.Model):
   end_time = models.DateTimeField()
   start_time_expected = models.DateTimeField(blank=True, null=True)
   end_time_expected = models.DateTimeField(blank=True, null=True)
-  is_cancelled = models.BooleanField(default=False)
+  status = models.CharField(max_length=15, choices=STATUSES, default='not-started')
   price = models.IntegerField(validators=[MinValueValidator(0)])
   created_at = models.DateTimeField(auto_now_add=True)
   modified_at = models.DateTimeField(auto_now_add=True)
@@ -86,5 +89,6 @@ def validate_appointment_cancellation_type(sender, instance, **kwargs):
     from django.core.exceptions import ValidationError
     raise ValidationError("Unsupported cancellation type")
 
-models.signals.pre_save.connect(validate_appointment_cancellation_type, 
+
+models.signals.pre_save.connect(validate_appointment_cancellation_type,
                                 sender=AppointmentCancellation)

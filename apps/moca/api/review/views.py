@@ -1,7 +1,6 @@
 from rest_framework import generics
 
 from .serializers import ReviewSerializer
-
 from moca.models.appointment import Review
 
 

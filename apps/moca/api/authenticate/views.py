@@ -8,6 +8,7 @@ from .serializers import LoginSerializer
 
 
 class LoginAPIView(generics.GenericAPIView):
+  permission_classes = []
   serializer_class = LoginSerializer
 
   def post(self, request, *args, **kwargs):

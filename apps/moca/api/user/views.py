@@ -1,5 +1,5 @@
 import json
-from functools import reduce 
+from functools import reduce
 
 from django.db.models import Avg, Count, F, Q
 from django.shortcuts import get_object_or_404
@@ -19,7 +19,8 @@ from moca.services.emails import send_email
 from .permissions import IsSelfOrReadonly
 from .serializers import (LeaveResponseSerializer, LeaveSerializer, PatientCreateSerializer,
                           PatientSerializer, PriceSerializer, TherapistCreateSerializer,
-                          TherapistSearchSerializer, TherapistSerializer, TherapistCertificationSerializer)
+                          TherapistSearchSerializer, TherapistSerializer,
+                          TherapistCertificationSerializer)
 
 
 @api_view(['GET'])
@@ -109,7 +110,7 @@ class TherapistSearchView(generics.ListAPIView):
       queries = [Q(session_type=duration) for duration in durations]
       query = reduce(lambda x, y: x | y, queries)
       therapists = therapists.filter(prices__in=Price.objects.filter(query))
-      
+
     if 'ailments' in criteria:
       ailments = json.loads(criteria['ailments'])
       therapists = therapists.filter(preferred_ailments__contains=ailments)
@@ -163,7 +164,7 @@ class TherapistPricingListCreateView(generics.ListCreateAPIView):
 
 class TherapistPricingDetailView(generics.RetrieveUpdateDestroyAPIView):
   lookup_url_kwarg = 'price_id'
-  serializer_class = PriceSerializer 
+  serializer_class = PriceSerializer
 
   def get_queryset(self):
     user = self.request.user

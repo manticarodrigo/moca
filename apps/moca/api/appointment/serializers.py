@@ -14,13 +14,12 @@ from moca.api.util.Validator import RequestValidator
 
 
 class AppointmentReviewSerializer(serializers.ModelSerializer):
-
   class Meta:
     model = Review
     fields = ['comment', 'rating']
 
-class NoteSerializer(serializers.ModelSerializer):
 
+class NoteSerializer(serializers.ModelSerializer):
   class Meta:
     model = Note
     fields = ['subjective', 'objective', 'treatment', 'assessment', 'diagnosis']
@@ -35,8 +34,10 @@ class AppointmentSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Appointment
-    fields = ['id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review',
-     'note', 'is_cancelled', 'therapist_rating']
+    fields = [
+      'id', 'start_time', 'end_time', 'price', 'other_party', 'address', 'review', 'note',
+      'status', 'therapist_rating'
+    ]
 
   def get_therapist_rating(self, appointment):
     return appointment.therapist.rating
@@ -122,12 +123,12 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
           review = instance.review
           update_review(review)
         except:
-          review = Review(appointment=instance, therapist_id=instance.therapist_id,
+          review = Review(appointment=instance,
+                          therapist_id=instance.therapist_id,
                           patient_id=user.id)
           update_review(review)
 
     return super(AppointmentCreateUpdateSerializer, self).update(instance, validated_data)
-
 
   def create(self, validated_data):
     patient_id = validated_data['patient'].user_id
