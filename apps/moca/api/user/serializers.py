@@ -292,7 +292,6 @@ class TherapistSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     if validated_data.get('user'):
       user_data = validated_data.pop('user')
-
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
       if user_serializer.is_valid():
         user_serializer.save()
