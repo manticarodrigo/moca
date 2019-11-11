@@ -19,8 +19,7 @@ from moca.api.payment.serializers import PaymentSerializer
 from moca.api.util.Validator import RequestValidator
 from moca.models import Price, Injury, TherapistCertification
 from moca.models.address import Address
-from moca.models.user import Patient, Therapist
-from moca.models.user.user import AwayDays
+from moca.models.user import Patient, Therapist, AwayDays
 from moca.models.verification import EmailVerification
 from moca.services import canned_messages
 from moca.services.emails import send_email, send_verification_mail
@@ -35,6 +34,34 @@ from .errors import DuplicateEmail
 SESSION_TYPES = list(zip(*Price.SESSION_TYPES))[0]
 
 User = get_user_model()
+
+
+class LeaveSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = AwayDays
+    exclude = ['therapist']
+
+  def create(self, validated_data):
+    request = self.context['request']
+    user_id = request.user.id
+    away_days = AwayDays.objects.create(therapist_id=user_id,
+                                        start_date=validated_data.get('start_date'),
+                                        end_date=validated_data.get('end_date'))
+    return away_days
+
+  def validate_therapist(self, value):
+    RequestValidator.therapist(value)
+    return value
+
+  def validate_start_date(self, value):
+    RequestValidator.future_date(value)
+    return value
+
+  def validate(self, data):
+    start_date = data['start_date']
+    end_date = data['end_date']
+    RequestValidator.end_after_start(end_date, start_date)
+    return data
 
 
 class InjurySerializer(serializers.ModelSerializer):
@@ -86,6 +113,7 @@ class PatientProfileSerializer(serializers.ModelSerializer):
 class TherapistProfileSerializer(serializers.ModelSerializer):
   prices = PriceSerializer(many=True, required=False)
   certifications = TherapistCertificationSerializer(many=True, required=False)
+  away_days = LeaveSerializer(many=True, required=False)
 
   class Meta:
     model = Therapist
@@ -128,7 +156,6 @@ class UserSerializer(serializers.ModelSerializer):
       return TherapistProfileSerializer(therapist).data
     return None
 
-
     return email
 
   def create(self, validated_data):
@@ -168,6 +195,7 @@ class UserSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError(errors)
 
     return data
+
 
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
@@ -264,7 +292,7 @@ class TherapistSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     if validated_data.get('user'):
       user_data = validated_data.pop('user')
-    
+
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
       if user_serializer.is_valid():
         user_serializer.save()
@@ -293,43 +321,3 @@ class TherapistCreateSerializer(TherapistSerializer):
     validated_data['user']['type'] = User.THERAPIST_TYPE
     user = UserSerializer().create(validated_data['user'])
     return Therapist.objects.create(user=user)
-
-
-class LeaveSerializer(serializers.Serializer):
-  therapist = serializers.IntegerField(required=True)
-  start_date = serializers.DateField(required=True)
-  end_date = serializers.DateField(required=True)
-
-  class Meta:
-    fields = '__all__'
-
-  def create(self, validated):
-    therapist = Therapist.objects.get(user_id=validated.pop('therapist'))
-    awaydays = therapist.awaydays.create(start_date=validated.get('start_date'),
-                                         end_date=validated.get('end_date'))
-    return awaydays
-
-  def validate_therapist(self, value):
-    RequestValidator.therapist(value)
-    return value
-
-  def validate_start_date(self, value):
-    RequestValidator.future_date(value)
-    return value
-
-  def validate(self, data):
-    start_time = data['start_time']
-    end_time = data['end_time']
-    RequestValidator.end_after_start(end_date, start_date)
-    return data
-
-
-class LeaveResponseSerializer(serializers.Serializer):
-  id = serializers.IntegerField(required=False)
-  therapist = TherapistSerializer(required=True)
-  start_date = serializers.DateField(required=True)
-  end_date = serializers.DateField(required=True)
-
-  class Meta:
-    fields = '__all__'
-    depth = 1

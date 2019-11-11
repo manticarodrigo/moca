@@ -11,16 +11,14 @@ from rest_framework.views import APIView
 
 from moca.models import Address, EmailVerification, User, TherapistCertification
 from moca.models.prices import Price
-from moca.models.user import Patient, Therapist
-from moca.models.user.user import AwayDays
+from moca.models.user import Patient, Therapist, AwayDays
 from moca.services import canned_messages
 from moca.services.emails import send_email
 
 from .permissions import IsSelfOrReadonly
-from .serializers import (LeaveResponseSerializer, LeaveSerializer, PatientCreateSerializer,
-                          PatientSerializer, PriceSerializer, TherapistCreateSerializer,
-                          TherapistSearchSerializer, TherapistSerializer,
-                          TherapistCertificationSerializer)
+from .serializers import (LeaveSerializer, PatientCreateSerializer, PatientSerializer,
+                          PriceSerializer, TherapistCreateSerializer, TherapistSearchSerializer,
+                          TherapistSerializer, TherapistCertificationSerializer)
 
 
 @api_view(['GET'])
@@ -139,19 +137,21 @@ class TherapistSearchView(generics.ListAPIView):
     return therapists
 
 
-class TherapistLeaveView(APIView):
-  def post(self, request, format=None):
-    awaydays = LeaveSerializer(data=request.data)
-    awaydays.is_valid(raise_exception=True)
-    awaydays = awaydays.save()
-    awaydays = AwayDays.objects.get(pk=awaydays.id)
-    return Response(LeaveResponseSerializer(awaydays).data, status.HTTP_201_CREATED)
+class TherapistLeaveListCreateView(generics.ListCreateAPIView):
+  serializer_class = LeaveSerializer
+
+  def get_queryset(self):
+    user = self.request.user
+    return AwayDays.objects.filter(therapist_id=user.id)
 
 
-class TherapistLeaveDetailView(APIView):
-  def delete(self, request, leave_id, format=None):
-    AwayDays.objects.get(id=leave_id).delete()
-    return Response('Leave succesfully deleted', status.HTTP_200_OK)
+class TherapistLeaveDetailView(generics.RetrieveUpdateDestroyAPIView):
+  lookup_url_kwarg = 'leave_id'
+  serializer_class = LeaveSerializer
+
+  def get_queryset(self):
+    user = self.request.user
+    return AwayDays.objects.filter(therapist_id=user.id)
 
 
 class TherapistPricingListCreateView(generics.ListCreateAPIView):

@@ -1,1 +1,1 @@
-from .user import User, Patient, Therapist, Device
+from .user import User, Patient, Therapist, Device, AwayDays

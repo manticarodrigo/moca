@@ -3,7 +3,7 @@ from django.urls import include, path
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views import (PatientCreateView, PatientDetailView, TherapistCreateView, TherapistDetailView,
-                    TherapistSearchView, TherapistLeaveView, TherapistLeaveDetailView,
+                    TherapistSearchView, TherapistLeaveListCreateView, TherapistLeaveDetailView,
                     TherapistPricingListCreateView, verify_email,
                     TherapistCertificationListCreateView, TherapistCertificationDetailView,
                     TherapistPricingDetailView)
@@ -27,7 +27,7 @@ urlpatterns = [
        TherapistCertificationDetailView.as_view(),
        name='therapist-cert-detail'),
   path('therapist/search/', TherapistSearchView.as_view(), name='therapist-search'),
-  path('therapist/away/', TherapistLeaveView.as_view(), name='therapist-away'),
+  path('therapist/away/', TherapistLeaveListCreateView.as_view(), name='therapist-away'),
   path('therapist/away/<int:leave_id>',
        TherapistLeaveDetailView.as_view(),
        name='therapist-away-detail')

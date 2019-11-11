@@ -9,7 +9,7 @@ class RequestValidator:
   @staticmethod
   def future_date(value):
     if value < datetime.date.today():
-      raise serializers.ValidationError(f'Start Day :{value} cant be past day')
+      raise serializers.ValidationError(f'Start Day :{value} can not be past today')
 
   @staticmethod
   def future_time(value):
