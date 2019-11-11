@@ -4,7 +4,6 @@ from django.db.models import Q
 from django.forms.models import model_to_dict
 from rest_framework import generics, permissions, status
 from rest_framework.exceptions import APIException
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -18,7 +17,6 @@ from .permissions import HasCancellationRights
 
 
 class AppointmentListView(generics.ListAPIView):
-  permission_classes = [IsAuthenticated]
   serializer_class = AppointmentSerializer
 
   def get_queryset(self):
@@ -62,7 +60,6 @@ class AppointmentAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AppointmentRequestView(APIView):
-  permission_classes = [permissions.IsAuthenticated]
 
   def post(self, request, appointment_request_id, request_status):
     try:
@@ -131,3 +128,17 @@ class AppointmentCancelView(APIView):
     appointment.save()
 
     return Response("Cancelled", status=status.HTTP_200_OK)
+
+
+class AppointmentStartView(APIView):
+
+  def post(self, request, appointment_id):
+    return Response("Started", status=status.HTTP_200_OK)
+
+
+
+class AppointmentEndView(APIView):
+
+  def post(self, request, appointment_id):
+ 
+    return Response("Ended", status=status.HTTP_200_OK)

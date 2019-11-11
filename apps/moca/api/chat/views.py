@@ -1,4 +1,3 @@
-from rest_framework import permissions
 from rest_framework import generics
 from rest_framework.exceptions import APIException
 from django.utils import timezone
@@ -8,7 +7,6 @@ from .serializers import ConversationSerializer, MessageSerializer
 
 
 class ConversationListView(generics.ListAPIView):
-  permission_classes = [permissions.IsAuthenticated]
   serializer_class = ConversationSerializer
 
   def get_queryset(self):
@@ -17,7 +15,6 @@ class ConversationListView(generics.ListAPIView):
 
 
 class MessageListCreateView(generics.ListCreateAPIView):
-  permission_classes = [permissions.IsAuthenticated]
   serializer_class = MessageSerializer
 
   def get_queryset(self):

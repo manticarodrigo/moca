@@ -3,7 +3,7 @@ from functools import reduce
 
 from django.db.models import Avg, Count, F, Q
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, status
+from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
@@ -84,7 +84,6 @@ class TherapistSearchView(generics.ListAPIView):
   """
   serializer_class = TherapistSearchSerializer
   queryset = Therapist.objects.annotate(Count('prices')).filter(prices__count__gt=0)
-  permission_classes = [permissions.IsAuthenticated]
 
   def filter_queryset(self, queryset):
     therapists = queryset
