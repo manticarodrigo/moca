@@ -49,6 +49,7 @@ class PatientCreateView(generics.CreateAPIView):
   POST {{ENV}}/api/user/patient
   """
   serializer_class = PatientCreateSerializer
+  permission_classes = []
 
 
 class PatientDetailView(generics.RetrieveUpdateAPIView):
@@ -65,6 +66,7 @@ class TherapistCreateView(generics.CreateAPIView):
   POST {{ENV}}/api/user/therapist/
   """
   serializer_class = TherapistCreateSerializer
+  permission_classes = []
 
 
 class TherapistDetailView(generics.RetrieveUpdateAPIView):
