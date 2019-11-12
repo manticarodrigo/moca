@@ -174,6 +174,14 @@ class UserSerializer(serializers.ModelSerializer):
     send_verification_mail(user)
     return user
 
+  def update(self, instance, validated_data):
+    if validated_data.get('password'):
+      password = validated_data.pop('password')
+      instance.set_password(password)
+      instance.save()
+    super(self.__class__, self).update(instance, validated_data)
+    return instance
+
   def to_representation(self, obj):
     representation = super().to_representation(obj)
     profile_representation = representation.pop('profile_info')
