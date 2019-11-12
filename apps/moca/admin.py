@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import (Address, Conversation, Message, TextMessage, Patient, Therapist,
-                     User, Device, PaymentProfile, Payment, Card, Bank, AppointmentRequestMessage,
+from .models import (Address, Conversation, Message, TextMessage, Patient, Therapist, AwayDays,
+                     User, Device, Payment, Card, Bank, Price, AppointmentRequestMessage,
                      PaymentProfile, Review, Appointment, AppointmentRequest, Area, Injury,
                      TherapistCertification, AppointmentCancellation)
 
@@ -16,11 +16,13 @@ admin.site.register(Message)
 admin.site.register(TextMessage)
 admin.site.register(Therapist)
 admin.site.register(Patient)
+admin.site.register(AwayDays)
 admin.site.register(Device)
 admin.site.register(Bank)
 admin.site.register(Card)
 admin.site.register(Payment)
 admin.site.register(PaymentProfile)
+admin.site.register(Price)
 admin.site.register(Appointment)
 admin.site.register(AppointmentCancellation, AppointmentCancellationAdmin)
 admin.site.register(AppointmentRequest)

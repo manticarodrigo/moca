@@ -27,7 +27,6 @@ from moca.utils.serializer_helpers import combineSerializers
 
 from django.core import exceptions
 from django.contrib.auth.password_validation import validate_password
-from .errors import DuplicateEmail
 
 # This is unzipping the list and takes the first list
 # i.e. [(0, 1), (2, 3), (4, 5)] becomes (0, 2, 4)
@@ -156,6 +155,18 @@ class UserSerializer(serializers.ModelSerializer):
       return TherapistProfileSerializer(therapist).data
     return None
 
+  def validate_email(self, email, **kwargs):
+    request = self.context['request']
+    user = request.user
+    method = request.method
+    is_update = method == 'POST' or method == 'PATCH' or 'PUT' or method == 'UPDATE'
+    is_different = not hasattr(user, 'email') or email.lower() != user.email
+
+    if email and is_update and is_different:
+      existing = User.objects.filter(email__iexact=email)
+      if existing.exists():
+        raise serializers.ValidationError(f'Email \'{email}\' has already been registered.')
+
     return email
 
   def create(self, validated_data):
@@ -217,7 +228,13 @@ class PatientSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     user_data = validated_data.pop('user', None)
     if user_data:
-      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
+      if user_data.get('password'):
+        password = user_data.pop('password')
+        instance.user.set_password(password)
+        instance.user.save()
+
+      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True,
+                                       context=self.context)
 
       if user_serializer.is_valid():
         user_serializer.save()
@@ -251,7 +268,7 @@ class PatientCreateSerializer(PatientSerializer):
   @transaction.atomic
   def create(self, validated_data):
     validated_data['user']['type'] = User.PATIENT_TYPE
-    user = UserSerializer().create(validated_data.pop('user'))
+    user = UserSerializer(context=self.context).create(validated_data.pop('user'))
     return Patient.objects.create(user=user, **validated_data)
 
 
@@ -292,7 +309,14 @@ class TherapistSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     if validated_data.get('user'):
       user_data = validated_data.pop('user')
-      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True)
+
+      if user_data.get('password'):
+        password = user_data.pop('password')
+        instance.user.set_password(password)
+        instance.user.save()
+
+      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True,
+                                       context=self.context)
       if user_serializer.is_valid():
         user_serializer.save()
 
@@ -318,5 +342,5 @@ class TherapistCreateSerializer(TherapistSerializer):
 
   def create(self, validated_data):
     validated_data['user']['type'] = User.THERAPIST_TYPE
-    user = UserSerializer().create(validated_data['user'])
+    user = UserSerializer(context=self.context).create(validated_data['user'])
     return Therapist.objects.create(user=user)

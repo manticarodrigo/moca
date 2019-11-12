@@ -1,7 +1,7 @@
 from .address import Address
 from .chat import (Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage, 
                    LastViewed)
-from .user import Patient, Therapist, User, Device
+from .user import Patient, Therapist, User, Device, AwayDays
 from .prices import Price
 from .injury import Injury
 from .therapist_certification import TherapistCertification

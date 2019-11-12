@@ -175,8 +175,12 @@ class AwayDays(models.Model):
                                 on_delete=models.CASCADE,
                                 primary_key=False,
                                 related_name='away_days')
-  start_date = models.DateField()
-  end_date = models.DateField()
+  start_date = models.DateTimeField()
+  end_date = models.DateTimeField()
+
+  def __str__(self):
+    return f'Therapist: {self.therapist.user.first_name} {self.therapist.user.last_name} \
+      start : {self.start_date} end : {self.end_date}'
 
 
 class Device(models.Model):

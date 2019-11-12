@@ -22,7 +22,7 @@ class AppointmentReviewSerializer(serializers.ModelSerializer):
 class NoteSerializer(serializers.ModelSerializer):
   class Meta:
     model = Note
-    fields = ['subjective', 'objective', 'treatment', 'assessment', 'diagnosis']
+    fields = ['subjective', 'objective', 'treatment', 'assessment', 'diagnosis', 'files']
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -100,6 +100,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   patient = serializers.PrimaryKeyRelatedField(queryset=Patient.objects.all())
   therapist = serializers.PrimaryKeyRelatedField(queryset=Therapist.objects.all())
   review = AppointmentReviewSerializer(required=False)
+  note = NoteSerializer(required=False)
 
   class Meta:
     model = Appointment
@@ -108,6 +109,26 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     request = self.context['request']
     user = request.user
+
+    if 'note' in validated_data:
+      note_data = validated_data.pop('note')
+
+      def update_note(note):
+        note.subjective = note_data.get('subjective', note.subjective)
+        note.objective = note_data.get('objective', note.objective)
+        note.treatment = note_data.get('treatment', note.treatment)
+        note.assessment = note_data.get('assessment', note.assessment)
+        note.diagnosis = note_data.get('diagnosis', note.diagnosis)
+        note.files = note_data.get('files', note.files)
+        note.save()
+
+      if user.type == User.THERAPIST_TYPE:
+        try:
+          note = instance.note
+          update_note(note)
+        except:
+          note = Note(appointment=instance)
+          update_note(note)
 
     if 'review' in validated_data:
       review_data = validated_data.pop('review')

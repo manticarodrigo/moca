@@ -57,7 +57,7 @@ class Note(models.Model):
   treatment = models.TextField(blank=True)
   assessment = models.TextField(blank=True)
   diagnosis = models.TextField(blank=True)
-  files = ArrayField(models.FileField())
+  files = ArrayField(models.FileField(), blank=True, null=True)
 
 
 class AppointmentCancellation(models.Model):
