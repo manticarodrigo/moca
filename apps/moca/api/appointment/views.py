@@ -77,6 +77,7 @@ class AppointmentRequestView(APIView):
 
       appointment_request.status = 'accepted'
       appointment_to_create = model_to_dict(appointment_request)
+      appointment_to_create['status'] = 'not-started'
 
       serializer = AppointmentCreateUpdateSerializer(data=appointment_to_create)
 

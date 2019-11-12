@@ -125,9 +125,9 @@ AUTH_PASSWORD_VALIDATORS = [
       'min_length': 8,
     }
   },
-  {
-    'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-  },
+  # {
+  #   'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+  # },
   {
     'NAME': 'moca.validators.passwords.NumberValidator',
   },
@@ -137,9 +137,9 @@ AUTH_PASSWORD_VALIDATORS = [
   {
     'NAME': 'moca.validators.passwords.LowercaseValidator',
   },
-  {
-    'NAME': 'moca.validators.passwords.SymbolValidator',
-  },
+  # {
+  #   'NAME': 'moca.validators.passwords.SymbolValidator',
+  # },
 ]
 
 # Internationalization

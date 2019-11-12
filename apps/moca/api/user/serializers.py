@@ -87,7 +87,7 @@ class PriceSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Price
-    fields = ('therapist', 'session_type', 'price')
+    fields = ('id', 'therapist', 'session_type', 'price')
 
   def create(self, validated_data):
     validated_data['therapist'] = Therapist.objects.get(user=self.context['request'].user)
