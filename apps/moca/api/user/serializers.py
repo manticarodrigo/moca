@@ -295,12 +295,6 @@ class TherapistSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     if validated_data.get('user'):
       user_data = validated_data.pop('user')
-
-      if user_data.get('password'):
-        password = user_data.pop('password')
-        instance.user.set_password(password)
-        instance.user.save()
-
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True,
                                        context=self.context)
       if user_serializer.is_valid():
