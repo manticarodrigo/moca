@@ -16,10 +16,11 @@ class AddressSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     user = self.context['request'].user
 
-    if validated_data['primary'] and user.type == User.THERAPIST_TYPE:
-      therapist = Therapist.objects.get(user=user)
-      therapist.primary_location = validated_data['location']
-      therapist.save()
+    if validated_data['primary']:
+      if user.type == User.THERAPIST_TYPE:
+        therapist = Therapist.objects.get(user=user)
+        therapist.primary_location = validated_data['location']
+        therapist.save()
 
       addresses = Address.objects.filter(user_id=instance.user_id)
       for address in addresses:
