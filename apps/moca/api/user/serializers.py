@@ -174,15 +174,6 @@ class UserSerializer(serializers.ModelSerializer):
     send_verification_mail(user)
     return user
 
-  def update(self, instance, validated_data):
-    if validated_data.get('password'):
-      password = validated_data.pop('password')
-      instance.set_password(password)
-      instance.save()
-
-    super(self.__class__, self).update(instance, validated_data)
-    return instance
-
   def to_representation(self, obj):
     representation = super().to_representation(obj)
     profile_representation = representation.pop('profile_info')
@@ -228,11 +219,6 @@ class PatientSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     user_data = validated_data.pop('user', None)
     if user_data:
-      if user_data.get('password'):
-        password = user_data.pop('password')
-        instance.user.set_password(password)
-        instance.user.save()
-
       user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True,
                                        context=self.context)
 
