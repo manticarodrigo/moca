@@ -16,7 +16,7 @@ class AddressSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     user = self.context['request'].user
 
-    if validated_data['primary']:
+    if validated_data['primary'] and user.type == User.THERAPIST_TYPE:
       therapist = Therapist.objects.get(user=user)
       therapist.primary_location = validated_data['location']
       therapist.save()
