@@ -19,7 +19,7 @@ from moca.api.payment.serializers import PaymentSerializer
 from moca.api.util.Validator import RequestValidator
 from moca.models import Price, Injury, TherapistCertification
 from moca.models.address import Address
-from moca.models.user import Patient, Therapist, AwayDays
+from moca.models.user import Patient, Therapist, AwayDays, Device
 from moca.models.verification import EmailVerification
 from moca.services import canned_messages
 from moca.services.emails import send_email, send_verification_mail
@@ -171,7 +171,12 @@ class UserSerializer(serializers.ModelSerializer):
     return email
 
   def create(self, validated_data):
+    device_token = validated_data.pop('device_token', None)
     user = User.objects.create_user(**validated_data)
+
+    if device_token:
+      Device.objects.create(user=user, token=device_token)
+
     send_verification_mail(user)
     return user
 
@@ -192,14 +197,11 @@ class UserSerializer(serializers.ModelSerializer):
     return representation
 
   def validate(self, data):
-    # TODO Add token logic
-    token = data.get('device_token')
-    if token:
-      data.pop('device_token')
-      print("TOKEN", token)
+    user_data = data.copy()
+    user_data.pop('device_token', None)
 
-    user = User(**data)
-    password = data.get('password')
+    user = User(**user_data)
+    password = user_data.get('password')
 
     if password:
       errors = dict()
