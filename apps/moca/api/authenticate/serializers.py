@@ -7,8 +7,10 @@ class LoginSerializer(serializers.Serializer):
   email = serializers.CharField()
   password = serializers.CharField()
   device_token = serializers.CharField(required=False)
+  token = serializers.CharField(max_length=300)
 
   def validate(self, data):
+    print("LOGIN", data)
     device_token = data.pop('device_token', None)
     user = authenticate(**data)
 

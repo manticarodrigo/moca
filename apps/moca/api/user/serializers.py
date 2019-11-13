@@ -131,17 +131,21 @@ class UserSerializer(serializers.ModelSerializer):
   email = serializers.EmailField(allow_blank=True)
   profile_info = serializers.SerializerMethodField(required=False)
   device_token = serializers.CharField(max_length=300, write_only=True, required=False)
+  token = serializers.CharField(max_length=300, read_only=True)
 
   class Meta:
     model = User
     fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type', 'email', 'password',
-              'is_active', 'addresses', 'payments', 'profile_info', 'image', 'device_token')
+              'is_active', 'addresses', 'payments', 'profile_info', 'image', 'device_token', 'token')
     extra_kwargs = {
       'password': {
         'write_only': True,
         'required': False
       },
     }
+
+  # def get_token(self, user):
+  #   return AuthToken.objects.create(user)[1]
 
   @swagger_serializer_method(serializer_or_field=AddressSerializer)
   def get_addresses(self, user):
@@ -177,11 +181,16 @@ class UserSerializer(serializers.ModelSerializer):
     return email
 
   def create(self, validated_data):
+    print("VAL", validated_data)
     device_token = validated_data.pop('device_token', None)
+    token = validated_data.pop('token', None)
     user = User.objects.create_user(**validated_data)
+    auth_token = AuthToken.objects.create(user)[1]
+    user.token = auth_token
+
 
     if device_token:
-      Device.objects.create(user=user, token=device_token)
+      Device.objects.create(user=user, token=device_token, auth_token=auth_token)
 
     send_verification_mail(user)
     return user
@@ -342,11 +351,6 @@ class TherapistSerializer(serializers.ModelSerializer):
 
 
 class TherapistCreateSerializer(TherapistSerializer):
-  token = serializers.SerializerMethodField()
-
-  def get_token(self, therapist):
-    return AuthToken.objects.create(therapist.user)[1]
-
   def create(self, validated_data):
     validated_data['user']['type'] = User.THERAPIST_TYPE
     user = UserSerializer(context=self.context).create(validated_data['user'])

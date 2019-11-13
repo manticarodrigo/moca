@@ -1,5 +1,6 @@
 import datetime
 
+from knox.models import AuthToken
 from django.conf import settings
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager, PermissionsMixin)
 from django.contrib.gis.db import models as gisModels
@@ -185,4 +186,5 @@ class AwayDays(models.Model):
 
 class Device(models.Model):
   user = models.ForeignKey(User, on_delete=models.CASCADE)
+  auth_token= models.ForeignKey(AuthToken, on_delete=models.CASCADE)
   token = models.CharField(max_length=50)
