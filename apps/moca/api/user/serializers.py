@@ -130,7 +130,7 @@ class UserSerializer(serializers.ModelSerializer):
   payments = PaymentSerializer(read_only=True, many=True)
   email = serializers.EmailField(allow_blank=True)
   profile_info = serializers.SerializerMethodField(required=False)
-  device_token = serializers.CharField(max_length=300, write_only=True)
+  device_token = serializers.CharField(max_length=300, write_only=True, required=False)
 
   class Meta:
     model = User
@@ -193,8 +193,11 @@ class UserSerializer(serializers.ModelSerializer):
 
   def validate(self, data):
     # TODO Add token logic
-    token = data.pop('device_token')
-    print("TOKEN", token)
+    token = data.get('device_token')
+    if token:
+      data.pop('device_token')
+      print("TOKEN", token)
+
     user = User(**data)
     password = data.get('password')
 

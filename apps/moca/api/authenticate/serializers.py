@@ -5,12 +5,14 @@ from rest_framework import serializers
 class LoginSerializer(serializers.Serializer):
   email = serializers.CharField()
   password = serializers.CharField()
-  device_token = serializers.CharField()
+  device_token = serializers.CharField(required=False)
 
-
-# TODO Add token logic
+  # TODO Add token logic
   def validate(self, data):
-    token = data['device_token']
+    token = data.get('device_token')
+    if token:
+      print("TOKEN", token)
+
     user = authenticate(**data)
     if user and user.is_active:
       return user
