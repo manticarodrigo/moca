@@ -136,7 +136,8 @@ class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
     fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type', 'email', 'password',
-              'is_active', 'addresses', 'payments', 'profile_info', 'image', 'device_token', 'token')
+              'is_active', 'addresses', 'payments', 'profile_info', 'image', 'device_token',
+              'token')
     extra_kwargs = {
       'password': {
         'write_only': True,
@@ -181,16 +182,14 @@ class UserSerializer(serializers.ModelSerializer):
     return email
 
   def create(self, validated_data):
-    print("VAL", validated_data)
     device_token = validated_data.pop('device_token', None)
     token = validated_data.pop('token', None)
     user = User.objects.create_user(**validated_data)
-    auth_token = AuthToken.objects.create(user)[1]
-    user.token = auth_token
-
+    auth_token = AuthToken.objects.create(user)
+    user.token = auth_token[1]
 
     if device_token:
-      Device.objects.create(user=user, token=device_token, auth_token=auth_token)
+      Device.objects.create(user=user, token=device_token, auth_token=auth_token[0])
 
     send_verification_mail(user)
     return user
