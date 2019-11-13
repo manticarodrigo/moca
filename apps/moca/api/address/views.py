@@ -22,7 +22,7 @@ class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
     except:
       raise APIException('No such address')
 
-    count = Address.objects.filter(user=request.user).count()
+    count = Address.objects.filter(user=request.user, archive=False).count()
 
     if count == 1:
       raise APIException('Can not delete last address')
