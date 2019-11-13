@@ -29,4 +29,4 @@ class CanEnd(IsParticipant):
   message = 'Invalid action'
 
   def has_object_permission(self, request, view, appointment):
-    return appointment.status == 'in-progess'
+    return appointment.status == 'in-progress'

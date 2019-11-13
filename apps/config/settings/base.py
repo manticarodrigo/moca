@@ -51,25 +51,25 @@ LOGGING = {
       'class': 'logging.StreamHandler',
     }
   },
-  # 'loggers': {
-  #   'moca.userapi': {
-  #     'level': 'DEBUG',
-  #     'handlers': ['console']
-  #   },
-  #   'django': {
-  #     'level': 'DEBUG',
-  #     'handlers': ['console'],
-  #   },
-  #   'django.server': {
-  #     'level': 'DEBUG',
-  #     'handlers': ['console'],
-  #   },
-  #   'django.request': {
-  #     'handlers': ['console'],
-  #     'level': 'DEBUG',  # change debug level as appropiate
-  #     'propagate': False,
-  #   },
-  # }
+  'loggers': {
+    # 'moca.userapi': {
+    #   'level': 'DEBUG',
+    #   'handlers': ['console']
+    # },
+    # 'django': {
+    #   'level': 'DEBUG',
+    #   'handlers': ['console'],
+    # },
+    # 'django.server': {
+    #   'level': 'DEBUG',
+    #   'handlers': ['console'],
+    # },
+    'django.request': {
+      'handlers': ['console'],
+      'level': 'DEBUG',  # change debug level as appropiate
+      'propagate': False,
+    },
+  }
 }
 
 REST_FRAMEWORK = {

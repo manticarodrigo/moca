@@ -2,16 +2,19 @@ from functools import reduce
 
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, serializers
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_yasg.utils import swagger_auto_schema
 
 from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
 from moca.api.appointment.serializers import (AppointmentCreateUpdateSerializer,
                                               AppointmentSerializer)
+from moca.models import Device
 from moca.models.appointment import (Appointment, AppointmentRequest, AppointmentCancellation,
                                      Review)
+from moca.services.notification.push import send_push_message
 
 from .permissions import CanCancel, CanStart, CanEnd
 
@@ -109,9 +112,15 @@ class AppointmentRequestView(APIView):
       raise APIException('Incorrect request status')
 
 
+class AppointmentCancellationSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = AppointmentCancellation
+    fields = ['type']
+
 class AppointmentCancelView(APIView):
   permission_classes = [CanCancel]
 
+  @swagger_auto_schema(request_body=AppointmentCancellationSerializer, responses={200: 'Cancelled'})
   def post(self, request, appointment_id):
     try:
       appointment = Appointment.objects.get(id=appointment_id)
@@ -143,6 +152,19 @@ class AppointmentStartView(APIView):
     appointment.status = 'in-progress'
     appointment.save()
 
+    devices = Device.objects.filter(user=appointment.patient.user)
+    text = f'Your appointment with {request.user.first_name} {request.user.last_name} has started.'
+
+    for device in devices:
+      send_push_message(device.token, text, {
+        'type': 'start_appointment',
+        'params': {
+          'user': {
+            'id': request.user.id
+          }
+        }
+      })
+
     return Response("Started", status=status.HTTP_200_OK)
 
 
@@ -159,5 +181,18 @@ class AppointmentEndView(APIView):
 
     appointment.status = 'completed'
     appointment.save()
+
+    devices = Device.objects.filter(user=appointment.patient.user)
+    text = f'Your appointment with {request.user.first_name} {request.user.last_name} has ended.'
+
+    for device in devices:
+      send_push_message(device.token, text, {
+        'type': 'end_appointment',
+        'params': {
+          'user': {
+            'id': request.user.id
+          }
+        }
+      })
 
     return Response("Ended", status=status.HTTP_200_OK)

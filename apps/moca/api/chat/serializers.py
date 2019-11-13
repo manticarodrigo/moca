@@ -9,8 +9,9 @@ from moca.api.appointment.serializers import (AppointmentRequestCreateSerializer
                                               AppointmentRequestSerializer)
 from moca.api.user.serializers import UserSnippetSerializer
 from moca.models import (Address, AppointmentRequest, AppointmentRequestMessage, Conversation,
-                         ImageMessage, Message, TextMessage, LastViewed)
+                         ImageMessage, Message, TextMessage, LastViewed, Device)
 from moca.utils.serializer_helpers import combineSerializers
+from moca.services.notification.push import send_push_message
 
 
 class TextMessageSerializer(serializers.ModelSerializer):
@@ -109,6 +110,20 @@ class MessageSerializer(serializers.ModelSerializer):
                                                appointment_request=appointment_request)
     else:
       raise APIException('Invalid message type')
+
+    
+    devices = Device.objects.filter(user=target_user_id)
+    text = f'New message from {request.user.first_name} {request.user.last_name}.'
+
+    for device in devices:
+      send_push_message(device.token, text, {
+        'type': 'new_message',
+        'params': {
+          'user': {
+            'id': user_id
+          }
+        }
+      })
 
     return message
 
