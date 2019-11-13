@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 import os
+from datetime import timedelta
 
 AUTH_USER_MODEL = 'moca.User'
 
@@ -141,6 +142,11 @@ AUTH_PASSWORD_VALIDATORS = [
   #   'NAME': 'moca.validators.passwords.SymbolValidator',
   # },
 ]
+
+REST_KNOX = {
+  'TOKEN_TTL': timedelta(weeks=1),
+  'AUTO_REFRESH': True,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
