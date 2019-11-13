@@ -25,10 +25,10 @@ class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
     count = Address.objects.filter(user=request.user, archive=False).count()
 
     if count == 1:
-      raise APIException('Can not delete last address')
+      raise APIException('Can not delete last address.')
 
     if to_delete.primary:
-      raise APIException('Can not delete primary address')
+      raise APIException('Can not delete active address.')
 
     to_delete.archive = True
     to_delete.save()
