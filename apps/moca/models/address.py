@@ -15,6 +15,7 @@ class Address(models.Model):
   # Actual coordinates
   primary = models.BooleanField()
   location = gisModels.PointField()
+  archive = models.BooleanField(default=False)
   user = models.ForeignKey(settings.AUTH_USER_MODEL,
                            related_name="addresses",
                            on_delete=models.CASCADE,

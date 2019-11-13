@@ -11,7 +11,7 @@ from moca.services.emails import send_email
 class AddressSerializer(serializers.ModelSerializer):
   class Meta:
     model = Address
-    exclude = ['user']
+    exclude = ['user', 'archive']
 
   def update(self, instance, validated_data):
     user = self.context['request'].user

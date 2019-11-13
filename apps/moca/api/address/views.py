@@ -1,8 +1,9 @@
-from rest_framework import generics
-
-from moca.models.address import Address
 from .serializers import AddressSerializer
 from rest_framework.exceptions import APIException
+from rest_framework import generics, status
+from rest_framework.response import Response
+
+from moca.models.address import Address
 
 
 class AddressCreateView(generics.CreateAPIView):
@@ -17,9 +18,9 @@ class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
   def delete(self, request, *args, **kwargs):
     address_id = kwargs.get("address_id")
     try:
-      to_delete = Address.objects.get(id=address_id)
+      to_delete = Address.objects.get(id=address_id, archive=False)
     except:
-      return self.destroy(request, *args, **kwargs)
+      raise APIException('No such address')
 
     count = Address.objects.filter(user=request.user).count()
 
@@ -29,4 +30,7 @@ class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
     if to_delete.primary:
       raise APIException('Can not delete primary address')
 
-    return self.destroy(request, *args, **kwargs)
+    to_delete.archive = True
+    to_delete.save()
+
+    return Response(status=status.HTTP_200_OK)

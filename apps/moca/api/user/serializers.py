@@ -126,7 +126,7 @@ class UserSnippetSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-  addresses = AddressSerializer(read_only=True, many=True)
+  addresses = serializers.SerializerMethodField(read_only=True)
   payments = PaymentSerializer(read_only=True, many=True)
   email = serializers.EmailField(allow_blank=True)
   profile_info = serializers.SerializerMethodField(required=False)
@@ -142,6 +142,12 @@ class UserSerializer(serializers.ModelSerializer):
         'required': False
       },
     }
+
+  @swagger_serializer_method(serializer_or_field=AddressSerializer)
+  def get_addresses(self, user):
+    addresses = Address.objects.filter(user=user, archive=False)
+    serializer = AddressSerializer(instance=addresses, many=True)
+    return serializer.data
 
   @swagger_serializer_method(serializer_or_field=combineSerializers(
     PatientProfileSerializer,
