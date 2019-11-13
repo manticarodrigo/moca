@@ -130,11 +130,12 @@ class UserSerializer(serializers.ModelSerializer):
   payments = PaymentSerializer(read_only=True, many=True)
   email = serializers.EmailField(allow_blank=True)
   profile_info = serializers.SerializerMethodField(required=False)
+  device_token = serializers.CharField(max_length=300, write_only=True)
 
   class Meta:
     model = User
     fields = ('id', 'first_name', 'last_name', 'gender', 'created_at', 'type', 'email', 'password',
-              'is_active', 'addresses', 'payments', 'profile_info', 'image')
+              'is_active', 'addresses', 'payments', 'profile_info', 'image', 'device_token')
     extra_kwargs = {
       'password': {
         'write_only': True,
@@ -191,6 +192,9 @@ class UserSerializer(serializers.ModelSerializer):
     return representation
 
   def validate(self, data):
+    # TODO Add token logic
+    token = data.pop('device_token')
+    print("TOKEN", token)
     user = User(**data)
     password = data.get('password')
 
@@ -227,7 +231,9 @@ class PatientSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     user_data = validated_data.pop('user', None)
     if user_data:
-      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True,
+      user_serializer = UserSerializer(instance=instance.user,
+                                       data=user_data,
+                                       partial=True,
                                        context=self.context)
 
       if user_serializer.is_valid():
@@ -303,7 +309,9 @@ class TherapistSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     if validated_data.get('user'):
       user_data = validated_data.pop('user')
-      user_serializer = UserSerializer(instance=instance.user, data=user_data, partial=True,
+      user_serializer = UserSerializer(instance=instance.user,
+                                       data=user_data,
+                                       partial=True,
                                        context=self.context)
       if user_serializer.is_valid():
         user_serializer.save()
