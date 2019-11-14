@@ -3,3 +3,4 @@ python-pip
 postgresql-libs
 gcc
 gdal
+redis

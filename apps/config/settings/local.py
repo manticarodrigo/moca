@@ -19,3 +19,6 @@ DATABASES = {
 }
 
 ALLOWED_HOSTS = ['*']
+
+CELERY_BROKER_URL = 'redis://moca_redis_db:6379'
+CELERY_RESULT_BACKEND = 'redis://moca_redis_db:6379'

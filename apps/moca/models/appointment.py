@@ -1,9 +1,12 @@
+import datetime
 from django.db import models
+from django.db.models import signals
 from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from moca.models import Address
+from moca.tasks import send_appt_start_notification
 
 
 class Appointment(models.Model):
@@ -21,6 +24,23 @@ class Appointment(models.Model):
   price = models.IntegerField(validators=[MinValueValidator(0)])
   created_at = models.DateTimeField(auto_now_add=True)
   modified_at = models.DateTimeField(auto_now_add=True)
+
+
+def appt_start_notification(instance, *args, **kwargs):
+  appointment = instance
+  appointment_id = appointment.id
+  therapist_id = appointment.therapist_id
+  patient_id = appointment.patient_id
+
+  notification_time = appointment.start_time - datetime.timedelta(minutes=30)
+  # Uncomment for testing celery and notifications
+  # notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+
+  send_appt_start_notification.apply_async((appointment_id, therapist_id, patient_id),
+                                           eta=notification_time)
+
+
+signals.post_save.connect(appt_start_notification, sender=Appointment)
 
 
 class AppointmentRequest(models.Model):

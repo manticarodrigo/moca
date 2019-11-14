@@ -4,6 +4,31 @@ volumes:
   moca-db-volume:
 
 services:
+  redis:
+    container_name: 'moca_redis_db'
+    image: 'redis:5.0-alpine'
+    restart: always
+    command: redis-server
+    volumes:
+      - moca-db-volume:/var/lib/redis/data
+    expose:
+      - 6379 
+    ports:
+      - 6379:6379
+
+  celery:
+    build: .
+    command: celery worker -A moca --loglevel=info
+    command: |
+      bash -c "
+      ./integration/wait-for-it/wait-for-it.sh moca_redis_db:6379 &&
+      cd apps &&
+      celery worker -A moca --loglevel=info"
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+    
   db:
     container_name: 'moca_db'
     image: mdillon/postgis
@@ -38,3 +63,4 @@ services:
       - "6899:6899"
     depends_on:
       - db
+      - celery

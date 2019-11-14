@@ -181,3 +181,7 @@ def get_service_host():
 EMAIL_VERIFICATION = False
 
 SWAGGER_SETTINGS = {'DISPLAY_OPERATION_ID': False}
+
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
