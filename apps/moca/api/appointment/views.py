@@ -117,10 +117,12 @@ class AppointmentCancellationSerializer(serializers.ModelSerializer):
     model = AppointmentCancellation
     fields = ['type']
 
+
 class AppointmentCancelView(APIView):
   permission_classes = [CanCancel]
 
-  @swagger_auto_schema(request_body=AppointmentCancellationSerializer, responses={200: 'Cancelled'})
+  @swagger_auto_schema(request_body=AppointmentCancellationSerializer,
+                       responses={200: 'Cancelled'})
   def post(self, request, appointment_id):
     try:
       appointment = Appointment.objects.get(id=appointment_id)

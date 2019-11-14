@@ -6,7 +6,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from moca.models import Address
-from moca.tasks import send_appt_start_notification
 
 
 class Appointment(models.Model):
@@ -26,21 +25,24 @@ class Appointment(models.Model):
   modified_at = models.DateTimeField(auto_now_add=True)
 
 
-def appt_start_notification(instance, *args, **kwargs):
+def post_save_appointment(instance, *args, **kwargs):
+  from moca.tasks import send_appt_start_notification, send_appt_review_notification
   appointment = instance
   appointment_id = appointment.id
   therapist_id = appointment.therapist_id
   patient_id = appointment.patient_id
 
-  notification_time = appointment.start_time - datetime.timedelta(minutes=30)
+  start_notification_time = appointment.start_time - datetime.timedelta(minutes=30)
+  review_notification_time = appointment.end_time
   # Uncomment for testing celery and notifications
-  # notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+  start_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+  review_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
 
-  send_appt_start_notification.apply_async((appointment_id, therapist_id, patient_id),
-                                           eta=notification_time)
+  send_appt_start_notification.apply_async((appointment_id, ), eta=start_notification_time)
+  send_appt_review_notification.apply_async((appointment_id, ), eta=review_notification_time)
 
 
-signals.post_save.connect(appt_start_notification, sender=Appointment)
+signals.post_save.connect(post_save_appointment, sender=Appointment)
 
 
 class AppointmentRequest(models.Model):

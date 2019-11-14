@@ -189,7 +189,7 @@ class UserSerializer(serializers.ModelSerializer):
     user.token = auth_token[1]
 
     if device_token:
-      Device.objects.create(user=user, token=device_token, auth_token=auth_token[0])
+      Device.objects.create(user=user, token=device_token)
 
     send_verification_mail(user)
     return user

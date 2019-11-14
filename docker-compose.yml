@@ -18,12 +18,11 @@ services:
 
   celery:
     build: .
-    command: celery worker -A moca --loglevel=info
     command: |
       bash -c "
       ./integration/wait-for-it/wait-for-it.sh moca_redis_db:6379 &&
       cd apps &&
-      celery worker -A moca --loglevel=info"
+      celery worker -A config --loglevel=info"
     volumes:
       - ./:/app
     depends_on:
@@ -54,6 +53,7 @@ services:
     command: |
       bash -c "
       ./integration/wait-for-it/wait-for-it.sh moca_db:5432 &&
+      python apps/manage.py makemigrations moca &&
       python apps/manage.py migrate &&
       python apps/manage.py runserver 0.0.0.0:8000"
     volumes:
