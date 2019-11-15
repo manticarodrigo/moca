@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 from moca.models.payment import Payment, PaymentProfile, Card, Bank, \
   PAYMENT_TYPE_BANK, PAYMENT_TYPE_CARD
-from moca.services.stripe import create_customer, add_payment, charge_customer
+from moca.services.stripe import create_customer, add_payment, charge_customer, set_primary_payment
 
 
 def get_model_and_serializer_by_type(type):
@@ -43,6 +43,29 @@ class PaymentSerializer(serializers.ModelSerializer):
     payment_info = payment_model.objects.get(payment=obj)
     return payment_serializer(payment_info).data
 
+  def update(self, instance, validated_data):
+    payment = instance
+    if validated_data['primary']:
+      customer_id = payment.payment_profile.stripe_customer_id
+      if payment.type == PAYMENT_TYPE_CARD:
+        payment_token = payment.card.token
+
+      if payment.type == PAYMENT_TYPE_BANK:
+        payment_token = payment.bank.token
+
+      if payment_token:
+        try:
+          set_primary_payment(customer_id, payment_token)
+        except:
+          pass
+
+      payments = Payment.objects.filter(user_id=instance.user_id)
+      for payment in payments:
+        payment.primary = False
+        payment.save()
+
+    return super(PaymentSerializer, self).update(instance, validated_data)
+
   def create(self, validated_data):
     request = self.context['request']
     user = request.user
@@ -69,8 +92,10 @@ class PaymentSerializer(serializers.ModelSerializer):
       customer = create_customer(email=user.email, name=user.get_full_name(), token=token)
       payment_profile = PaymentProfile.objects.create(user=user, stripe_customer_id=customer.id)
 
-    payment = Payment.objects.create(**validated_data, payment_profile=payment_profile)
-
+    primary = Payment.objects.filter(user=request.user).count() == 0
+    payment = Payment.objects.create(**validated_data,
+                                     payment_profile=payment_profile,
+                                     primary=primary)
     payment_data = request.data[payment_type]
 
     # Support future updates to model

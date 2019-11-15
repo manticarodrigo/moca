@@ -42,6 +42,15 @@ def remove_payment(customer_id, token):
     raise APIException('STRIPE ISSUE')
 
 
+def set_primary_payment(customer_id, token):
+  try:
+    customer = stripe.Customer.modify(customer_id, default_source=token)
+    return customer
+  except Exception as e:
+    print('STRIPE UPDATE PRIMARY PAYMENT EXCEPTION', e)
+    raise APIException('STRIPE ISSUE')
+
+
 # Amount is in cents!!!
 def charge_customer(id, amount, description, currency='usd'):
   try:

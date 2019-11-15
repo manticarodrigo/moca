@@ -11,6 +11,7 @@ class AddressCreateView(generics.CreateAPIView):
 
 
 class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
+  # TODO add permission!!!!
   lookup_url_kwarg = 'address_id'
   queryset = Address.objects.all()
   serializer_class = AddressSerializer

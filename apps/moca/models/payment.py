@@ -4,6 +4,7 @@ from django.db import models
 from django.dispatch import receiver
 from django.db.models import signals
 from moca.services.stripe import remove_payment
+from rest_framework.exceptions import ValidationError
 
 PAYMENT_TYPE_BANK = 'bank_account'
 PAYMENT_TYPE_CARD = 'card'
@@ -38,8 +39,12 @@ class Payment(models.Model):
 
 
 @receiver(signals.pre_delete, sender=Payment)
-def payment_post_delete(sender, instance, *args, **kwargs):
+def payment_pre_delete(sender, instance, *args, **kwargs):
   payment = instance
+
+  if payment.primary:
+    raise ValidationError('Can not delete primary payment.')
+
   customer_id = payment.payment_profile.stripe_customer_id
   if payment.type == PAYMENT_TYPE_CARD:
     payment_token = payment.card.token

@@ -14,7 +14,7 @@ class PaymentListCreateView(generics.ListCreateAPIView):
     return Payment.objects.filter(user=self.request.user)
 
 
-class PaymentDetailView(generics.DestroyAPIView):
+class PaymentDetailView(generics.RetrieveUpdateDestroyAPIView):
   permission_classes = [IsOwner]
   lookup_url_kwarg = 'payment_id'
   queryset = Payment.objects.all()
