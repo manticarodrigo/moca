@@ -23,16 +23,6 @@ def get_customer(id):
     raise APIException('STRIPE ISSUE')
 
 
-def update_customer(id, **args):
-  try:
-    token = args.pop('token')
-    customer = stripe.Customer.modify(id, source=token, **args)
-    return customer
-  except Exception as e:
-    print('STRIPE UPDATE EXCEPTION', e)
-    raise APIException('STRIPE ISSUE')
-
-
 def add_payment(id, **args):
   try:
     token = args.pop('token')
@@ -40,6 +30,15 @@ def add_payment(id, **args):
     return customer
   except Exception as e:
     print('STRIPE ADD PAYMENT EXCEPTION', e)
+    raise APIException('STRIPE ISSUE')
+
+
+def remove_payment(customer_id, token):
+  try:
+    customer = stripe.Customer.delete_source(customer_id, token)
+    return customer
+  except Exception as e:
+    print('STRIPE DELETE PAYMENT EXCEPTION', e)
     raise APIException('STRIPE ISSUE')
 
 

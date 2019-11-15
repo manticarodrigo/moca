@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 from moca.models.payment import Payment, PaymentProfile, Card, Bank, \
   PAYMENT_TYPE_BANK, PAYMENT_TYPE_CARD
-from moca.services.stripe import create_customer, update_customer, add_payment, charge_customer
+from moca.services.stripe import create_customer, add_payment, charge_customer
 
 
 def get_model_and_serializer_by_type(type):
@@ -69,12 +69,14 @@ class PaymentSerializer(serializers.ModelSerializer):
       customer = create_customer(email=user.email, name=user.get_full_name(), token=token)
       payment_profile = PaymentProfile.objects.create(user=user, stripe_customer_id=customer.id)
 
-    payment = Payment.objects.create(**validated_data)
+    payment = Payment.objects.create(**validated_data, payment_profile=payment_profile)
 
     payment_data = request.data[payment_type]
+
     # Support future updates to model
     model_fields = [f.name for f in payment_model._meta.get_fields() if not f.auto_created]
     fields = {field: payment_data[field] for field in model_fields if field in payment_data}
+    fields["token"] = payment_data["id"]
     payment_model.objects.create(**fields, payment=payment, user=user)
 
     return payment
