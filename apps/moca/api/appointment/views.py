@@ -91,22 +91,62 @@ class AppointmentRequestView(APIView):
                                                                  'request': request
                                                                }).data
         appointment_request.save()
+
+        devices = Device.objects.filter(user=appointment_request.therapist.user)
+        text = f'Your appointment request for {request.user.first_name} {request.user.last_name} was accepted.'
+
+        for device in devices:
+          send_push_message(device.token, text, {
+            'type': 'new_message',
+            'params': {
+              'user': {
+                'id': request.user.id
+              }
+            }
+          })
+
         return Response(serialized_created_appointment, status.HTTP_200_OK)
 
       else:
         raise APIException('Appointment request handler issue')
+
+    elif request_status == 'reject':
+      appointment_request.status = 'rejected'
+      appointment_request.save()
+
+      devices = Device.objects.filter(user=appointment_request.therapist.user)
+      text = f'Your appointment request for {request.user.first_name} {request.user.last_name} was rejected.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'new_message',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
+          }
+        })
+      return Response("Rejected", status=status.HTTP_200_OK)
 
     elif request_status == 'cancel':
       if self.request.user.id != appointment_request.therapist_id:
         raise APIException('Only therapist can cancel')
       appointment_request.status = 'cancelled'
       appointment_request.save()
-      return Response("Cancelled", status=status.HTTP_200_OK)
 
-    elif request_status == 'reject':
-      appointment_request.status = 'rejected'
-      appointment_request.save()
-      return Response("Rejected", status=status.HTTP_200_OK)
+      devices = Device.objects.filter(user=appointment_request.patient.user)
+      text = f'Your appointment with {request.user.first_name} {request.user.last_name} was cancelled.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'new_message',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
+          }
+        })
+      return Response("Cancelled", status=status.HTTP_200_OK)
 
     else:
       raise APIException('Incorrect request status')
