@@ -7,14 +7,16 @@ from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from drf_yasg.utils import swagger_auto_schema
+from django.utils import timezone
 
 from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
 from moca.api.appointment.serializers import (AppointmentCreateUpdateSerializer,
                                               AppointmentSerializer)
-from moca.models import Device
+from moca.models import Device, User, PaymentProfile, Issue
 from moca.models.appointment import (Appointment, AppointmentRequest, AppointmentCancellation,
                                      Review)
 from moca.services.notification.push import send_push_message
+from moca.services.stripe import charge_customer
 
 from .permissions import CanCancel, CanStart, CanEnd
 
@@ -39,6 +41,19 @@ class AppointmentListView(generics.ListAPIView):
     end = query_params.get("end")
     if end:
       queries.append(Q(end_time__lte=end))
+
+    show_cancelled = query_params.get("showCancelled")
+    only_cancelled = query_params.get("onlyCancelled")
+    only_completed = query_params.get("onlyCompleted")
+
+    if not show_cancelled == "true":
+      if only_cancelled == "true":
+        queries.append(Q(status="cancelled"))
+      else:
+        queries.append(~Q(status="cancelled"))
+
+    if only_completed == "true":
+      queries.append(Q(status="completed"))
 
     query = reduce(lambda x, y: x & y, queries)
 
@@ -164,6 +179,7 @@ class AppointmentCancelView(APIView):
   @swagger_auto_schema(request_body=AppointmentCancellationSerializer,
                        responses={200: 'Cancelled'})
   def post(self, request, appointment_id):
+    user = request.user
     try:
       appointment = Appointment.objects.get(id=appointment_id)
     except:
@@ -171,11 +187,31 @@ class AppointmentCancelView(APIView):
 
     self.check_object_permissions(self.request, appointment)
 
-    type = request.data.get('type')
-    AppointmentCancellation.objects.create(appointment=appointment, type=type, user=request.user)
+    type = request.data.get('type', 'standard')
+    AppointmentCancellation.objects.create(appointment=appointment, type=type, user=user)
 
     appointment.status = 'cancelled'
     appointment.save()
+
+    if user.type == User.PATIENT_TYPE:
+      cancellation_time = timezone.now()
+      start_time = appointment.start_time
+      penalty_time = start_time - timezone.timedelta(hours=24)
+
+      # charge customer 50%
+      if cancellation_time > penalty_time:
+        amount = int(appointment.price / 2 * 100)
+        description = "Moca cancellation fee"
+        try:
+          stripe_customer_id = PaymentProfile.objects.get(user=user).stripe_customer_id
+          charge_customer(stripe_customer_id, amount, description)
+        except Exception as e:
+          description = f"Cancellation payment of ${amount/100} failed."
+          Issue.objects.create(appointment=appointment,
+                               therapist=appointment.therapist,
+                               patient=appointment.patient,
+                               priority="high",
+                               description=description)
 
     return Response("Cancelled", status=status.HTTP_200_OK)
 
@@ -194,7 +230,8 @@ class AppointmentStartView(APIView):
     appointment.status = 'in-progress'
     appointment.save()
 
-    devices = Device.objects.filter(user=appointment.patient.user)
+    patient = appointment.patient.user
+    devices = Device.objects.filter(user=patient)
     text = f'Your appointment with {request.user.first_name} {request.user.last_name} has started.'
 
     for device in devices:
@@ -206,6 +243,16 @@ class AppointmentStartView(APIView):
           }
         }
       })
+
+    # Charge customer
+    amount = appointment.price * 100
+    description = "Moca appointment"
+    try:
+      stripe_customer_id = PaymentProfile.objects.get(user=patient).stripe_customer_id
+      charge_customer(stripe_customer_id, amount, description)
+    except Exception as e:
+      # TODO add issue
+      return Response("Payment Failed", status=status.HTTP_402_PAYMENT_REQUIRED)
 
     return Response("Started", status=status.HTTP_200_OK)
 

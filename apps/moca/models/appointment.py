@@ -35,8 +35,8 @@ def post_save_appointment(instance, *args, **kwargs):
   start_notification_time = appointment.start_time - datetime.timedelta(minutes=30)
   review_notification_time = appointment.end_time
   # Uncomment for testing celery and notifications
-  start_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
-  review_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+  # start_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+  # review_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
 
   send_appt_start_notification.apply_async((appointment_id, ), eta=start_notification_time)
   send_appt_review_notification.apply_async((appointment_id, ), eta=review_notification_time)

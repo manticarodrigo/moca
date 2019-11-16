@@ -1,5 +1,5 @@
 from .address import Address
-from .chat import (Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage, 
+from .chat import (Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage,
                    LastViewed)
 from .user import Patient, Therapist, User, Device, AwayDays
 from .prices import Price
@@ -9,3 +9,4 @@ from .payment import Payment, PaymentProfile, Card, Bank
 from .appointment import Appointment, AppointmentCancellation, AppointmentRequest, Review
 from .verification import EmailVerification
 from .app_availability import Area
+from .issue import Issue

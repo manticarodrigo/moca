@@ -3,11 +3,12 @@ from django.contrib import admin
 from .models import (Address, Conversation, Message, TextMessage, Patient, Therapist, AwayDays,
                      User, Device, Payment, Card, Bank, Price, AppointmentRequestMessage,
                      PaymentProfile, Review, Appointment, AppointmentRequest, Area, Injury,
-                     TherapistCertification, AppointmentCancellation)
+                     TherapistCertification, AppointmentCancellation, Issue)
 
 
 class AppointmentCancellationAdmin(admin.ModelAdmin):
-  readonly_fields = ('cancellation_time',)
+  readonly_fields = ('cancellation_time', )
+
 
 admin.site.register(User)
 admin.site.register(Address)
@@ -31,4 +32,4 @@ admin.site.register(Review)
 admin.site.register(Injury)
 admin.site.register(TherapistCertification)
 admin.site.register(Area)
-
+admin.site.register(Issue)
