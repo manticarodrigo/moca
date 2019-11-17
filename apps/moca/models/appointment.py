@@ -10,7 +10,8 @@ from moca.models import Address
 
 class Appointment(models.Model):
   STATUSES = [('in-progress', 'In Progress'), ('not-started', 'Not Started'),
-              ('completed', 'Completed'), ('cancelled', 'Cancelled')]
+              ('completed', 'Completed'), ('cancelled', 'Cancelled'),
+              ('payment-failed', 'Payment Failed')]
 
   patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
   therapist = models.ForeignKey('Therapist', on_delete=models.CASCADE)

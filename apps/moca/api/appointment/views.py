@@ -231,28 +231,54 @@ class AppointmentStartView(APIView):
     appointment.save()
 
     patient = appointment.patient.user
-    devices = Device.objects.filter(user=patient)
-    text = f'Your appointment with {request.user.first_name} {request.user.last_name} has started.'
-
-    for device in devices:
-      send_push_message(device.token, text, {
-        'type': 'start_appointment',
-        'params': {
-          'user': {
-            'id': request.user.id
-          }
-        }
-      })
 
     # Charge customer
-    amount = appointment.price * 100
+    amount = int(appointment.price * 100)
     description = "Moca appointment"
     try:
       stripe_customer_id = PaymentProfile.objects.get(user=patient).stripe_customer_id
       charge_customer(stripe_customer_id, amount, description)
     except Exception as e:
-      # TODO add issue
+      appointment.status = 'payment-failed'
+      appointment.save()
+
+      description = f"Appointment payment of ${amount/100} failed."
+      Issue.objects.create(appointment=appointment,
+                           therapist=appointment.therapist,
+                           patient=appointment.patient,
+                           priority="high",
+                           description=description)
+      payment_failed = True
+
+    devices = Device.objects.filter(user=patient)
+
+    if payment_failed:
+      # Send push notification to patient
+      text = f'Payment failed.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'failed_payment',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
+          }
+        })
       return Response("Payment Failed", status=status.HTTP_402_PAYMENT_REQUIRED)
+
+    else:
+      text = f'Your appointment with {request.user.first_name} {request.user.last_name} has started.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'start_appointment',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
+          }
+        })
 
     return Response("Started", status=status.HTTP_200_OK)
 
