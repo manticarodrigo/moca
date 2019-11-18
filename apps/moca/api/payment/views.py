@@ -1,7 +1,7 @@
 from rest_framework import permissions, generics
 
-from .serializers import PaymentSerializer, PaymentSerializer
-from moca.models.payment import Payment
+from .serializers import PaymentSerializer
+from moca.models import Payment
 
 
 class PaymentListCreateView(generics.ListCreateAPIView):

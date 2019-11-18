@@ -3,7 +3,7 @@ from rest_framework.exceptions import APIException
 from rest_framework import generics, status
 from rest_framework.response import Response
 
-from moca.models.address import Address
+from moca.models import Address
 
 
 class AddressCreateView(generics.CreateAPIView):

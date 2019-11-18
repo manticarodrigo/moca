@@ -1,9 +1,7 @@
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException, ValidationError
 
-from moca.models.address import Address
-from moca.models.app_availability import Area, UnavailableArea
-from moca.models.user import Therapist, User
+from moca.models import User, Therapist, Address, AvailableArea, UnavailableArea
 from moca.services import canned_messages
 from moca.services.emails import send_email
 
@@ -44,7 +42,7 @@ class AddressSerializer(serializers.ModelSerializer):
         therapist.primary_location = validated_data['location']
         therapist.save()
 
-    if not Area.objects.filter(state__iexact=validated_data['state']).exists():
+    if not AvailableArea.objects.filter(state__iexact=validated_data['state']).exists():
       if user.type == User.PATIENT_TYPE:
         send_email(user, **canned_messages.PATIENT_UNAVAILABLE)
       elif user.type == User.THERAPIST_TYPE:

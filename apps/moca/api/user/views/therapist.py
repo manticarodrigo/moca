@@ -2,85 +2,44 @@ import json
 from functools import reduce
 
 from django.db.models import Avg, Count, F, Q
-from django.shortcuts import get_object_or_404
-from rest_framework import generics, status
-from rest_framework.decorators import api_view
+from rest_framework import generics
 from rest_framework.exceptions import APIException
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser
 
-from moca.models import Address, EmailVerification, User, TherapistCertification
-from moca.models.prices import Price
-from moca.models.user import Patient, Therapist, AwayDays
-from moca.services import canned_messages
-from moca.services.emails import send_email
+from moca.models import Therapist, Address, Price, AwayPeriod, Certification
 
-from .permissions import IsSelfOrReadonly
-from .serializers import (LeaveSerializer, PatientCreateSerializer, PatientSerializer,
-                          PriceSerializer, TherapistCreateSerializer, TherapistSearchSerializer,
-                          TherapistSerializer, TherapistCertificationSerializer)
-
-
-@api_view(['GET'])
-def verify_email(request, token):
-  emailVerification = get_object_or_404(EmailVerification, token=token)
-  if emailVerification.status not in (EmailVerification.EXPIRED, EmailVerification.VERIFIED):
-    emailVerification.status = EmailVerification.VERIFIED
-    emailVerification.save()
-
-    emailVerification.user.is_active = True
-    emailVerification.user.save()
-
-    if emailVerification.user.type == User.PATIENT_TYPE:
-      send_email(emailVerification.user, **canned_messages.WELCOME_PATIENT)
-    elif emailVerification.user.type == User.THERAPIST_TYPE:
-      send_email(emailVerification.user, **canned_messages.WELCOME_PHYSICAL_THERAPIST)
-
-    # TODO this should be a rendered template or a redirect(which should open the app)
-    return Response("Verified")
-  else:
-    # TODO this should be a rendered template
-    return Response("Token expired")
-
-
-class PatientCreateView(generics.CreateAPIView):
-  """
-  POST {{ENV}}/api/user/patient
-  """
-  serializer_class = PatientCreateSerializer
-  permission_classes = []
-
-
-class PatientDetailView(generics.RetrieveUpdateAPIView):
-  """
-  GET, PATCH {{ENV}}/api/user/patient/{id}
-  """
-  serializer_class = PatientSerializer
-  queryset = Patient.objects
-  permission_classes = [IsSelfOrReadonly]
+from ..permissions import IsTherapistSelf, IsProfileSelfOrReadonly
+from ..serializers import (TherapistSerializer, TherapistCreateSerializer,
+                           TherapistSearchSerializer, CertificationSerializer, PriceSerializer,
+                           AwayPeriodSerializer)
 
 
 class TherapistCreateView(generics.CreateAPIView):
-  """
-  POST {{ENV}}/api/user/therapist/
-  """
   serializer_class = TherapistCreateSerializer
   permission_classes = []
 
 
 class TherapistDetailView(generics.RetrieveUpdateAPIView):
-  """
-  GET, PATCH {{ENV}}/api/user/therapist/{id}
-  """
   serializer_class = TherapistSerializer
   queryset = Therapist.objects
-  permission_classes = [IsSelfOrReadonly]
+  permission_classes = [IsProfileSelfOrReadonly]
 
+
+class TherapistCertificationCreateView(generics.CreateAPIView):
+  serializer_class = CertificationSerializer
+  queryset = Certification.objects
+  permission_classes = [IsTherapistSelf]
+  parser_classes = (MultiPartParser,)
+
+
+class TherapistCertificationDetailView(generics.RetrieveUpdateDestroyAPIView):
+  lookup_url_kwarg = 'certification_id'
+  serializer_class = CertificationSerializer
+  queryset = Certification.objects
+  permission_classes = [IsTherapistSelf]
+  parser_classes = (MultiPartParser,)
 
 class TherapistSearchView(generics.ListAPIView):
-  """
-  GET {{ENV}}/api/user/therapist/search/
-  """
   serializer_class = TherapistSearchSerializer
   queryset = Therapist.objects.annotate(Count('prices')).filter(prices__count__gt=0)
 
@@ -137,21 +96,21 @@ class TherapistSearchView(generics.ListAPIView):
     return therapists
 
 
-class TherapistLeaveListCreateView(generics.ListCreateAPIView):
-  serializer_class = LeaveSerializer
+class TherapistAwayPeriodListCreateView(generics.ListCreateAPIView):
+  serializer_class = AwayPeriodSerializer
 
   def get_queryset(self):
     user = self.request.user
-    return AwayDays.objects.filter(therapist_id=user.id)
+    return AwayPeriod.objects.filter(therapist_id=user.id)
 
 
-class TherapistLeaveDetailView(generics.RetrieveUpdateDestroyAPIView):
-  lookup_url_kwarg = 'leave_id'
-  serializer_class = LeaveSerializer
+class TherapistAwayPeriodDetailView(generics.RetrieveUpdateDestroyAPIView):
+  lookup_url_kwarg = 'period_id'
+  serializer_class = AwayPeriodSerializer
 
   def get_queryset(self):
     user = self.request.user
-    return AwayDays.objects.filter(therapist_id=user.id)
+    return AwayPeriod.objects.filter(therapist_id=user.id)
 
 
 class TherapistPricingListCreateView(generics.ListCreateAPIView):
@@ -169,20 +128,3 @@ class TherapistPricingDetailView(generics.RetrieveUpdateDestroyAPIView):
   def get_queryset(self):
     user = self.request.user
     return Price.objects.filter(therapist_id=user.id)
-
-
-class TherapistCertificationListCreateView(generics.ListCreateAPIView):
-  serializer_class = TherapistCertificationSerializer
-
-  def get_queryset(self):
-    user = self.request.user
-    return TherapistCertification.objects.filter(therapist_id=user.id)
-
-
-class TherapistCertificationDetailView(generics.RetrieveUpdateDestroyAPIView):
-  lookup_url_kwarg = 'certification_id'
-  serializer_class = TherapistCertificationSerializer
-
-  def get_queryset(self):
-    user = self.request.user
-    return TherapistCertification.objects.filter(therapist_id=user.id)

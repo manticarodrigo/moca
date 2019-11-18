@@ -13,6 +13,9 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
+
 from django.contrib import admin
 from django.urls import path, include
 
@@ -32,8 +35,14 @@ schema_view = get_schema_view(
 
 urlpatterns = [
   path('admin/', admin.site.urls),
-  path('api/auth/', include('knox.urls')),
   path('api/', include('moca.api.urls')),
   path('api/docs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
   path('api/docs/swagger.yaml', schema_view.without_ui(cache_timeout=0), name='schema-json'),
 ]
+
+if settings.DEBUG:
+  from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+  from django.conf.urls.static import static
+
+  urlpatterns += staticfiles_urlpatterns()
+  urlpatterns += static('media', document_root=settings.MEDIA_ROOT)

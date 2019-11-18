@@ -23,7 +23,7 @@ class TextMessageSerializer(serializers.ModelSerializer):
 class ImageMessageSerializer(serializers.ModelSerializer):
   class Meta:
     model = ImageMessage
-    fields = ['content']
+    fields = ['image']
 
 
 class AppointmentRequestMessageSerializer(serializers.ModelSerializer):

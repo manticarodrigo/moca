@@ -17,9 +17,8 @@ from rest_framework_gis.fields import GeoJsonDict
 from moca.api.address.serializers import AddressSerializer
 from moca.api.payment.serializers import PaymentSerializer
 from moca.api.util.Validator import RequestValidator
-from moca.models import Price, Injury, TherapistCertification
-from moca.models.address import Address
-from moca.models.user import Patient, Therapist, AwayDays, Device
+from moca.models import (Therapist, Patient, Address, Device, AwayPeriod, Price, Certification,
+                         CertificationImage, Injury, InjuryImage)
 from moca.models.verification import EmailVerification
 from moca.services import canned_messages
 from moca.services.emails import send_email, send_verification_mail
@@ -35,18 +34,18 @@ SESSION_TYPES = list(zip(*Price.SESSION_TYPES))[0]
 User = get_user_model()
 
 
-class LeaveSerializer(serializers.ModelSerializer):
+class AwayPeriodSerializer(serializers.ModelSerializer):
   class Meta:
-    model = AwayDays
+    model = AwayPeriod
     exclude = ['therapist']
 
   def create(self, validated_data):
     request = self.context['request']
     user_id = request.user.id
-    away_days = AwayDays.objects.create(therapist_id=user_id,
+    away_period = AwayPeriod.objects.create(therapist_id=user_id,
                                         start_date=validated_data.get('start_date'),
                                         end_date=validated_data.get('end_date'))
-    return away_days
+    return away_period
 
   def validate_therapist(self, value):
     RequestValidator.therapist(value)
@@ -62,24 +61,75 @@ class LeaveSerializer(serializers.ModelSerializer):
     RequestValidator.end_after_start(end_date, start_date)
     return data
 
+class InjuryImageSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = InjuryImage
+    fields = ('id', 'image',)
 
 class InjurySerializer(serializers.ModelSerializer):
+  images = InjuryImageSerializer(many=True, read_only=True)
+
   class Meta:
     model = Injury
-    fields = '__all__'
-
-
-class TherapistCertificationSerializer(serializers.ModelSerializer):
-  therapist = serializers.PrimaryKeyRelatedField(read_only=True)
-
-  class Meta:
-    model = TherapistCertification
-    fields = '__all__'
+    fields = ('id', 'title', 'description', 'images',)
 
   def create(self, validated_data):
+    images_data = self.context.get('view').request.FILES
     user = self.context['request'].user
-    validated_data['therapist_id'] = user.id
-    return super(TherapistCertificationSerializer, self).create(validated_data)
+    patient = Patient.objects.get(user=user)
+    injury = Injury.objects.create(patient=patient, **validated_data)
+
+    for image_data in images_data.getlist('images'):
+      InjuryImage.objects.create(injury=injury, image=image_data)
+    return injury
+
+  def update(self, instance, validated_data):
+    images_data = self.context.get('view').request.FILES
+
+    for image_data in images_data.getlist('images'):
+      InjuryImage.objects.create(injury=instance, image=image_data)
+
+    instance.title = validated_data.get('title', instance.title)
+    instance.description = validated_data.get('description', instance.description)
+
+    instance.save()
+
+    return instance
+
+class CertificationImageSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = CertificationImage
+    fields = ('id', 'image',)
+
+class CertificationSerializer(serializers.ModelSerializer):
+  images = CertificationImageSerializer(many=True, read_only=True)
+
+  class Meta:
+    model = Certification
+    fields = ('id', 'title', 'description', 'images',)
+
+  def create(self, validated_data):
+    images_data = self.context.get('view').request.FILES
+    user = self.context['request'].user
+    therapist = Therapist.objects.get(user=user)
+    certification = Certification.objects.create(therapist=therapist, **validated_data)
+
+    for image_data in images_data.getlist('images'):
+      CertificationImage.objects.create(certification=certification, image=image_data)
+    return certification
+
+  def update(self, instance, validated_data):
+    images_data = self.context.get('view').request.FILES
+
+    for image_data in images_data.getlist('images'):
+      CertificationImage.objects.create(certification=instance, image=image_data)
+
+    instance.title = validated_data.get('title', instance.title)
+    instance.description = validated_data.get('description', instance.description)
+
+    instance.save()
+
+    return instance
 
 
 class PriceSerializer(serializers.ModelSerializer):
@@ -102,17 +152,17 @@ class PriceSerializer(serializers.ModelSerializer):
 
 
 class PatientProfileSerializer(serializers.ModelSerializer):
-  injury = InjurySerializer(read_only=True)
+  injuries = InjurySerializer(many=True, required=False)
 
   class Meta:
     model = Patient
-    fields = ['injury']
+    exclude = ['user']
 
 
 class TherapistProfileSerializer(serializers.ModelSerializer):
   prices = PriceSerializer(many=True, required=False)
-  certifications = TherapistCertificationSerializer(many=True, required=False)
-  away_days = LeaveSerializer(many=True, required=False)
+  certifications = CertificationSerializer(many=True, required=False)
+  away_days = AwayPeriodSerializer(many=True, required=False)
 
   class Meta:
     model = Therapist
@@ -124,6 +174,10 @@ class UserSnippetSerializer(serializers.ModelSerializer):
     model = User
     fields = ('id', 'first_name', 'last_name', 'image')
 
+class UserImageSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = User
+    fields = ('image',)
 
 class UserSerializer(serializers.ModelSerializer):
   addresses = serializers.SerializerMethodField(read_only=True)
@@ -148,7 +202,7 @@ class UserSerializer(serializers.ModelSerializer):
   # def get_token(self, user):
   #   return AuthToken.objects.create(user)[1]
 
-  @swagger_serializer_method(serializer_or_field=AddressSerializer)
+  @swagger_serializer_method(serializer_or_field=AddressSerializer(many=True))
   def get_addresses(self, user):
     addresses = Address.objects.filter(user=user, archive=False)
     serializer = AddressSerializer(instance=addresses, many=True)
@@ -232,7 +286,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class PatientSerializer(serializers.ModelSerializer):
   user = UserSerializer()
-  injury = InjurySerializer(required=False)
+  injuries = InjurySerializer(read_only=True, many=True)
 
   class Meta:
     model = Patient
@@ -257,21 +311,6 @@ class PatientSerializer(serializers.ModelSerializer):
 
       if user_serializer.is_valid():
         user_serializer.save()
-
-    injury_data = validated_data.pop('injury', None)
-    if injury_data:
-      if hasattr(instance, 'injury'):
-        injury_serializer = InjurySerializer(instance=instance.injury,
-                                             data=injury_data,
-                                             partial=True)
-      else:
-        injury_data['patient'] = instance
-        injury_serializer = InjurySerializer(data=injury_data)
-
-      if injury_serializer.is_valid():
-        instance.injury = injury_serializer.save()
-      else:
-        raise APIException('Invalid Injury')
 
     instance.save()
 
@@ -311,7 +350,7 @@ class TherapistSearchSerializer(serializers.ModelSerializer):
 class TherapistSerializer(serializers.ModelSerializer):
   user = UserSerializer()
   prices = PriceSerializer(many=True, required=False)
-  certifications = TherapistCertificationSerializer(many=True, required=False)
+  certifications = CertificationSerializer(many=True, required=False)
 
   class Meta:
     model = Therapist

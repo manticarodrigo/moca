@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-from moca.models import Address
+from .user.address import Address
 
 
 class Appointment(models.Model):

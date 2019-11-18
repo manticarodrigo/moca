@@ -1,11 +1,7 @@
-from .address import Address
-from .chat import (Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage, 
+from .chat import (Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage,
                    LastViewed)
-from .user import Patient, Therapist, User, Device, AwayDays
-from .prices import Price
-from .injury import Injury
-from .therapist_certification import TherapistCertification
-from .payment import Payment, PaymentProfile, Card, Bank
+from .user import (Therapist, Patient, User, Address, Device, AwayPeriod, Payment, PaymentProfile,
+                   Card, Bank, Price, Certification, CertificationImage, Injury, InjuryImage)
 from .appointment import Appointment, AppointmentCancellation, AppointmentRequest, Review
 from .verification import EmailVerification
-from .app_availability import Area
+from .availability import AvailableArea, UnavailableArea

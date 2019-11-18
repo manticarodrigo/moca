@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class Area(models.Model):
+class AvailableArea(models.Model):
   state = models.CharField(max_length=2)
 
 

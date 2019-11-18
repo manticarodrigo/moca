@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 import os
+import socket
+from os.path import join
 from datetime import timedelta
 
 AUTH_USER_MODEL = 'moca.User'
@@ -161,10 +163,22 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
+ # Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.0/howto/static-files/
+STATIC_ROOT = os.path.normpath(join(os.path.dirname(BASE_DIR), 'static'))
 STATIC_URL = '/static/'
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
+# Media files
+HOST_ADDR = '192.168.1.156:8000' # socket.gethostbyname('host.docker.internal')
+MEDIA_ROOT = join(os.path.dirname(BASE_DIR), 'media')
+MEDIA_URL = 'http://' + HOST_ADDR + '/media/'
+
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400
+
 # APPEND_SLASH=False
 
 EMAIL_USE_TLS = True
