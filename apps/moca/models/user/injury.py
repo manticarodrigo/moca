@@ -11,6 +11,7 @@ class Injury(models.Model):
   def __str__(self):
     return f'Patient: {self.patient.user.first_name} Injury ID: {self.id}'
 
+
 class InjuryImage(models.Model):
   injury = models.ForeignKey(Injury, on_delete=models.CASCADE, related_name="images")
   image = models.ImageField(upload_to='injuries',)

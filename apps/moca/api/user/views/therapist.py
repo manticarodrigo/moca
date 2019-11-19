@@ -8,7 +8,7 @@ from rest_framework.parsers import MultiPartParser
 
 from moca.models import Therapist, Address, Price, AwayPeriod, Certification
 
-from ..permissions import IsTherapistSelf, IsProfileSelfOrReadonly
+from ..permissions import IsObjectUserSelfOrReadonly, IsObjectTherapistSelfOrReadonly
 from ..serializers import (TherapistSerializer, TherapistCreateSerializer,
                            TherapistSearchSerializer, CertificationSerializer, PriceSerializer,
                            AwayPeriodSerializer)
@@ -22,13 +22,13 @@ class TherapistCreateView(generics.CreateAPIView):
 class TherapistDetailView(generics.RetrieveUpdateAPIView):
   serializer_class = TherapistSerializer
   queryset = Therapist.objects
-  permission_classes = [IsProfileSelfOrReadonly]
+  permission_classes = [IsObjectUserSelfOrReadonly]
 
 
 class TherapistCertificationCreateView(generics.CreateAPIView):
   serializer_class = CertificationSerializer
   queryset = Certification.objects
-  permission_classes = [IsTherapistSelf]
+  permission_classes = [IsObjectTherapistSelfOrReadonly]
   parser_classes = (MultiPartParser,)
 
 
@@ -36,7 +36,7 @@ class TherapistCertificationDetailView(generics.RetrieveUpdateDestroyAPIView):
   lookup_url_kwarg = 'certification_id'
   serializer_class = CertificationSerializer
   queryset = Certification.objects
-  permission_classes = [IsTherapistSelf]
+  permission_classes = [IsObjectTherapistSelfOrReadonly]
   parser_classes = (MultiPartParser,)
 
 class TherapistSearchView(generics.ListAPIView):
@@ -98,6 +98,7 @@ class TherapistSearchView(generics.ListAPIView):
 
 class TherapistAwayPeriodListCreateView(generics.ListCreateAPIView):
   serializer_class = AwayPeriodSerializer
+  permission_classes = [IsObjectTherapistSelfOrReadonly]
 
   def get_queryset(self):
     user = self.request.user
@@ -107,6 +108,7 @@ class TherapistAwayPeriodListCreateView(generics.ListCreateAPIView):
 class TherapistAwayPeriodDetailView(generics.RetrieveUpdateDestroyAPIView):
   lookup_url_kwarg = 'period_id'
   serializer_class = AwayPeriodSerializer
+  permission_classes = [IsObjectTherapistSelfOrReadonly]
 
   def get_queryset(self):
     user = self.request.user

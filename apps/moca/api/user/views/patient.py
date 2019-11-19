@@ -18,7 +18,7 @@ from moca.models import (User, Therapist, Patient, Address, Price, EmailVerifica
 from moca.services import canned_messages
 from moca.services.emails import send_email
 
-from ..permissions import IsTherapistSelf, IsPatientSelf, IsUserSelf, IsProfileSelfOrReadonly
+from ..permissions import IsUserSelf, IsObjectUserSelfOrReadonly, IsObjectPatientSelfOrReadonly
 from ..serializers import (UserSerializer, UserImageSerializer, AwayPeriodSerializer,
                           TherapistSerializer, TherapistCreateSerializer, CertificationSerializer,
                           PriceSerializer, TherapistSearchSerializer, PatientSerializer,
@@ -33,7 +33,7 @@ class PatientCreateView(generics.CreateAPIView):
 class PatientDetailView(generics.RetrieveUpdateAPIView):
   serializer_class = PatientSerializer
   queryset = Patient.objects
-  permission_classes = [IsProfileSelfOrReadonly]
+  permission_classes = [IsObjectUserSelfOrReadonly]
 
 
 # TODO: fix collectionFormat='multi' (yasg works, openapi-generator doesn't)
@@ -45,7 +45,7 @@ class PatientDetailView(generics.RetrieveUpdateAPIView):
 class PatientInjuryCreateView(generics.CreateAPIView):
   serializer_class = InjurySerializer
   queryset = Injury.objects
-  permission_classes = [IsPatientSelf]
+  permission_classes = [IsObjectPatientSelfOrReadonly]
   parser_classes = (MultiPartParser,)
 
 
@@ -53,5 +53,5 @@ class PatientInjuryDetailView(generics.RetrieveUpdateDestroyAPIView):
   lookup_url_kwarg = 'injury_id'
   serializer_class = InjurySerializer
   queryset = Injury.objects
-  permission_classes = [IsPatientSelf]
+  permission_classes = [IsObjectPatientSelfOrReadonly]
   parser_classes = (MultiPartParser,)

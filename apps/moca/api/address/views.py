@@ -5,6 +5,8 @@ from rest_framework.response import Response
 
 from moca.models import Address
 
+from ..user.permissions import IsObjectUserSelfOrReadonly
+
 
 class AddressCreateView(generics.CreateAPIView):
   serializer_class = AddressSerializer
@@ -14,6 +16,7 @@ class AddressDetailView(generics.RetrieveUpdateDestroyAPIView):
   lookup_url_kwarg = 'address_id'
   queryset = Address.objects.all()
   serializer_class = AddressSerializer
+  permission_classes = [IsObjectUserSelfOrReadonly]
 
   def delete(self, request, *args, **kwargs):
     address_id = kwargs.get("address_id")
