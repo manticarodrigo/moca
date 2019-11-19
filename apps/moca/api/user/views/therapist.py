@@ -41,7 +41,7 @@ class TherapistCertificationDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class TherapistSearchView(generics.ListAPIView):
   serializer_class = TherapistSearchSerializer
-  queryset = Therapist.objects.annotate(Count('prices')).filter(prices__count__gt=0)
+  queryset = Therapist.objects.annotate(Count('prices')).filter(prices__count__gt=1)
 
   def filter_queryset(self, queryset):
     therapists = queryset
@@ -53,6 +53,9 @@ class TherapistSearchView(generics.ListAPIView):
       user_location = Address.objects.get(user=user, primary=True).location
     except Address.DoesNotExist:
       raise APIException('No primary address found.')
+
+    therapists = therapists.filter(is_verified=True)
+    therapists = therapists.filter(status=Therapist.AVAILABLE)
 
     if 'gender' in criteria:
       gender = criteria['gender']

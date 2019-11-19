@@ -149,6 +149,7 @@ class Therapist(models.Model):
   bio = models.CharField(max_length=200, blank=True, null=True)
   cert_date = models.DateField(blank=True, null=True)
   license_number = models.CharField(max_length=50, blank=True, null=True)
+  is_verified = models.BooleanField(default=False)
   operation_radius = models.IntegerField(default=10)
   status = models.CharField(max_length=100, choices=STATUS, default=AVAILABLE)
   primary_location = gisModels.PointField(null=True)

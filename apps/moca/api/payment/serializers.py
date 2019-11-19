@@ -64,7 +64,7 @@ class PaymentSerializer(serializers.ModelSerializer):
         payment.primary = False
         payment.save()
 
-    return super(PaymentSerializer, self).update(instance, validated_data)
+    return super(self.__class__, self).update(instance, validated_data)
 
   def create(self, validated_data):
     request = self.context['request']

@@ -36,7 +36,7 @@ class NoteSerializer(serializers.ModelSerializer):
     for image_data in images_data.getlist('images'):
       NoteImage.objects.create(note=instance, image=image_data)
 
-    return super(NoteSerializer, self).update(instance, validated_data)
+    return super(self.__class__, self).update(instance, validated_data)
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -143,7 +143,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
                           patient_id=user.id)
           update_review(review)
 
-    return super(AppointmentCreateUpdateSerializer, self).update(instance, validated_data)
+    return super(self.__class__, self).update(instance, validated_data)
 
   def create(self, validated_data):
     patient_id = validated_data['patient'].user_id
@@ -153,7 +153,7 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
       raise APIException('Patient does not have a primary address')
 
     validated_data['address'] = primary_address
-    return super(AppointmentCreateUpdateSerializer, self).create(validated_data)
+    return super(self.__class__, self).create(validated_data)
 
   # TODO check which fields can be updates and their validations
   def validate(self, data):

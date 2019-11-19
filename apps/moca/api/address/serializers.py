@@ -25,7 +25,7 @@ class AddressSerializer(serializers.ModelSerializer):
         address.primary = False
         address.save()
 
-    return super(AddressSerializer, self).update(instance, validated_data)
+    return super(self.__class__, self).update(instance, validated_data)
 
   def create(self, validated_data):
     user = self.context['request'].user

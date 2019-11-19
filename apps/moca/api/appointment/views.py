@@ -42,18 +42,13 @@ class AppointmentListView(generics.ListAPIView):
     if end:
       queries.append(Q(end_time__lte=end))
 
-    show_cancelled = query_params.get("showCancelled")
-    only_cancelled = query_params.get("onlyCancelled")
-    only_completed = query_params.get("onlyCompleted")
+    hide_finished = query_params.get("hideFinished")
+    only_finished = query_params.get("onlyFinished")
 
-    if not show_cancelled == "true":
-      if only_cancelled == "true":
-        queries.append(Q(status="cancelled"))
-      else:
-        queries.append(~Q(status="cancelled"))
-
-    if only_completed == "true":
-      queries.append(Q(status="completed"))
+    if hide_finished == "true":
+      queries.append(~Q(status="cancelled") & ~Q(status="completed") & ~Q(status="payment-failed"))
+    if only_finished == "true":
+      queries.append(Q(status="cancelled") | Q(status="completed") | Q(status="payment-failed"))
 
     query = reduce(lambda x, y: x & y, queries)
 
@@ -255,6 +250,8 @@ class AppointmentStartView(APIView):
     # Charge customer
     amount = int(appointment.price * 100)
     description = "Moca appointment"
+    payment_failed = False
+
     try:
       stripe_customer_id = PaymentProfile.objects.get(user=patient).stripe_customer_id
       charge_customer(stripe_customer_id, amount, description)

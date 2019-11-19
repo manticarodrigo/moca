@@ -91,7 +91,7 @@ class InjurySerializer(serializers.ModelSerializer):
     for image_data in images_data.getlist('images'):
       InjuryImage.objects.create(injury=instance, image=image_data)
 
-    return super(InjurySerializer, self).update(instance, validated_data)
+    return super(self.__class__, self).update(instance, validated_data)
 
 
 class CertificationImageSerializer(serializers.ModelSerializer):
@@ -123,7 +123,7 @@ class CertificationSerializer(serializers.ModelSerializer):
     for image_data in images_data.getlist('images'):
       CertificationImage.objects.create(certification=instance, image=image_data)
 
-    return super(CertificationSerializer, self).update(instance, validated_data)
+    return super(self.__class__, self).update(instance, validated_data)
 
 
 class PriceSerializer(serializers.ModelSerializer):
@@ -161,17 +161,22 @@ class TherapistProfileSerializer(serializers.ModelSerializer):
   class Meta:
     model = Therapist
     exclude = ['user']
+    extra_kwargs = {
+      'is_verified': {
+        'read_only': True
+      }
+    }
 
 
 class UserSnippetSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ('id', 'first_name', 'last_name', 'image')
+    fields = ['id', 'first_name', 'last_name', 'image']
 
 class UserImageSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ('image',)
+    fields = ['image']
 
 class UserSerializer(serializers.ModelSerializer):
   addresses = serializers.SerializerMethodField(read_only=True)
@@ -244,8 +249,8 @@ class UserSerializer(serializers.ModelSerializer):
       password = validated_data.pop('password')
       instance.set_password(password)
       instance.save()
-    super(self.__class__, self).update(instance, validated_data)
-    return instance
+
+    return super(self.__class__, self).update(instance, validated_data)
 
   def to_representation(self, obj):
     representation = super().to_representation(obj)
@@ -346,6 +351,11 @@ class TherapistSerializer(serializers.ModelSerializer):
   class Meta:
     model = Therapist
     fields = '__all__'
+    extra_kwargs = {
+      'is_verified': {
+        'read_only': True
+      }
+    }
 
   def to_representation(self, obj):
     representation = super().to_representation(obj)
@@ -365,18 +375,7 @@ class TherapistSerializer(serializers.ModelSerializer):
       if user_serializer.is_valid():
         user_serializer.save()
 
-    # therapist fields
-    instance.bio = validated_data.get('bio', instance.bio)
-    instance.status = validated_data.get('status', instance.status)
-    instance.cert_date = validated_data.get('cert_date', instance.cert_date)
-    instance.license_number = validated_data.get('license_number', instance.license_number)
-    instance.operation_radius = validated_data.get('operation_radius', instance.operation_radius)
-    instance.preferred_ailments = validated_data.get('preferred_ailments',
-                                                     instance.preferred_ailments)
-
-    instance.save()
-
-    return instance
+    return super(self.__class__, self).update(instance, validated_data)
 
 
 class TherapistCreateSerializer(TherapistSerializer):
