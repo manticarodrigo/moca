@@ -38,6 +38,15 @@ def send_appt_start_notification(appointment_id):
 def send_appt_review_notification(appointment_id):
   try:
     appointment = Appointment.objects.get(id=appointment_id)
+
+    if appointment.status != "in-progress" and appointment.status != "completed":
+      # appointment cancelled. abort notification
+      return
+
+    if appointment.status == "in-progress":
+      appointment.status = "completed"
+      appointment.save()
+
     therapist_name = appointment.therapist.user.get_full_name()
 
     devices = Device.objects.filter(user_id=appointment.patient_id)

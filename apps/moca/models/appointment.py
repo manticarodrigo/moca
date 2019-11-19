@@ -2,7 +2,6 @@ import datetime
 from django.db import models
 from django.db.models import signals
 from django.conf import settings
-from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from .user.address import Address
@@ -10,7 +9,8 @@ from .user.address import Address
 
 class Appointment(models.Model):
   STATUSES = [('in-progress', 'In Progress'), ('not-started', 'Not Started'),
-              ('completed', 'Completed'), ('cancelled', 'Cancelled')]
+              ('completed', 'Completed'), ('cancelled', 'Cancelled'),
+              ('payment-failed', 'Payment Failed')]
 
   patient = models.ForeignKey('Patient', on_delete=models.CASCADE)
   therapist = models.ForeignKey('Therapist', on_delete=models.CASCADE)
@@ -35,8 +35,8 @@ def post_save_appointment(instance, *args, **kwargs):
   start_notification_time = appointment.start_time - datetime.timedelta(minutes=30)
   review_notification_time = appointment.end_time
   # Uncomment for testing celery and notifications
-  start_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
-  review_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+  # start_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+  # review_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
 
   send_appt_start_notification.apply_async((appointment_id, ), eta=start_notification_time)
   send_appt_review_notification.apply_async((appointment_id, ), eta=review_notification_time)
@@ -73,13 +73,17 @@ class Review(models.Model):
 
 
 class Note(models.Model):
-  appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
+  appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE, related_name="note")
   subjective = models.TextField(blank=True)
   objective = models.TextField(blank=True)
   treatment = models.TextField(blank=True)
   assessment = models.TextField(blank=True)
   diagnosis = models.TextField(blank=True)
-  files = ArrayField(models.FileField(), blank=True, null=True)
+
+
+class NoteImage(models.Model):
+  note = models.ForeignKey(Note, on_delete=models.CASCADE, related_name="images")
+  image = models.ImageField(upload_to='notes',)
 
 
 class AppointmentCancellation(models.Model):

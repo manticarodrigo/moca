@@ -1,22 +1,24 @@
 from functools import reduce
 
+from django.utils import timezone
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from rest_framework import generics, permissions, status, serializers
+from rest_framework import generics, status, serializers
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser
 from drf_yasg.utils import swagger_auto_schema
 
-from moca.api.appointment.errors import AppointmentNotFound, ReviewNotFound
-from moca.api.appointment.serializers import (AppointmentCreateUpdateSerializer,
-                                              AppointmentSerializer)
-from moca.models import Device
-from moca.models.appointment import (Appointment, AppointmentRequest, AppointmentCancellation,
-                                     Review)
+from moca.models import User, Device, PaymentProfile, Issue, NoteImage
+from moca.models.appointment import Appointment, AppointmentRequest, AppointmentCancellation, Note
 from moca.services.notification.push import send_push_message
+from moca.services.stripe import charge_customer
 
+from ..user.permissions import IsObjectTherapistSelfOrReadonly
 from .permissions import CanCancel, CanStart, CanEnd
+from .serializers import (AppointmentCreateUpdateSerializer, AppointmentSerializer, NoteSerializer,
+                          NoteImageSerializer)
 
 
 class AppointmentListView(generics.ListAPIView):
@@ -40,6 +42,19 @@ class AppointmentListView(generics.ListAPIView):
     if end:
       queries.append(Q(end_time__lte=end))
 
+    show_cancelled = query_params.get("showCancelled")
+    only_cancelled = query_params.get("onlyCancelled")
+    only_completed = query_params.get("onlyCompleted")
+
+    if not show_cancelled == "true":
+      if only_cancelled == "true":
+        queries.append(Q(status="cancelled"))
+      else:
+        queries.append(~Q(status="cancelled"))
+
+    if only_completed == "true":
+      queries.append(Q(status="completed"))
+
     query = reduce(lambda x, y: x & y, queries)
 
     limit = query_params.get("limit")
@@ -51,7 +66,7 @@ class AppointmentListView(generics.ListAPIView):
     return Appointment.objects.filter(query)
 
 
-class AppointmentAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
+class AppointmentDetailView(generics.RetrieveUpdateDestroyAPIView):
   lookup_url_kwarg = 'appointment_id'
   queryset = Appointment.objects.all()
 
@@ -60,6 +75,26 @@ class AppointmentAPIDetailView(generics.RetrieveUpdateDestroyAPIView):
       return AppointmentSerializer
     else:
       return AppointmentCreateUpdateSerializer
+
+
+class AppointmentNoteView(generics.RetrieveUpdateDestroyAPIView):
+  lookup_url_kwarg = 'appointment_id'
+  serializer_class = NoteSerializer
+  permission_classes = [IsObjectTherapistSelfOrReadonly]
+  parser_classes = (MultiPartParser,)
+
+  def get_object(self):
+    appointment_id = self.kwargs.get(self.lookup_url_kwarg)
+    instance, _ = Note.objects.get_or_create(appointment_id=appointment_id)
+
+    return instance
+
+
+class AppointmentNoteImageDestroyView(generics.DestroyAPIView):
+  lookup_url_kwarg = 'image_id'
+  queryset = NoteImage
+  serializer_class = NoteImageSerializer
+  # TODO: permission_classes = []
 
 
 class AppointmentRequestView(APIView):
@@ -91,22 +126,62 @@ class AppointmentRequestView(APIView):
                                                                  'request': request
                                                                }).data
         appointment_request.save()
+
+        devices = Device.objects.filter(user=appointment_request.therapist.user)
+        text = f'Your appointment request for {request.user.first_name} {request.user.last_name} was accepted.'
+
+        for device in devices:
+          send_push_message(device.token, text, {
+            'type': 'new_message',
+            'params': {
+              'user': {
+                'id': request.user.id
+              }
+            }
+          })
+
         return Response(serialized_created_appointment, status.HTTP_200_OK)
 
       else:
         raise APIException('Appointment request handler issue')
+
+    elif request_status == 'reject':
+      appointment_request.status = 'rejected'
+      appointment_request.save()
+
+      devices = Device.objects.filter(user=appointment_request.therapist.user)
+      text = f'Your appointment request for {request.user.first_name} {request.user.last_name} was rejected.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'new_message',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
+          }
+        })
+      return Response("Rejected", status=status.HTTP_200_OK)
 
     elif request_status == 'cancel':
       if self.request.user.id != appointment_request.therapist_id:
         raise APIException('Only therapist can cancel')
       appointment_request.status = 'cancelled'
       appointment_request.save()
-      return Response("Cancelled", status=status.HTTP_200_OK)
 
-    elif request_status == 'reject':
-      appointment_request.status = 'rejected'
-      appointment_request.save()
-      return Response("Rejected", status=status.HTTP_200_OK)
+      devices = Device.objects.filter(user=appointment_request.patient.user)
+      text = f'Your appointment with {request.user.first_name} {request.user.last_name} was cancelled.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'new_message',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
+          }
+        })
+      return Response("Cancelled", status=status.HTTP_200_OK)
 
     else:
       raise APIException('Incorrect request status')
@@ -124,6 +199,7 @@ class AppointmentCancelView(APIView):
   @swagger_auto_schema(request_body=AppointmentCancellationSerializer,
                        responses={200: 'Cancelled'})
   def post(self, request, appointment_id):
+    user = request.user
     try:
       appointment = Appointment.objects.get(id=appointment_id)
     except:
@@ -131,11 +207,31 @@ class AppointmentCancelView(APIView):
 
     self.check_object_permissions(self.request, appointment)
 
-    type = request.data.get('type')
-    AppointmentCancellation.objects.create(appointment=appointment, type=type, user=request.user)
+    type = request.data.get('type', 'standard')
+    AppointmentCancellation.objects.create(appointment=appointment, type=type, user=user)
 
     appointment.status = 'cancelled'
     appointment.save()
+
+    if user.type == User.PATIENT_TYPE:
+      cancellation_time = timezone.now()
+      start_time = appointment.start_time
+      penalty_time = start_time - timezone.timedelta(hours=24)
+
+      # charge customer 50%
+      if cancellation_time > penalty_time:
+        amount = int(appointment.price / 2 * 100)
+        description = "Moca cancellation fee"
+        try:
+          stripe_customer_id = PaymentProfile.objects.get(user=user).stripe_customer_id
+          charge_customer(stripe_customer_id, amount, description)
+        except Exception as e:
+          description = f"Cancellation payment of ${amount/100} failed."
+          Issue.objects.create(appointment=appointment,
+                               therapist=appointment.therapist,
+                               patient=appointment.patient,
+                               priority="high",
+                               description=description)
 
     return Response("Cancelled", status=status.HTTP_200_OK)
 
@@ -154,18 +250,55 @@ class AppointmentStartView(APIView):
     appointment.status = 'in-progress'
     appointment.save()
 
-    devices = Device.objects.filter(user=appointment.patient.user)
-    text = f'Your appointment with {request.user.first_name} {request.user.last_name} has started.'
+    patient = appointment.patient.user
 
-    for device in devices:
-      send_push_message(device.token, text, {
-        'type': 'start_appointment',
-        'params': {
-          'user': {
-            'id': request.user.id
+    # Charge customer
+    amount = int(appointment.price * 100)
+    description = "Moca appointment"
+    try:
+      stripe_customer_id = PaymentProfile.objects.get(user=patient).stripe_customer_id
+      charge_customer(stripe_customer_id, amount, description)
+    except Exception as e:
+      appointment.status = 'payment-failed'
+      appointment.save()
+
+      description = f"Appointment payment of ${amount/100} failed."
+      Issue.objects.create(appointment=appointment,
+                           therapist=appointment.therapist,
+                           patient=appointment.patient,
+                           priority="high",
+                           description=description)
+      payment_failed = True
+
+    devices = Device.objects.filter(user=patient)
+
+    if payment_failed:
+      # Send push notification to patient
+      text = f'Payment failed.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'failed_payment',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
           }
-        }
-      })
+        })
+      return Response("Payment Failed", status=status.HTTP_402_PAYMENT_REQUIRED)
+
+    else:
+      text = f'Your appointment with {request.user.first_name} {request.user.last_name} has started.'
+
+      for device in devices:
+        send_push_message(device.token, text, {
+          'type': 'start_appointment',
+          'params': {
+            'user': {
+              'id': request.user.id
+            }
+          }
+        })
 
     return Response("Started", status=status.HTTP_200_OK)
 

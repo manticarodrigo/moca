@@ -3,50 +3,36 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 SAFE_METHODS = ['GET', 'HEAD', 'OPTIONS']
 
 
-class IsPatientSelf(IsAuthenticated):
-  """
-  The request is authenticated as the target user, or is a read-only request.
-  """
-  message = f"Current user is not allowed to edit target user"
 
-  # TODO this doesn't make sense
+class IsUserSelf(IsAuthenticated):
+  message = f"You are not allowed to edit the target user."
+
+  def has_object_permission(self, request, view, user):
+    return request.user.id == user.id
+
+
+class IsObjectUserSelfOrReadonly(IsAuthenticated):
+  message = f"You are not allowed to edit the target user."
+
+  def has_object_permission(self, request, view, obj):
+    if (request.method in SAFE_METHODS):
+      return True
+    return request.user.id == obj.user.id
+
+
+class IsObjectPatientSelfOrReadonly(IsAuthenticated):
+  message = f"Only the patient is allow to make edits."
+
   def has_object_permission(self, request, view, obj):
     if (request.method in SAFE_METHODS):
       return True
     return request.user.id == obj.patient.user.id
 
-class IsTherapistSelf(IsAuthenticated):
-  """
-  The request is authenticated as the target user, or is a read-only request.
-  """
-  message = f"Current user is not allowed to edit target user"
 
-  # TODO this doesn't make sense
+class IsObjectTherapistSelfOrReadonly(IsAuthenticated):
+  message = f"Only the therapist is allow to make edits."
+
   def has_object_permission(self, request, view, obj):
     if (request.method in SAFE_METHODS):
       return True
     return request.user.id == obj.therapist.user.id
-
-class IsUserSelf(IsAuthenticated):
-  """
-  The request is authenticated as the target user, or is a read-only request.
-  """
-  message = f"Current user is not allowed to edit target user"
-
-  # TODO this doesn't make sense
-  def has_object_permission(self, request, view, user):
-    if (request.method in SAFE_METHODS):
-      return True
-    return request.user.id == user.id
-
-class IsProfileSelfOrReadonly(IsAuthenticated):
-  """
-  The request is authenticated as the target user, or is a read-only request.
-  """
-  message = f"Current user is not allowed to edit target user"
-
-  # TODO this doesn't make sense
-  def has_object_permission(self, request, view, profile):
-    if (request.method in SAFE_METHODS):
-      return True
-    return request.user.id == profile.user.id

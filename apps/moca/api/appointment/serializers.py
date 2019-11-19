@@ -8,7 +8,7 @@ from django.db.models import ForeignKey
 from moca.api.user.serializers import PatientSerializer, TherapistSerializer, UserSnippetSerializer
 from moca.api.address.serializers import AddressSerializer
 from moca.models import Address, User
-from moca.models.appointment import Appointment, AppointmentRequest, Review, Note
+from moca.models.appointment import Appointment, AppointmentRequest, Review, Note, NoteImage
 from moca.models.user import Patient, Therapist
 from moca.api.util.Validator import RequestValidator
 
@@ -18,11 +18,25 @@ class AppointmentReviewSerializer(serializers.ModelSerializer):
     model = Review
     fields = ['comment', 'rating']
 
+class NoteImageSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = NoteImage
+    fields = ['id', 'image']
 
 class NoteSerializer(serializers.ModelSerializer):
+  images = NoteImageSerializer(many=True, read_only=True)
+
   class Meta:
     model = Note
-    fields = ['subjective', 'objective', 'treatment', 'assessment', 'diagnosis', 'files']
+    fields = ['subjective', 'objective', 'treatment', 'assessment', 'diagnosis', 'images']
+
+  def update(self, instance, validated_data):
+    images_data = self.context.get('view').request.FILES
+
+    for image_data in images_data.getlist('images'):
+      NoteImage.objects.create(note=instance, image=image_data)
+
+    return super(NoteSerializer, self).update(instance, validated_data)
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
@@ -30,7 +44,7 @@ class AppointmentSerializer(serializers.ModelSerializer):
   therapist_rating = serializers.SerializerMethodField()
   other_party = serializers.SerializerMethodField()
   review = AppointmentReviewSerializer(required=False)
-  note = NoteSerializer(required=False)
+  note = NoteSerializer(read_only=True)
 
   class Meta:
     model = Appointment
@@ -109,26 +123,6 @@ class AppointmentCreateUpdateSerializer(serializers.ModelSerializer):
   def update(self, instance, validated_data):
     request = self.context['request']
     user = request.user
-
-    if 'note' in validated_data:
-      note_data = validated_data.pop('note')
-
-      def update_note(note):
-        note.subjective = note_data.get('subjective', note.subjective)
-        note.objective = note_data.get('objective', note.objective)
-        note.treatment = note_data.get('treatment', note.treatment)
-        note.assessment = note_data.get('assessment', note.assessment)
-        note.diagnosis = note_data.get('diagnosis', note.diagnosis)
-        note.files = note_data.get('files', note.files)
-        note.save()
-
-      if user.type == User.THERAPIST_TYPE:
-        try:
-          note = instance.note
-          update_note(note)
-        except:
-          note = Note(appointment=instance)
-          update_note(note)
 
     if 'review' in validated_data:
       review_data = validated_data.pop('review')
