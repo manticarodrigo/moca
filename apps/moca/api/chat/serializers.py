@@ -135,7 +135,7 @@ class ConversationSerializer(serializers.ModelSerializer):
 
   class Meta:
     model = Conversation
-    fields = ('other_user', 'last_message', 'unread_count')
+    fields = ['other_user', 'last_message', 'unread_count']
 
   def get_unread_count(self, obj):
     user = self.context['request'].user
@@ -159,7 +159,11 @@ class ConversationSerializer(serializers.ModelSerializer):
     else:
       since_timestamp = last_sent_msg_timestamp or last_viewed_timestamp
 
-    unread_count = Message.objects.filter(conversation=obj, created_at__gt=since_timestamp).count()
+    if since_timestamp:
+      unread_count = Message.objects.filter(conversation=obj, created_at__gt=since_timestamp).count()
+    else:
+      unread_count = Message.objects.filter(conversation=obj).count()
+      
     return unread_count
 
   @swagger_serializer_method(serializer_or_field=UserSnippetSerializer)
