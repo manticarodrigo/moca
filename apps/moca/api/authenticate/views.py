@@ -20,8 +20,7 @@ class LoginAPIView(generics.GenericAPIView):
     auth_token = AuthToken.objects.create(user)
 
     if device_token:
-      Device.objects.update_or_create(
-        user=user,
-        token=device_token,
-      )
+      Device.objects.update_or_create(user=user,
+                                      token=device_token,
+                                      defaults={"auth_token": auth_token[0]})
     return Response({**UserSerializer(user).data, "token": auth_token[1]})

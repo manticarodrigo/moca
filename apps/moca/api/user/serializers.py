@@ -61,17 +61,19 @@ class AwayPeriodSerializer(serializers.ModelSerializer):
     RequestValidator.end_after_start(end_date, start_date)
     return data
 
+
 class InjuryImageSerializer(serializers.ModelSerializer):
   class Meta:
     model = InjuryImage
-    fields = ('id', 'image',)
+    fields = ['id', 'image']
+
 
 class InjurySerializer(serializers.ModelSerializer):
   images = InjuryImageSerializer(many=True, read_only=True)
 
   class Meta:
     model = Injury
-    fields = ('id', 'title', 'description', 'images',)
+    fields = ['id', 'title', 'description', 'images']
 
   def create(self, validated_data):
     images_data = self.context.get('view').request.FILES
@@ -89,24 +91,21 @@ class InjurySerializer(serializers.ModelSerializer):
     for image_data in images_data.getlist('images'):
       InjuryImage.objects.create(injury=instance, image=image_data)
 
-    instance.title = validated_data.get('title', instance.title)
-    instance.description = validated_data.get('description', instance.description)
+    return super(InjurySerializer, self).update(instance, validated_data)
 
-    instance.save()
-
-    return instance
 
 class CertificationImageSerializer(serializers.ModelSerializer):
   class Meta:
     model = CertificationImage
-    fields = ('id', 'image',)
+    fields = ['id', 'image']
+
 
 class CertificationSerializer(serializers.ModelSerializer):
   images = CertificationImageSerializer(many=True, read_only=True)
 
   class Meta:
     model = Certification
-    fields = ('id', 'title', 'description', 'images',)
+    fields = ['id', 'title', 'description', 'images']
 
   def create(self, validated_data):
     images_data = self.context.get('view').request.FILES
@@ -124,12 +123,7 @@ class CertificationSerializer(serializers.ModelSerializer):
     for image_data in images_data.getlist('images'):
       CertificationImage.objects.create(certification=instance, image=image_data)
 
-    instance.title = validated_data.get('title', instance.title)
-    instance.description = validated_data.get('description', instance.description)
-
-    instance.save()
-
-    return instance
+    return super(CertificationSerializer, self).update(instance, validated_data)
 
 
 class PriceSerializer(serializers.ModelSerializer):
@@ -199,9 +193,6 @@ class UserSerializer(serializers.ModelSerializer):
       },
     }
 
-  # def get_token(self, user):
-  #   return AuthToken.objects.create(user)[1]
-
   @swagger_serializer_method(serializer_or_field=AddressSerializer(many=True))
   def get_addresses(self, user):
     addresses = Address.objects.filter(user=user, archive=False)
@@ -243,7 +234,7 @@ class UserSerializer(serializers.ModelSerializer):
     user.token = auth_token[1]
 
     if device_token:
-      Device.objects.create(user=user, token=device_token)
+      Device.objects.create(user=user, token=device_token, auth_token=auth_token[0])
 
     send_verification_mail(user)
     return user
