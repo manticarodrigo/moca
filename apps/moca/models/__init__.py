@@ -1,5 +1,5 @@
-from .chat import (Conversation, Message, TextMessage, ImageMessage, AppointmentRequestMessage,
-                   LastViewed)
+from .chat import (Conversation, Message, CompositeMessage, CompositeMessageImage,
+                   AppointmentRequestMessage, LastViewed)
 from .user import (Therapist, Patient, User, Address, Device, AwayPeriod, Price, Certification,
                    CertificationImage, Injury, InjuryImage)
 

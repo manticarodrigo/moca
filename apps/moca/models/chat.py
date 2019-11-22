@@ -27,10 +27,9 @@ class LastViewed(models.Model):
 
 
 class Message(models.Model):
-  MESSAGE_TYPE_TEXT = 'text'
-  MESSAGE_TYPE_IMAGE = 'image'
+  MESSAGE_TYPE_COMPOSITE = 'composite'
   MESSAGE_TYPE_APPOINTMENT_REQUEST = 'appointment-request'
-  MESSAGE_TYPES = [(MESSAGE_TYPE_TEXT, 'Text'), (MESSAGE_TYPE_IMAGE, 'Image'),
+  MESSAGE_TYPES = [(MESSAGE_TYPE_COMPOSITE, 'Composite'),
                    (MESSAGE_TYPE_APPOINTMENT_REQUEST, 'Appointment Request')]
 
   conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
@@ -39,14 +38,15 @@ class Message(models.Model):
   type = models.CharField(max_length=20, choices=MESSAGE_TYPES)
 
 
-class TextMessage(models.Model):
-  message = models.OneToOneField(Message, related_name="text", on_delete=models.CASCADE)
+class CompositeMessage(models.Model):
+  message = models.OneToOneField(Message, on_delete=models.CASCADE)
+  title = models.CharField(max_length=50, null=True)
   text = models.TextField()
 
 
-class ImageMessage(models.Model):
-  message = models.OneToOneField(Message, related_name="image", on_delete=models.CASCADE)
-  image = models.FileField()
+class CompositeMessageImage(models.Model):
+  message = models.ForeignKey(CompositeMessage, related_name="images", on_delete=models.CASCADE)
+  image = models.ImageField(upload_to="messages")
 
 
 class AppointmentRequestMessage(models.Model):

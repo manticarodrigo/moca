@@ -1,10 +1,10 @@
 from django.contrib import admin
 
 from .models import (User, Therapist, Patient, AvailableArea, Address, Device, Payment,
-                     PaymentProfile, Card, Bank, Conversation, Message, TextMessage,
-                     AppointmentRequestMessage, Price, Note, NoteImage, Review, Appointment,
-                     AppointmentRequest, AppointmentCancellation, Issue, AwayPeriod, Certification,
-                     CertificationImage, Injury, InjuryImage)
+                     PaymentProfile, Card, Bank, Conversation, Message, CompositeMessage,
+                     CompositeMessageImage, AppointmentRequestMessage, Price, Note, NoteImage,
+                     Review, Appointment, AppointmentRequest, AppointmentCancellation, Issue,
+                     AwayPeriod, Certification, CertificationImage, Injury, InjuryImage)
 
 
 class AppointmentCancellationAdmin(admin.ModelAdmin):
@@ -23,7 +23,8 @@ admin.site.register(Bank)
 admin.site.register(Card)
 admin.site.register(Conversation)
 admin.site.register(Message)
-admin.site.register(TextMessage)
+admin.site.register(CompositeMessage)
+admin.site.register(CompositeMessageImage)
 admin.site.register(AppointmentRequestMessage)
 admin.site.register(Price)
 admin.site.register(Note)

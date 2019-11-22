@@ -8,23 +8,24 @@ from rest_framework.utils.serializer_helpers import BindingDict
 from moca.api.appointment.serializers import (AppointmentRequestCreateSerializer,
                                               AppointmentRequestSerializer)
 from moca.api.user.serializers import UserSnippetSerializer
-from moca.models import (Address, AppointmentRequest, AppointmentRequestMessage, Conversation,
-                         ImageMessage, Message, TextMessage, LastViewed, Device)
+from moca.models import (Address, AppointmentRequest, Conversation, Message, CompositeMessage,
+                         CompositeMessageImage, AppointmentRequestMessage, LastViewed, Device)
 from moca.utils.serializer_helpers import combineSerializers
 from moca.services.notification.push import send_push_message
 
 
-class TextMessageSerializer(serializers.ModelSerializer):
+class CompositeMessageImageSerializer(serializers.ModelSerializer):
   class Meta:
-    model = TextMessage
-    fields = ['text']
-
-
-class ImageMessageSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = ImageMessage
+    model = CompositeMessageImage
     fields = ['image']
 
+
+class CompositeMessageSerializer(serializers.ModelSerializer):
+  images = CompositeMessageImageSerializer(many=True, read_only=True)
+
+  class Meta:
+    model = CompositeMessage
+    fields = ['title', 'text', 'images']
 
 class AppointmentRequestMessageSerializer(serializers.ModelSerializer):
   appointment_request = AppointmentRequestSerializer()
@@ -38,14 +39,14 @@ class AppointmentRequestMessageSerializer(serializers.ModelSerializer):
     return representation["appointment_request"]
 
 
-ChatMessageSerializer = combineSerializers(TextMessageSerializer,
+ChatMessageSerializer = combineSerializers(CompositeMessageSerializer,
                                            AppointmentRequestMessageSerializer,
                                            serializerName=lambda a, b: 'ChatMessage')
 
 
 class MessageSerializer(serializers.ModelSerializer):
   user = serializers.PrimaryKeyRelatedField(read_only=True)
-  content = serializers.SerializerMethodField(required=False)
+  content = serializers.SerializerMethodField(read_only=False)
 
   class Meta:
     model = Message
@@ -57,9 +58,9 @@ class MessageSerializer(serializers.ModelSerializer):
     if message_type == 'appointment-request':
       appointment_request_message = AppointmentRequestMessage.objects.get(message=obj)
       return AppointmentRequestMessageSerializer(appointment_request_message).data
-    elif message_type == 'text':
-      text_message = TextMessage.objects.get(message=obj)
-      return TextMessageSerializer(text_message).data
+    elif message_type == 'composite':
+      composite_message = CompositeMessage.objects.get(message=obj)
+      return CompositeMessageSerializer(composite_message).data
     else:
       raise APIException('Invalid message content')
 
@@ -68,8 +69,8 @@ class MessageSerializer(serializers.ModelSerializer):
     request = self.context['request']
     user_id = request.user.id
     target_user_id = self.context.get('view').kwargs.get('user_id')
-    type = validated_data.get('type')
-    content = request.data.get('content')
+    content = request.data.dict()
+    type = content.pop('type')
 
     if target_user_id == user_id:
       raise APIException('Can\'t message yourself')
@@ -88,8 +89,16 @@ class MessageSerializer(serializers.ModelSerializer):
 
     message = Message.objects.create(conversation=conversation, type=type, user_id=user_id)
 
-    if type == 'text':
-      TextMessage.objects.create(message=message, **content)
+    if type == 'composite':
+      if content.get('images'):
+        # TODO: better way to handle this
+        content.pop('images')
+
+      composite_message = CompositeMessage.objects.create(message=message, **content)
+
+      images_data = self.context.get('view').request.FILES
+      for image_data in images_data.getlist('images'):
+        CompositeMessageImage.objects.create(message=composite_message, image=image_data)
 
     elif type == 'appointment-request':
       content['therapist'] = user_id

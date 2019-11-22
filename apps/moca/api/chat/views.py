@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import APIException
 from django.utils import timezone
 
@@ -16,6 +17,7 @@ class ConversationListView(generics.ListAPIView):
 
 class MessageListCreateView(generics.ListCreateAPIView):
   serializer_class = MessageSerializer
+  parser_classes = (MultiPartParser,)
 
   def get_queryset(self):
     user = self.request.user
