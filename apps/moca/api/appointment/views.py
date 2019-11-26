@@ -243,6 +243,7 @@ class AppointmentStartView(APIView):
     self.check_object_permissions(self.request, appointment)
 
     appointment.status = 'in-progress'
+    appointment.start_time_manual = timezone.now()
     appointment.save()
 
     patient = appointment.patient.user
@@ -265,37 +266,6 @@ class AppointmentStartView(APIView):
                            patient=appointment.patient,
                            priority="high",
                            description=description)
-      payment_failed = True
-
-    devices = Device.objects.filter(user=patient)
-
-    if payment_failed:
-      # Send push notification to patient
-      text = f'Payment failed.'
-
-      for device in devices:
-        send_push_message(device.token, text, {
-          'type': 'failed_payment',
-          'params': {
-            'user': {
-              'id': request.user.id
-            }
-          }
-        })
-      return Response("Payment Failed", status=status.HTTP_402_PAYMENT_REQUIRED)
-
-    else:
-      text = f'Your appointment with {request.user.first_name} {request.user.last_name} has started.'
-
-      for device in devices:
-        send_push_message(device.token, text, {
-          'type': 'start_appointment',
-          'params': {
-            'user': {
-              'id': request.user.id
-            }
-          }
-        })
 
     return Response("Started", status=status.HTTP_200_OK)
 
@@ -312,19 +282,7 @@ class AppointmentEndView(APIView):
     self.check_object_permissions(self.request, appointment)
 
     appointment.status = 'completed'
+    appointment.end_time_manual = timezone.now()
     appointment.save()
-
-    devices = Device.objects.filter(user=appointment.patient.user)
-    text = f'Your appointment with {request.user.first_name} {request.user.last_name} has ended.'
-
-    for device in devices:
-      send_push_message(device.token, text, {
-        'type': 'end_appointment',
-        'params': {
-          'user': {
-            'id': request.user.id
-          }
-        }
-      })
 
     return Response("Ended", status=status.HTTP_200_OK)

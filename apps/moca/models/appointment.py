@@ -1,6 +1,7 @@
 import datetime
 from django.db import models
 from django.db.models import signals
+from django.utils import timezone
 from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -17,8 +18,8 @@ class Appointment(models.Model):
   address = models.ForeignKey(Address, on_delete=models.DO_NOTHING)
   start_time = models.DateTimeField()
   end_time = models.DateTimeField()
-  start_time_expected = models.DateTimeField(blank=True, null=True)
-  end_time_expected = models.DateTimeField(blank=True, null=True)
+  start_time_manual = models.DateTimeField(blank=True, null=True)
+  end_time_manual = models.DateTimeField(blank=True, null=True)
   status = models.CharField(max_length=15, choices=STATUSES, default='not-started')
   price = models.IntegerField(validators=[MinValueValidator(0)])
   created_at = models.DateTimeField(auto_now_add=True)
@@ -26,17 +27,21 @@ class Appointment(models.Model):
 
 
 def post_save_appointment(instance, *args, **kwargs):
-  from moca.tasks import send_appt_start_notification, send_appt_review_notification
+  from moca.tasks import (send_appt_upcoming_notification, send_appt_start_notification,
+                          send_appt_review_notification)
   appointment = instance
   appointment_id = appointment.id
-  therapist_id = appointment.therapist_id
-  patient_id = appointment.patient_id
 
-  start_notification_time = appointment.start_time - datetime.timedelta(minutes=30)
-  review_notification_time = appointment.end_time
-  # Uncomment for testing celery and notifications
-  # start_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
-  # review_notification_time = appointment.created_at + datetime.timedelta(seconds=10)
+  upcoming_notification_time = appointment.start_time - datetime.timedelta(minutes=30)
+  start_notification_time = (appointment.start_time_manual if appointment.start_time_manual and
+                              appointment.start_time > appointment.start_time_manual else
+                              appointment.start_time)
+  review_notification_time = (appointment.end_time_manual if appointment.end_time_manual and
+                              appointment.end_time > appointment.end_time_manual else
+                              appointment.end_time)
+
+  if upcoming_notification_time > timezone.now():
+    send_appt_upcoming_notification.apply_async((appointment_id, ), eta=upcoming_notification_time)
 
   send_appt_start_notification.apply_async((appointment_id, ), eta=start_notification_time)
   send_appt_review_notification.apply_async((appointment_id, ), eta=review_notification_time)
