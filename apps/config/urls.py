@@ -17,7 +17,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
+from django.views.generic import TemplateView
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -38,6 +39,7 @@ urlpatterns = [
   path('api/', include('moca.api.urls')),
   path('api/docs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
   path('api/docs/swagger.yaml', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+  re_path(r'^.*', TemplateView.as_view(template_name='index.html')),
 ]
 
 if settings.DEBUG:

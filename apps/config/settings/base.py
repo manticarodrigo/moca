@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 import os
-import socket
 from os.path import join
 from datetime import timedelta
+
 
 AUTH_USER_MODEL = 'moca.User'
 
@@ -100,21 +100,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 ROOT_URLCONF = 'config.urls'
 
-TEMPLATES = [
-  {
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [],
-    'APP_DIRS': True,
-    'OPTIONS': {
-      'context_processors': [
-        'django.template.context_processors.debug',
-        'django.template.context_processors.request',
-        'django.contrib.auth.context_processors.auth',
-        'django.contrib.messages.context_processors.messages',
-      ],
-    },
-  },
-]
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
@@ -163,36 +148,51 @@ USE_L10N = True
 
 USE_TZ = True
 
+def get_service_host():
+  return os.environ.get('MOCA_SERVICE', 'http://0.0.0.0:8000')
+
  # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
-STATIC_ROOT = os.path.normpath(join(os.path.dirname(BASE_DIR), 'static'))
 STATIC_URL = '/static/'
+STATIC_ROOT = join(os.path.dirname(BASE_DIR), 'static')
+STATICFILES_DIRS = ['moca-website/build']
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
 # Media files
-HOST_ADDR = '192.168.1.156:8000' # socket.gethostbyname('host.docker.internal')
+MEDIA_URL = '/media/'
 MEDIA_ROOT = join(os.path.dirname(BASE_DIR), 'media')
-MEDIA_URL = 'http://' + HOST_ADDR + '/media/'
+
+TEMPLATES = [
+  {
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'DIRS': [STATIC_ROOT],
+    'APP_DIRS': True,
+    'OPTIONS': {
+      'context_processors': [
+        'django.template.context_processors.debug',
+        'django.template.context_processors.request',
+        'django.contrib.auth.context_processors.auth',
+        'django.contrib.messages.context_processors.messages',
+      ],
+    },
+  },
+]
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400
 
 # APPEND_SLASH=False
 
-EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'mocaemail@moca.moc'
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST = os.getenv('DJANGO_EMAIL_HOST')
+EMAIL_HOST_USER = os.getenv('DJANGO_EMAIL_HOST_USER')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = os.getenv('DJANGO_EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
-
-
-def get_service_host():
-  return os.environ.get('MOCA_SERVICE', 'http://0.0.0.0:8000')
-
-
-EMAIL_VERIFICATION = False
+EMAIL_USE_SSL = False
+EMAIL_USE_TLS = True
+EMAIL_VERIFICATION = True
 
 SWAGGER_SETTINGS = {'DISPLAY_OPERATION_ID': False}
 

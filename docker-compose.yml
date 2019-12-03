@@ -50,6 +50,8 @@ services:
     image: moca_service:latest
     environment:
       - PYTHONUNBUFFERED=1
+    env_file:
+      - .env/.local
     command: |
       bash -c "
       ./integration/wait-for-it/wait-for-it.sh moca_db:5432 &&
@@ -64,3 +66,12 @@ services:
     depends_on:
       - db
       - celery
+
+  proxy:
+    container_name: moca_proxy
+    build: ./nginx
+    ports:
+      - 1337:80
+      - 80:80
+    depends_on:
+      - web
