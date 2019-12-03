@@ -1,5 +1,4 @@
 from django.urls import path
-from knox.views import LogoutView
 
 from .views import (AppointmentListView, AppointmentDetailView, AppointmentNoteView,
                     AppointmentNoteImageDestroyView, AppointmentRequestView, AppointmentCancelView,
