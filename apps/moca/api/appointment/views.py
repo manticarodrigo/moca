@@ -12,7 +12,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from moca.models import User, Device, PaymentProfile, Issue, NoteImage
 from moca.models.appointment import Appointment, AppointmentRequest, AppointmentCancellation, Note
-from moca.services.notification.push import send_push_message
+from moca.services.push import send_push_message
 from moca.services.stripe import charge_customer
 
 from ..user.permissions import IsObjectTherapistSelfOrReadonly

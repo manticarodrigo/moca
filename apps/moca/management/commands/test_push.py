@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 
-from moca.services.notification.push import send_push_message
+from moca.services.push import send_push_message
 
 
 class Command(BaseCommand):

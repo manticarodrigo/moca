@@ -11,7 +11,7 @@ from moca.api.user.serializers import UserSnippetSerializer
 from moca.models import (Address, AppointmentRequest, Conversation, Message, CompositeMessage,
                          CompositeMessageImage, AppointmentRequestMessage, LastViewed, Device)
 from moca.utils.serializer_helpers import combineSerializers
-from moca.services.notification.push import send_push_message
+from moca.services.push import send_push_message
 
 
 class CompositeMessageImageSerializer(serializers.ModelSerializer):

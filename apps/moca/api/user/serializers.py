@@ -314,11 +314,6 @@ class PatientSerializer(serializers.ModelSerializer):
 
 
 class PatientCreateSerializer(PatientSerializer):
-  token = serializers.SerializerMethodField()
-
-  def get_token(self, patient):
-    return AuthToken.objects.create(patient.user)[1]
-
   @transaction.atomic
   def create(self, validated_data):
     validated_data['user']['type'] = User.PATIENT_TYPE
@@ -365,6 +360,7 @@ class TherapistSerializer(serializers.ModelSerializer):
 
     return representation
 
+  @transaction.atomic
   def update(self, instance, validated_data):
     if validated_data.get('user'):
       user_data = validated_data.pop('user')
@@ -379,7 +375,8 @@ class TherapistSerializer(serializers.ModelSerializer):
 
 
 class TherapistCreateSerializer(TherapistSerializer):
+  @transaction.atomic
   def create(self, validated_data):
     validated_data['user']['type'] = User.THERAPIST_TYPE
-    user = UserSerializer(context=self.context).create(validated_data['user'])
-    return Therapist.objects.create(user=user)
+    user = UserSerializer(context=self.context).create(validated_data.pop('user'))
+    return Therapist.objects.create(user=user, **validated_data)

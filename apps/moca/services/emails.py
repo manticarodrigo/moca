@@ -1,9 +1,7 @@
 import random
 import string
-from os import environ
 
 from django.core import mail
-from django.core.mail import send_mail
 
 from config.settings.base import EMAIL_VERIFICATION, get_service_host
 from moca.models import EmailVerification
@@ -14,7 +12,7 @@ def send_email(user, subject, body):
     mail.EmailMessage(
       subject,
       body,
-      "Moca",
+      'MOCA <hello@joinmoca.com>',
       [user.email],
       connection=connection,
     ).send()
