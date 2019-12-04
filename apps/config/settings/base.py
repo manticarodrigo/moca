@@ -162,7 +162,7 @@ STATICFILES_FINDERS = (
 )
 
 # Media files
-MEDIA_URL = '/media/'
+MEDIA_URL = get_service_host() + '/media/'
 MEDIA_ROOT = join(os.path.dirname(BASE_DIR), 'media')
 
 TEMPLATES = [
