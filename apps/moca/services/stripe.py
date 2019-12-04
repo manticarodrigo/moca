@@ -27,7 +27,7 @@ def get_connect_oauth_url(user):
   return url
 
 def get_connect_login_url(merchant_id):
-  return stripe.Account.create_login_link(merchant_id)
+  return stripe.Account.create_login_link(merchant_id).url
 
 def connect_account(code):
   try:
