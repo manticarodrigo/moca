@@ -39,7 +39,6 @@ urlpatterns = [
   path('api/', include('moca.api.urls')),
   path('api/docs/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
   path('api/docs/swagger.yaml', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-  re_path(r'^.*', TemplateView.as_view(template_name='index.html')),
 ]
 
 if settings.DEBUG:
