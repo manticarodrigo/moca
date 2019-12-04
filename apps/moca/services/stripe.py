@@ -1,7 +1,44 @@
+import os
 import stripe
+
 from rest_framework.exceptions import APIException
 
-stripe.api_key = 'sk_test_ZNk6P5iWYhDBBWIDcK7hZd1O00je2Z70F4'
+from config.settings.base import get_service_host
+
+STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+STRIPE_CLIENT_ID = os.environ.get('STRIPE_CLIENT_ID')
+
+stripe.api_key = STRIPE_API_KEY
+
+
+def get_connect_oauth_url(user):
+  base_url = 'https://connect.stripe.com/express/oauth/authorize'
+  response_type = 'response_type=code'
+  client_id = f'client_id={STRIPE_CLIENT_ID}'
+  scope = 'scope=read_write'
+  suggested_capabilities = 'suggested_capabilities[]=transfers'
+  state = f'state={user.id}'
+  redirect_uri = f'redirect_uri={get_service_host()}/api/payment/connect/callback/'
+  email = f'stripe_user[email]={user.email}'
+  first_name = f'stripe_user[first_name]={user.first_name}'
+  last_name = f'stripe_user[last_name]={user.last_name}'
+  country = f'stripe_user[country]=US'
+  url = f'{base_url}?{response_type}&{client_id}&{scope}&{suggested_capabilities}&{state}&{redirect_uri}&{email}&{first_name}&{last_name}&{country}'
+  return url
+
+def get_connect_login_url(merchant_id):
+  return stripe.Account.create_login_link(merchant_id)
+
+def connect_account(code):
+  try:
+    response = stripe.OAuth.token(
+      grant_type='authorization_code',
+      code=code,
+    )
+    return response['stripe_user_id']
+  except Exception as e:
+    print('STRIPE CONNECT EXCEPTION', e)
+    raise APIException('STRIPE ISSUE')
 
 
 def create_customer(**args):
@@ -52,12 +89,15 @@ def set_primary_payment(customer_id, token):
 
 
 # Amount is in cents!!!
-def charge_customer(id, amount, description, currency='usd'):
+def charge_customer(customer_id, merchant_id, amount, description, currency='usd'):
   try:
+    application_fee = int(amount * 0.15)
     charge = stripe.Charge.create(amount=amount,
                                   currency=currency,
                                   description=description,
-                                  customer=id)
+                                  customer=customer_id,
+                                  application_fee_amount=application_fee,
+                                  transfer_data={'destination': merchant_id})
   except Exception as e:
     print('STRIPE CHARGE CARD EXCEPTION', e)
     raise APIException('STRIPE ISSUE')

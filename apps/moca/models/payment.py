@@ -9,6 +9,14 @@ PAYMENT_TYPE_BANK = 'bank_account'
 PAYMENT_TYPE_CARD = 'card'
 
 
+class MerchantProfile(models.Model):
+  stripe_user_id = models.CharField(max_length=30)
+  user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+  def __str__(self):
+    return f"Merchant Profile: {self.id}, User: {self.user}"
+
+
 class PaymentProfile(models.Model):
   stripe_customer_id = models.CharField(max_length=20)
   user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

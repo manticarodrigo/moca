@@ -3,7 +3,7 @@ from .chat import (Conversation, Message, CompositeMessage, CompositeMessageImag
 from .user import (Therapist, Patient, User, Address, Device, AwayPeriod, Price, Certification,
                    CertificationImage, Injury, InjuryImage)
 
-from .payment import Payment, PaymentProfile, Card, Bank
+from .payment import MerchantProfile, PaymentProfile, Payment, Card, Bank
 
 from .appointment import (Appointment, AppointmentCancellation, AppointmentRequest, Note, NoteImage,
                           Review)

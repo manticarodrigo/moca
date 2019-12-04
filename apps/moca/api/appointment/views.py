@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser
 from drf_yasg.utils import swagger_auto_schema
 
-from moca.models import User, Device, PaymentProfile, Issue, NoteImage
+from moca.models import User, Device, MerchantProfile, PaymentProfile, Issue, NoteImage
 from moca.models.appointment import Appointment, AppointmentRequest, AppointmentCancellation, Note
 from moca.services.push import send_push_message
 from moca.services.stripe import charge_customer
@@ -218,8 +218,9 @@ class AppointmentCancelView(APIView):
         amount = int(appointment.price / 2 * 100)
         description = "Moca cancellation fee"
         try:
-          stripe_customer_id = PaymentProfile.objects.get(user=user).stripe_customer_id
-          charge_customer(stripe_customer_id, amount, description)
+          customer_id = PaymentProfile.objects.get(user=user).stripe_customer_id
+          merchant_id = MerchantProfile.objects.get(user=appointment.therapist.user).stripe_user_id
+          charge_customer(customer_id, merchant_id, amount, description)
         except Exception as e:
           description = f"Cancellation payment of ${amount/100} failed."
           Issue.objects.create(appointment=appointment,
@@ -246,16 +247,15 @@ class AppointmentStartView(APIView):
     appointment.start_time_manual = timezone.now()
     appointment.save()
 
-    patient = appointment.patient.user
-
     # Charge customer
     amount = int(appointment.price * 100)
     description = "Moca appointment"
     payment_failed = False
 
     try:
-      stripe_customer_id = PaymentProfile.objects.get(user=patient).stripe_customer_id
-      charge_customer(stripe_customer_id, amount, description)
+      customer_id = PaymentProfile.objects.get(user=appointment.patient.user).stripe_customer_id
+      merchant_id = MerchantProfile.objects.get(user=appointment.therapist.user).stripe_user_id
+      charge_customer(customer_id, merchant_id, amount, description)
     except Exception as e:
       appointment.status = 'payment-failed'
       appointment.save()

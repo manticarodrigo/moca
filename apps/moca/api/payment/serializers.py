@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 from moca.models.payment import Payment, PaymentProfile, Card, Bank, \
   PAYMENT_TYPE_BANK, PAYMENT_TYPE_CARD
-from moca.services.stripe import create_customer, add_payment, charge_customer, set_primary_payment
+from moca.services.stripe import create_customer, add_payment, set_primary_payment
 
 
 def get_model_and_serializer_by_type(type):

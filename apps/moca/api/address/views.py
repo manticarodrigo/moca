@@ -1,4 +1,3 @@
-from .serializers import AddressSerializer
 from rest_framework.exceptions import APIException
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -6,6 +5,7 @@ from rest_framework.response import Response
 from moca.models import Address
 
 from ..user.permissions import IsObjectUserSelfOrReadonly
+from .serializers import AddressSerializer
 
 
 class AddressCreateView(generics.CreateAPIView):
