@@ -4,6 +4,3 @@
 [submodule "moca-client"]
 	path = moca-client
 	url = http://gitlab.approdite.io/moca/moca-client.git
-[submodule "moca-website"]
-	path = moca-website
-	url = git@github.com:manticarodrigo/moca-website.git
